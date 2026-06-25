@@ -173,15 +173,15 @@ def _init_default_users() -> dict:
     raw = {
         "admin":          ("Administrador SSMOC",                           "admin",          "abastecimiento@ssmocc.cl",       None,             "Admin2026*"),
         "bayron":         ("Bayron Retamal González",                       "admin",          "bayron.retamal@ssmocc.cl",       None,             "Ssmoc2026*"),
-        "traumatologico": ("Referente — Inst. Traumatológico",              "establecimiento","abast.traumatologico@ssmocc.cl", "traumatologico", "Trauma2026*"),
-        "direccion":      ("Referente — Dir. SSMOC",                        "establecimiento","abast.direccion@ssmocc.cl",      "direccion",      "Dir2026*"),
-        "felix_bulnes":   ("Referente — H. Félix Bulnes",                   "establecimiento","abast.felixbulnes@ssmocc.cl",    "felix_bulnes",   "Felix2026*"),
-        "san_juan":       ("Referente — H. San Juan de Dios",               "establecimiento","abast.sanjuan@ssmocc.cl",        "san_juan",       "Sjd2026*"),
-        "crs_allende":    ("Referente — CRS Salvador Allende",              "establecimiento","abast.allende@ssmocc.cl",        "crs_allende",    "Crs2026*"),
-        "melipilla":      ("Referente — H. Melipilla",                      "establecimiento","abast.melipilla@ssmocc.cl",      "melipilla",      "Meli2026*"),
-        "penaflor":       ("Referente — H. Peñaflor",                       "establecimiento","abast.penaflor@ssmocc.cl",       "penaflor",       "Pen2026*"),
-        "curacavi":       ("Referente — H. Curacaví",                       "establecimiento","abast.curacavi@ssmocc.cl",       "curacavi",       "Cura2026*"),
-        "talagante":      ("Referente — H. Talagante",                      "establecimiento","abast.talagante@ssmocc.cl",      "talagante",      "Tala2026*"),
+        "traumatologico": ("Miguel Jara",                                   "establecimiento","miguel.jara@intraumatologico.cl",  "traumatologico", "Trauma2026*"),
+        "direccion":      ("Referente — Dir. SSMOC",                        "establecimiento","abast.direccion@ssmocc.cl",             "direccion",      "Dir2026*"),
+        "felix_bulnes":   ("Carolina Castro",                                "establecimiento","carolina.castroj@redsalud.gob.cl",     "felix_bulnes",   "Felix2026*"),
+        "san_juan":       ("Rodrigo Bravo Gajardo",                          "establecimiento","rodrigo.bravog@redsalud.gob.cl",       "san_juan",       "Sjd2026*"),
+        "crs_allende":    ("Eric Cubillo Antúnez",                           "establecimiento","eric.cubillo@redsalud.gob.cl",         "crs_allende",    "Crs2026*"),
+        "melipilla":      ("María de los Ángeles Morales",                  "establecimiento","maria.moralesj@redsalud.gob.cl",      "melipilla",      "Meli2026*"),
+        "penaflor":       ("Gissela Salvo",                                 "establecimiento","gissela.salvo@redsalud.gob.cl",       "penaflor",       "Pen2026*"),
+        "curacavi":       ("Pablo Yévenes Olivares",                        "establecimiento","pablo.yevenes@redsalud.gob.cl",       "curacavi",       "Cura2026*"),
+        "talagante":      ("María Andrea Villegas Albarrán",                "establecimiento","mandrea.villegas@redsalud.gob.cl",    "talagante",      "Tala2026*"),
     }
     users = {}
     for uid, (nombre, rol, email, estab, pwd) in raw.items():
