@@ -720,12 +720,34 @@ def pg_dashboard():
     st.markdown("<hr style='border-color:#f1f5f9;margin:12px 0'>",unsafe_allow_html=True)
 
     # Casos críticos
-    st.markdown('<div style="font-size:12px;font-weight:600;color:#1F3864;margin-bottom:8px">Establecimientos en nivel rojo</div>',unsafe_allow_html=True)
-    cols_r=st.columns(len(rojos))
-    for i,e in enumerate(sorted(rojos,key=lambda x:-x["pct_2026"])):
-        va=f"+{e['variacion']:.1f}" if e["variacion"]>0 else f"{e['variacion']:.1f}"
-        with cols_r[i]:
-            st.markdown(f'<div style="background:white;border:1px solid #FECACA;border-top:4px solid #E24B4A;border-radius:8px;padding:12px"><div style="font-size:11px;font-weight:600;color:#991B1B">{e["nombre_corto"]}</div><div style="font-size:26px;font-weight:800;color:#A32D2D;line-height:1.1">{e["pct_2026"]:.1f}%</div><div style="font-size:10px;color:#DC2626;margin-top:3px">Brecha: +{e["brecha"]:.1f} pp · Var.: {va} pp</div></div>',unsafe_allow_html=True)
+    st.markdown('<div style="font-size:12px;font-weight:600;color:#1F3864;margin-bottom:8px">Establecimientos en nivel rojo</div>', unsafe_allow_html=True)
+    rojos_ordenados = sorted(rojos, key=lambda x: -x.get("pct_2026", 0))
+
+    if not rojos_ordenados:
+        st.markdown('''
+        <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-left:5px solid #22C55E;
+                    border-radius:0 10px 10px 0;padding:14px 16px;margin-bottom:8px;color:#166534">
+            <div style="font-size:13px;font-weight:700">✅ Sin establecimientos en nivel rojo</div>
+            <div style="font-size:12px;margin-top:3px">Para el período seleccionado no existen casos críticos en categoría roja.</div>
+        </div>
+        ''', unsafe_allow_html=True)
+    else:
+        # Máximo 3 tarjetas por fila para evitar columnas demasiado angostas.
+        for start in range(0, len(rojos_ordenados), 3):
+            grupo = rojos_ordenados[start:start+3]
+            cols_r = st.columns(len(grupo))
+            for i, e in enumerate(grupo):
+                va = f"+{e.get('variacion', 0):.1f}" if e.get("variacion", 0) > 0 else f"{e.get('variacion', 0):.1f}"
+                brecha = f"+{e.get('brecha', 0):.1f}" if e.get("brecha", 0) > 0 else f"{e.get('brecha', 0):.1f}"
+                with cols_r[i]:
+                    st.markdown(
+                        f'<div style="background:white;border:1px solid #FECACA;border-top:4px solid #E24B4A;border-radius:8px;padding:12px;margin-bottom:8px">'
+                        f'<div style="font-size:11px;font-weight:600;color:#991B1B">{e.get("nombre_corto", "")}</div>'
+                        f'<div style="font-size:26px;font-weight:800;color:#A32D2D;line-height:1.1">{e.get("pct_2026", 0):.1f}%</div>'
+                        f'<div style="font-size:10px;color:#DC2626;margin-top:3px">Brecha: {brecha} pp · Var.: {va} pp</div>'
+                        f'</div>',
+                        unsafe_allow_html=True
+                    )
 
     st.markdown("<hr style='border-color:#f1f5f9;margin:12px 0'>",unsafe_allow_html=True)
 
