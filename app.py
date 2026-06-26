@@ -11,6 +11,13 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+# Forzar sidebar siempre visible
+st.markdown("""
+<style>
+[data-testid="collapsedControl"] {display: none !important;}
+section[data-testid="stSidebar"] {min-width: 250px !important; max-width: 250px !important;}
+</style>
+""", unsafe_allow_html=True)
 
 # ── OCULTAR navegación automática de Streamlit ────────────────────────
 st.markdown("""
@@ -464,6 +471,46 @@ def pg_dashboard():
                     <div style="font-size:11px;font-weight:700;color:{tc_p};margin-top:4px">{estado.upper()}</div>
                 </div>""", unsafe_allow_html=True)
 
+        # Calendario de plazos para el establecimiento
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('<div style="font-size:13px;font-weight:600;color:#1F3864;margin-bottom:8px">📅 Plazos de reporte — Lineamiento MINSAL v1.0</div>', unsafe_allow_html=True)
+        import datetime as _dt
+        hoy = _dt.date.today()
+        plazos_e = [
+            ("R1","1° Reporte","Enero–Marzo 2026",    _dt.date(2026,7,31)),
+            ("R2","2° Reporte","Abril–Junio 2026",     _dt.date(2026,8,31)),
+            ("R3","3° Reporte","Jul–Sep 2026",          _dt.date(2026,11,30)),
+            ("R4","4° Reporte","Oct–Dic 2026",          _dt.date(2027,2,28)),
+        ]
+        rpts_e = load_reports()
+        cols_cal_e = st.columns(4)
+        for i,(rid,label,periodo,fecha_lim) in enumerate(plazos_e):
+            dias_rest = (fecha_lim - hoy).days
+            r_e = next((x for x in rpts_e if x.get("establecimiento_id")==eid_user and x.get("reporte_id")==rid), None)
+            est_e = r_e.get("estado","pendiente") if r_e else "pendiente"
+            if est_e == "enviado":
+                bg,tc,bc,tag = "#F0FDF4","#166534","#BBF7D0","✅ ENVIADO"
+            elif est_e == "borrador":
+                bg,tc,bc,tag = "#FFFBEB","#92400E","#FDE68A","📝 BORRADOR"
+            elif dias_rest < 0:
+                bg,tc,bc,tag = "#FEF2F2","#991B1B","#FECACA","⛔ VENCIDO"
+            elif dias_rest <= 14:
+                bg,tc,bc,tag = "#FEF2F2","#991B1B","#FECACA",f"⚠️ {dias_rest}d"
+            elif dias_rest <= 30:
+                bg,tc,bc,tag = "#FFFBEB","#92400E","#FDE68A",f"🔔 {dias_rest}d"
+            else:
+                bg,tc,bc,tag = "#F8FAFC","#475569","#E2E8F0",f"📅 {dias_rest}d"
+            with cols_cal_e[i]:
+                st.markdown(f"""
+                <div style="background:{bg};border:1px solid {bc};border-top:3px solid {tc};
+                            border-radius:8px;padding:10px;text-align:center">
+                    <div style="font-size:15px;font-weight:800;color:{tc}">{label}</div>
+                    <div style="font-size:10px;color:{tc};margin:2px 0">{periodo}</div>
+                    <div style="font-size:11px;font-weight:600;color:{tc}">{fecha_lim.strftime('%d/%m/%Y')}</div>
+                    <div style="background:rgba(0,0,0,.06);border-radius:4px;padding:2px 5px;
+                                margin-top:5px;font-size:11px;color:{tc};font-weight:700">{tag}</div>
+                </div>""", unsafe_allow_html=True)
+
         if nivel in ["rojo","amarillo"]:
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("📋  Ingresar mi reporte →", type="primary"):
@@ -535,6 +582,65 @@ def pg_dashboard():
         rows.append(row)
     import pandas as pd
     st.dataframe(pd.DataFrame(rows),use_container_width=True,hide_index=True)
+
+    # ── Calendario de reportes ────────────────────────────────────────
+    st.markdown("<hr style='border-color:#f1f5f9;margin:16px 0'>", unsafe_allow_html=True)
+    st.markdown('<div style="font-size:13px;font-weight:600;color:#1F3864;margin-bottom:10px">📅 Calendario de reportes — Lineamiento MINSAL v1.0</div>', unsafe_allow_html=True)
+
+    import datetime as _dt
+    hoy = _dt.date.today()
+    plazos = [
+        ("R1","1° Reporte","Enero–Marzo 2026",    _dt.date(2026,7,31)),
+        ("R2","2° Reporte","Abril–Junio 2026",     _dt.date(2026,8,31)),
+        ("R3","3° Reporte","Jul–Sep 2026",          _dt.date(2026,11,30)),
+        ("R4","4° Reporte","Oct–Dic 2026",          _dt.date(2027,2,28)),
+    ]
+    r1_ent = len([r for r in reports if r.get("reporte_id")=="R1" and r.get("estado")=="enviado"])
+    r2_ent = len([r for r in reports if r.get("reporte_id")=="R2" and r.get("estado")=="enviado"])
+    r3_ent = len([r for r in reports if r.get("reporte_id")=="R3" and r.get("estado")=="enviado"])
+    r4_ent = len([r for r in reports if r.get("reporte_id")=="R4" and r.get("estado")=="enviado"])
+    enviados_por_periodo = {"R1":r1_ent,"R2":r2_ent,"R3":r3_ent,"R4":r4_ent}
+    total_req = len(rojos)+len(amarillos)
+
+    cols_cal = st.columns(4)
+    for i,(rid,label,periodo,fecha_lim) in enumerate(plazos):
+        dias_rest = (fecha_lim - hoy).days
+        env = enviados_por_periodo[rid]
+        if env == total_req:
+            bg,tc,bc,estado_txt = "#F0FDF4","#166534","#BBF7D0","✅ COMPLETO"
+        elif dias_rest < 0:
+            bg,tc,bc,estado_txt = "#FEF2F2","#991B1B","#FECACA","⛔ VENCIDO"
+        elif dias_rest <= 14:
+            bg,tc,bc,estado_txt = "#FEF2F2","#991B1B","#FECACA",f"⚠️ {dias_rest}d restantes"
+        elif dias_rest <= 30:
+            bg,tc,bc,estado_txt = "#FFFBEB","#92400E","#FDE68A",f"🔔 {dias_rest}d restantes"
+        else:
+            bg,tc,bc,estado_txt = "#F8FAFC","#475569","#E2E8F0",f"📅 {dias_rest}d restantes"
+        with cols_cal[i]:
+            st.markdown(f"""
+            <div style="background:{bg};border:1px solid {bc};border-top:3px solid {tc};
+                        border-radius:8px;padding:12px;text-align:center">
+                <div style="font-size:18px;font-weight:800;color:{tc}">{label}</div>
+                <div style="font-size:11px;color:{tc};margin:3px 0">{periodo}</div>
+                <div style="font-size:12px;font-weight:600;color:{tc}">
+                    {fecha_lim.strftime('%d/%m/%Y')}
+                </div>
+                <div style="background:rgba(0,0,0,.06);border-radius:4px;padding:3px 6px;
+                            margin-top:6px;font-size:11px;color:{tc};font-weight:600">
+                    {estado_txt}
+                </div>
+                <div style="font-size:11px;color:{tc};margin-top:4px">
+                    {env}/{total_req} enviados
+                </div>
+            </div>""", unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;
+                padding:9px 14px;margin-top:8px;font-size:11px;color:#1E40AF">
+        <strong>Nota MINSAL:</strong> Los antecedentes se remiten de manera consolidada por el Servicio de Salud,
+        incluyendo únicamente establecimientos en categoría Amarilla y Roja. Las fechas pueden ajustarse
+        según disponibilidad de ChileCompra.
+    </div>""", unsafe_allow_html=True)
 
     with st.expander("📊 Contexto nacional — 224 establecimientos MINSAL"):
         nc1,nc2,nc3,nc4=st.columns(4)
@@ -748,18 +854,72 @@ def pg_exportar():
 
     rows=[]
     for r in r_p:
-        med=r.get("medidas",{}); med_txt=", ".join(k.replace("_"," ").title() for k,v in med.items() if v)
-        rows.append({"Servicio de Salud":"Metropolitano Occidente","Establecimiento":r.get("establecimiento_nombre",""),"Código DEIS":ESTABLECIMIENTOS.get(r["establecimiento_id"],{}).get("codigo_deis",""),"RUT":ESTABLECIMIENTOS.get(r["establecimiento_id"],{}).get("rut",""),"Nivel de Riesgo":r.get("nivel_riesgo","").capitalize(),"Período informado":r.get("periodo",""),"% TD 2026 (MINSAL)":r.get("pct_2026",""),"% TD 2025":r.get("pct_2025",""),"Brecha vs meta (pp)":ESTABLECIMIENTOS.get(r["establecimiento_id"],{}).get("brecha",""),"Variación vs 2025 (pp)":ESTABLECIMIENTOS.get(r["establecimiento_id"],{}).get("variacion",""),"Monto TD ($CLP)":r.get("monto_td",0),"N° procesos TD":r.get("n_proc",0),"Principales causas":"; ".join(r.get("causas_sel",[])) + ("\n\n"+r.get("causas_desc","") if r.get("causas_desc") else ""),"Medidas implementadas":med_txt+("\n\n"+r.get("med_desc","") if r.get("med_desc") else ""),"Compromisos":r.get("compromisos",""),"Meta próximo período (%)":r.get("meta_prox",""),"Responsable":r.get("resp_nombre",""),"Cargo":r.get("resp_cargo",""),"Correo":r.get("resp_email",""),"Fecha comprometida":r.get("fecha_comp",""),"Observaciones":r.get("obs",""),"Estado":r.get("estado","").upper(),"Fecha ingreso":r.get("fecha_ingreso","")[:16]})
-
+        eid = r["establecimiento_id"]
+        estab_d = ESTABLECIMIENTOS.get(eid, {})
+        med = r.get("medidas",{})
+        med_labels = {"pac":"Actualizacion Plan Anual Compras","lic":"Inicio procesos licitatorios","cm":"Migracion Convenio Marco","cenabast":"Gestion CENABAST","cap":"Capacitacion equipo Ley 21.634","venc":"Control vencimiento contratos"}
+        med_txt = "; ".join(lbl for k,lbl in med_labels.items() if med.get(k))
+        if r.get("med_desc"): med_txt = (med_txt + " | " if med_txt else "") + r.get("med_desc","")
+        causas_txt = "; ".join(r.get("causas_sel",[]))
+        if r.get("causas_desc"): causas_txt = (causas_txt + " | " if causas_txt else "") + r.get("causas_desc","")
+        rows.append({
+            "Servicio de salud":          "Metropolitano Occidente",
+            "Establecimiento":            r.get("establecimiento_nombre",""),
+            "Nivel de Riesgo":            r.get("nivel_riesgo","").capitalize(),
+            "Periodo informado":          r.get("periodo",""),
+            "Principales causas":         causas_txt,
+            "Medidas implementadas":      med_txt,
+            "Compromisos":                r.get("compromisos",""),
+            "Responsable":                r.get("resp_nombre","") + " - " + r.get("resp_cargo",""),
+            "Fecha comprometida":         r.get("fecha_comp",""),
+            "Codigo DEIS":                estab_d.get("codigo_deis",""),
+            "RUT":                        estab_d.get("rut",""),
+            "Pct TD 2026 MINSAL":         r.get("pct_2026",""),
+            "Pct TD 2025":                r.get("pct_2025",""),
+            "Brecha pp":                  estab_d.get("brecha",""),
+            "Variacion pp":               estab_d.get("variacion",""),
+            "Denominador CLP":            estab_d.get("denominador",""),
+            "Numerador CLP":              estab_d.get("numerador",""),
+            "Monto TD periodo CLP":       r.get("monto_td",0),
+            "N procesos TD":              r.get("n_proc",0),
+            "Correo responsable":         r.get("resp_email",""),
+            "Meta proximo periodo":        r.get("meta_prox",""),
+            "Observaciones":              r.get("obs",""),
+            "Estado reporte":             r.get("estado","").upper(),
+            "Fecha ingreso":              r.get("fecha_ingreso","")[:16],
+        })
     df=pd.DataFrame(rows)
     st.dataframe(df,use_container_width=True,hide_index=True)
     st.markdown(f"**{len(rows)} establecimiento(s)** · Generado: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}")
 
+    import openpyxl as _xl
+    from openpyxl.styles import Font as _Ft, PatternFill as _PF, Alignment as _Al, Border as _Bd, Side as _Sd
     buf=io.BytesIO()
     with pd.ExcelWriter(buf,engine="openpyxl") as w:
-        df.to_excel(w,sheet_name="Anexo N°1 MINSAL",index=False)
-        resumen=pd.DataFrame([{"Establecimiento":e["nombre"],"Nivel":e["nivel"].capitalize(),"% TD 2026":e["pct_2026"],"Enviado":"✅" if any(r.get("establecimiento_id")==eid and r.get("estado")=="enviado" and r.get("reporte_id")==ps for r in reports) else "⬜"} for eid,e in ESTABLECIMIENTOS.items()])
-        resumen.to_excel(w,sheet_name="Resumen SSMOC",index=False)
+        # Hoja 1: Anexo N°1 — columnas exactas MINSAL
+        cols_minsal = ["Servicio de salud","Establecimiento","Nivel de Riesgo","Periodo informado",
+                       "Principales causas","Medidas implementadas","Compromisos","Responsable","Fecha comprometida"]
+        df_minsal = df[cols_minsal] if all(c in df.columns for c in cols_minsal) else df
+        df_minsal.to_excel(w, sheet_name="Anexo N1 MINSAL", index=False)
+        ws_a = w.sheets["Anexo N1 MINSAL"]
+        for cell in ws_a[1]:
+            cell.font = _Ft(bold=True, color="FFFFFF", name="Arial", size=10)
+            cell.fill = _PF("solid", fgColor="1F3864")
+            cell.alignment = _Al(horizontal="center", vertical="center", wrap_text=True)
+        ws_a.row_dimensions[1].height = 30
+        for col in ws_a.columns:
+            ws_a.column_dimensions[col[0].column_letter].width = 30
+        # Hoja 2: Datos completos
+        df.to_excel(w, sheet_name="Datos completos", index=False)
+        # Hoja 3: Resumen red
+        resumen=pd.DataFrame([{
+            "Establecimiento":e["nombre"],"Nivel":e["nivel"].capitalize(),
+            "% TD 2026":e["pct_2026"],"% TD 2025":e["pct_2025"],
+            "Brecha (pp)":e["brecha"],"Variacion (pp)":e["variacion"],
+            "Denominador ($)":e["denominador"],"Numerador ($)":e["numerador"],
+            "Enviado 1R":"Si" if any(r.get("establecimiento_id")==eid and r.get("estado")=="enviado" and r.get("reporte_id")==ps for r in reports) else "No"
+        } for eid,e in ESTABLECIMIENTOS.items()])
+        resumen.to_excel(w, sheet_name="Resumen SSMOC", index=False)
     buf.seek(0)
     fecha=datetime.datetime.now().strftime("%Y%m%d_%H%M")
     c1,c2=st.columns(2)
