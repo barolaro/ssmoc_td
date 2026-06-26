@@ -389,6 +389,88 @@ def pg_dashboard():
     import plotly.graph_objects as go
     import pandas as pd
 
+    user = st.session_state.user
+    es_admin = user["rol"] == "admin"
+    eid_user = user.get("establecimiento")
+
+    # ── Vista ESTABLECIMIENTO: solo ve su propio establecimiento ──────
+    if not es_admin and eid_user:
+        e = ESTABLECIMIENTOS.get(eid_user, {})
+        nivel = e.get("nivel","verde")
+        nb = {"rojo":"#FEF2F2","amarillo":"#FFFBEB","verde":"#F0FDF4"}.get(nivel,"#F0FDF4")
+        nt = {"rojo":"#991B1B","amarillo":"#92400E","verde":"#166534"}.get(nivel,"#166534")
+        nc = {"rojo":"#E24B4A","amarillo":"#F59E0B","verde":"#22C55E"}.get(nivel,"#22C55E")
+        va = f"+{e.get('variacion',0):.2f}" if e.get("variacion",0)>0 else f"{e.get('variacion',0):.2f}"
+
+        page_header(f"Mi establecimiento — {e.get('nombre_corto','')}",
+                    f"Datos oficiales MINSAL · Período enero–junio 2026 · Meta institucional ≤ 16%")
+
+        c1,c2,c3,c4 = st.columns(4)
+        kpi_card(c1,"Numerador CLP", f"${e.get('numerador',0)/1e9:.1f} MM", "Monto TD recepción conforme","#0C447C")
+        kpi_card(c2,"Denominador CLP", f"${e.get('denominador',0)/1e9:.1f} MM", "Total todas las modalidades","#0C447C")
+        kpi_card(c3,"% TD 2026", f"{e.get('pct_2026',0):.2f}%",
+                 f"Brecha {'+' if e.get('brecha',0)>0 else ''}{e.get('brecha',0):.2f} pp vs meta",
+                 "#A32D2D" if nivel=="rojo" else "#92400E" if nivel=="amarillo" else "#166534")
+        kpi_card(c4,"% TD 2025 mismo período", f"{e.get('pct_2025',0):.2f}%", f"Variación: {va} pp","#0C447C")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Estado con instrucciones
+        acciones = {
+            "rojo": "Elaborar plan de acción con medidas correctivas y plazos · Reunión técnica de seguimiento · Monitoreo mensual hasta normalización · Ingresar reporte con causas y compromisos.",
+            "amarillo": "Analizar causas del resultado · Identificar compras para migrar a mecanismos competitivos · Ingresar reporte con medidas implementadas.",
+            "verde": "Mantener buenas prácticas · No se requiere remitir antecedentes a la Subsecretaría de Redes Asistenciales."
+        }
+        titulo_estado = {"rojo":"Requiere plan de acción urgente","amarillo":"Monitoreo reforzado","verde":"Mantener buenas prácticas"}
+        st.markdown(f"""
+        <div style="background:{nb};border-left:5px solid {nc};border-radius:0 8px 8px 0;
+                    border:1px solid {nc};padding:14px 18px;margin-bottom:16px">
+            <div style="font-size:14px;font-weight:700;color:{nt};margin-bottom:6px">
+                Nivel {nivel.upper()} — {titulo_estado[nivel]}
+            </div>
+            <div style="font-size:12px;color:{nt};line-height:1.7">{acciones[nivel]}</div>
+        </div>""", unsafe_allow_html=True)
+
+        # Gráfico comparativo 2025 vs 2026
+        st.markdown('<div style="font-size:13px;font-weight:600;color:#1F3864;margin-bottom:8px">Comparación % TD — 2025 vs 2026</div>', unsafe_allow_html=True)
+        fig = go.Figure()
+        fig.add_trace(go.Bar(name="% TD 2025", x=["Mismo período 2025"], y=[e.get("pct_2025",0)], marker_color="#CBD5E1", text=[f"{e.get('pct_2025',0):.1f}%"], textposition="outside"))
+        fig.add_trace(go.Bar(name="% TD 2026", x=["Acumulado 2026"], y=[e.get("pct_2026",0)], marker_color=nc, text=[f"{e.get('pct_2026',0):.1f}%"], textposition="outside"))
+        fig.add_hline(y=16, line_dash="dash", line_color="#1F3864", line_width=1.5, annotation_text="Meta 16%", annotation_font_color="#1F3864", annotation_position="top right")
+        fig.update_layout(height=220, margin=dict(l=0,r=80,t=20,b=20), plot_bgcolor="white", paper_bgcolor="white",
+                          showlegend=True, legend=dict(orientation="h",y=1.1,x=0),
+                          yaxis=dict(range=[0,max(e.get("pct_2026",0)+15,30)], gridcolor="#f1f5f9", title="% TD"),
+                          font=dict(size=12,family="Arial"))
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Estado de mis reportes
+        rpts = load_reports()
+        st.markdown('<div style="font-size:13px;font-weight:600;color:#1F3864;margin-bottom:8px">Estado de mis reportes</div>', unsafe_allow_html=True)
+        cols_p = st.columns(4)
+        for i, p in enumerate(PERIODOS):
+            r = next((x for x in rpts if x.get("establecimiento_id")==eid_user and x.get("reporte_id")==p["id"]), None)
+            estado = r.get("estado","pendiente") if r else "pendiente"
+            icon = "✅" if estado=="enviado" else "📝" if estado=="borrador" else "⬜"
+            bg_p = "#F0FDF4" if estado=="enviado" else "#FFFBEB" if estado=="borrador" else "#F8FAFC"
+            bc_p = "#BBF7D0" if estado=="enviado" else "#FDE68A" if estado=="borrador" else "#E2E8F0"
+            tc_p = "#166534" if estado=="enviado" else "#92400E" if estado=="borrador" else "#64748b"
+            with cols_p[i]:
+                st.markdown(f"""
+                <div style="background:{bg_p};border:1px solid {bc_p};border-radius:8px;padding:12px;text-align:center">
+                    <div style="font-size:24px">{icon}</div>
+                    <div style="font-size:12px;font-weight:600;color:{tc_p};margin-top:4px">{p["label"]}</div>
+                    <div style="font-size:10px;color:{tc_p}">{p["periodo"]}</div>
+                    <div style="font-size:10px;color:{tc_p}">Plazo: {p["fecha_limite"]}</div>
+                    <div style="font-size:11px;font-weight:700;color:{tc_p};margin-top:4px">{estado.upper()}</div>
+                </div>""", unsafe_allow_html=True)
+
+        if nivel in ["rojo","amarillo"]:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("📋  Ingresar mi reporte →", type="primary"):
+                st.session_state.page="mis_reportes"; st.rerun()
+        return
+
+    # ── Vista ADMIN: red completa ─────────────────────────────────────
     page_header("Monitoreo Trato Directo — Red SSMOC 2026",
                 "Lineamiento MINSAL v1.0 · Junio 2026 · Fuente: ChileCompra — OC aceptadas con recepción conforme, monto neto CLP")
 
