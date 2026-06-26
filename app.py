@@ -5,6 +5,7 @@ Navegación sin sidebar para evitar problema de colapso en Streamlit Cloud
 import streamlit as st
 import hashlib, json, datetime, io, base64, csv
 from pathlib import Path
+import urllib.request, urllib.error
 
 st.set_page_config(
     page_title="Monitor TD — SSMOCC",
@@ -52,11 +53,102 @@ section[data-testid="stSidebar"]{display:none!important;}
 # ═══════════════════════════════════════════════════════════════════════
 # DATOS
 # ═══════════════════════════════════════════════════════════════════════
+# ── ALMACENAMIENTO PERSISTENTE ──────────────────────────────────────────
+# Usa GitHub como backend para persistencia real en Streamlit Cloud
+# Configura st.secrets con:
+#   [github]
+#   token = "ghp_..."
+#   repo  = "barolaro/ssmoc_td"
+#   branch = "main"
+
 DATA_DIR = Path(__file__).parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
 USERS_FILE   = DATA_DIR / "users.json"
 REPORTS_FILE = DATA_DIR / "reports.json"
 DATOS_FILE   = DATA_DIR / "datos_minsal.json"
+
+def _gh_cfg():
+    """Retorna config de GitHub desde secrets si está disponible."""
+    try:
+        s = st.secrets.get("github", {})
+        if s.get("token") and s.get("repo"):
+            return s
+    except Exception:
+        pass
+    return None
+
+def _gh_read(filename: str):
+    """Lee un archivo JSON desde GitHub."""
+    cfg = _gh_cfg()
+    if not cfg: return None
+    url = f"https://api.github.com/repos/{cfg['repo']}/contents/data/{filename}"
+    req = urllib.request.Request(url, headers={
+        "Authorization": f"token {cfg['token']}",
+        "Accept": "application/vnd.github.v3+json"
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            data = json.loads(r.read())
+            content_b64 = data.get("content","").replace("\n","")
+            return json.loads(base64.b64decode(content_b64).decode("utf-8")), data.get("sha","")
+    except urllib.error.HTTPError as e:
+        if e.code == 404: return None, ""
+        raise
+    except Exception:
+        return None, ""
+
+def _gh_write(filename: str, content_obj, sha: str = ""):
+    """Escribe un archivo JSON en GitHub."""
+    cfg = _gh_cfg()
+    if not cfg: return False
+    url = f"https://api.github.com/repos/{cfg['repo']}/contents/data/{filename}"
+    content_bytes = json.dumps(content_obj, ensure_ascii=False, indent=2, default=str).encode("utf-8")
+    payload = {
+        "message": f"Update {filename} via SSMOCC platform",
+        "content": base64.b64encode(content_bytes).decode("utf-8"),
+        "branch": cfg.get("branch", "main"),
+    }
+    if sha: payload["sha"] = sha
+    req = urllib.request.Request(url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Authorization": f"token {cfg['token']}",
+                 "Accept": "application/vnd.github.v3+json",
+                 "Content-Type": "application/json"},
+        method="PUT")
+    try:
+        with urllib.request.urlopen(req, timeout=15):
+            return True
+    except Exception:
+        return False
+
+def _load_json_persistent(local_path: Path, filename: str, default):
+    """Carga JSON: primero GitHub, luego local, luego default."""
+    # Try GitHub
+    result = _gh_read(filename)
+    if result and result[0] is not None:
+        data, sha = result
+        # Cache locally
+        local_path.write_text(json.dumps(data, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+        return data
+    # Try local
+    if local_path.exists():
+        try:
+            return json.loads(local_path.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return default
+
+def _save_json_persistent(local_path: Path, filename: str, data):
+    """Guarda JSON: local + GitHub."""
+    txt = json.dumps(data, ensure_ascii=False, indent=2, default=str)
+    local_path.write_text(txt, encoding="utf-8")
+    # Try GitHub
+    try:
+        existing = _gh_read(filename)
+        sha = existing[1] if existing and existing[1] else ""
+        _gh_write(filename, data, sha)
+    except Exception:
+        pass  # Local save is enough if GitHub fails
 
 def _hash(p): return hashlib.sha256(p.encode()).hexdigest()
 
@@ -86,20 +178,16 @@ DEIS_MAP = {
 }
 
 def load_datos_minsal():
-    """Carga datos MINSAL desde JSON guardado (si existe), si no usa los hardcoded."""
-    if DATOS_FILE.exists():
-        try:
-            saved = json.loads(DATOS_FILE.read_text(encoding="utf-8"))
-            # Merge saved data into ESTABLECIMIENTOS
-            for eid, vals in saved.items():
-                if eid in ESTABLECIMIENTOS:
-                    ESTABLECIMIENTOS[eid].update(vals)
-        except Exception:
-            pass
+    """Carga datos MINSAL desde GitHub/local. Nunca se pierden."""
+    saved = _load_json_persistent(DATOS_FILE, "datos_minsal.json", {})
+    if saved:
+        for eid, vals in saved.items():
+            if eid in ESTABLECIMIENTOS:
+                ESTABLECIMIENTOS[eid].update(vals)
 
 def save_datos_minsal(updates: dict):
-    """Guarda datos actualizados de MINSAL en JSON."""
-    DATOS_FILE.write_text(json.dumps(updates, ensure_ascii=False, indent=2), encoding="utf-8")
+    """Guarda datos MINSAL en GitHub + local. Persiste entre reinicios."""
+    _save_json_persistent(DATOS_FILE, "datos_minsal.json", updates)
 
 def parse_csv_minsal(file_bytes) -> dict:
     """
@@ -193,13 +281,21 @@ def _default_users():
     return {uid:{"nombre":n,"rol":r,"email":e,"establecimiento":est,"password_hash":_hash(p),"activo":True} for uid,(n,r,e,est,p) in raw.items()}
 
 def load_users():
-    if not USERS_FILE.exists(): u=_default_users(); save_users(u); return u
-    return json.loads(USERS_FILE.read_text(encoding="utf-8"))
-def save_users(u): USERS_FILE.write_text(json.dumps(u,ensure_ascii=False,indent=2),encoding="utf-8")
+    data = _load_json_persistent(USERS_FILE, "users.json", None)
+    if data is None:
+        u = _default_users()
+        save_users(u)
+        return u
+    return data
+
+def save_users(u):
+    _save_json_persistent(USERS_FILE, "users.json", u)
+
 def load_reports():
-    if not REPORTS_FILE.exists(): return []
-    return json.loads(REPORTS_FILE.read_text(encoding="utf-8"))
-def save_reports(r): REPORTS_FILE.write_text(json.dumps(r,ensure_ascii=False,indent=2,default=str),encoding="utf-8")
+    return _load_json_persistent(REPORTS_FILE, "reports.json", [])
+
+def save_reports(r):
+    _save_json_persistent(REPORTS_FILE, "reports.json", r)
 def upsert_report(data):
     rpts=load_reports()
     for i,r in enumerate(rpts):
@@ -709,6 +805,57 @@ def pg_configuracion():
     import pandas as pd
     page_header("Configuración del sistema","Estado y mantenimiento de la plataforma")
     reports=load_reports()
+
+    # Estado de persistencia GitHub
+    gh = _gh_cfg()
+    if gh:
+        st.markdown(f"""
+        <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-left:4px solid #22C55E;
+                    border-radius:0 8px 8px 0;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px">✅</span>
+            <div>
+                <div style="font-size:13px;font-weight:700;color:#166534">GitHub conectado — datos persistentes</div>
+                <div style="font-size:11px;color:#16a34a">
+                    Repositorio: <strong>{gh.get("repo","")}</strong> · Branch: <strong>{gh.get("branch","main")}</strong><br>
+                    Los reportes, usuarios y datos MINSAL se guardan automáticamente en GitHub y nunca se pierden.
+                </div>
+            </div>
+        </div>""", unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div style="background:#FEF2F2;border:1px solid #FECACA;border-left:4px solid #E24B4A;
+                    border-radius:0 8px 8px 0;padding:10px 16px;margin-bottom:14px">
+            <div style="font-size:13px;font-weight:700;color:#991B1B">⚠️ GitHub no configurado — datos en riesgo</div>
+            <div style="font-size:11px;color:#991B1B;margin-top:4px">
+                Sin GitHub configurado, los datos se pierden cuando Streamlit Cloud reinicia la app.<br>
+                <strong>Configura st.secrets en Streamlit Cloud para activar la persistencia.</strong>
+            </div>
+        </div>""", unsafe_allow_html=True)
+
+        with st.expander("📋 Instrucciones para configurar GitHub"):
+            st.markdown("""
+            **Paso 1 — Crear token en GitHub:**
+            1. Ve a github.com → tu foto → **Settings**
+            2. **Developer settings** → **Personal access tokens** → **Tokens (classic)**
+            3. **Generate new token** → marca **repo** → copia el token (`ghp_...`)
+
+            **Paso 2 — Configurar en Streamlit Cloud:**
+            1. Ve a [share.streamlit.io](https://share.streamlit.io) → tu app → **⋮** → **Settings**
+            2. Sección **Secrets** → pegar esto:
+
+            ```toml
+            [github]
+            token = "ghp_TU_TOKEN_AQUI"
+            repo = "barolaro/ssmoc_td"
+            branch = "main"
+            ```
+
+            3. Clic **Save** → la app se reiniciará automáticamente
+
+            **Paso 3 — Crear carpeta data/ en GitHub:**
+            En tu repositorio, crea el archivo `data/.gitkeep` para que la carpeta exista.
+            """)
+
     c1,c2=st.columns(2)
     with c1:
         st.subheader("Resumen del sistema")

@@ -4,9 +4,7 @@ __pycache__/
 .env
 venv/
 .venv/
-data/users.json
-data/reports.json
 .DS_Store
 *.egg-info/
-dist/
-build/
+# No ignorar data/ porque necesitamos .gitkeep en GitHub
+# Los JSON de datos se guardan via API, no via git push
