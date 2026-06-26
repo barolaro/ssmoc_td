@@ -482,7 +482,7 @@ def render_topbar():
     st.markdown("<hr style='margin:0 0 12px;border-color:#e2e8f0'>",unsafe_allow_html=True)
     selected_year_report_controls()
     st.markdown('''<div style="text-align:right;font-size:10px;color:#94a3b8;margin-top:-10px;padding-right:4px;margin-bottom:4px">
-        Desarrollado por <strong style="color:#64748b">Bayron Retamal González</strong> &nbsp;·&nbsp; Subdirección RFF &nbsp;·&nbsp; SSMOCC 2026
+        Desarrollado por <strong style="color:#64748b">Bayron Retamal González</strong> &nbsp;·&nbsp; Subdirección RRFF &nbsp;·&nbsp; SSMOCC 2026
     </div>''', unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════════════
