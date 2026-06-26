@@ -426,6 +426,42 @@ def upsert_report(data):
 def delete_report(eid,rid,year=None):
     year = year or st.session_state.get("selected_year", 2026)
     save_reports([r for r in load_reports() if not(r.get("year", 2026)==year and r["establecimiento_id"]==eid and r["reporte_id"]==rid)])
+
+def _append_audit_entry(report: dict, accion: str, detalle: str = "") -> dict:
+    """Agrega trazabilidad al reporte sin romper compatibilidad con registros antiguos."""
+    user = st.session_state.get("user", {}) or {}
+    entry = {
+        "fecha": datetime.datetime.now().isoformat(timespec="seconds"),
+        "usuario": user.get("username", "sistema"),
+        "nombre": user.get("nombre", ""),
+        "accion": accion,
+        "detalle": detalle,
+    }
+    bitacora = list(report.get("bitacora", []) or [])
+    bitacora.append(entry)
+    report["bitacora"] = bitacora
+    return report
+
+def habilitar_edicion_reporte(report: dict, motivo: str) -> dict:
+    """Devuelve un reporte enviado a borrador para corrección excepcional por administrador."""
+    user = st.session_state.get("user", {}) or {}
+    report["estado"] = "borrador"
+    report["bloqueado"] = False
+    report["habilitado_edicion"] = True
+    report["habilitado_por"] = user.get("username", "admin")
+    report["habilitado_nombre"] = user.get("nombre", "Administrador")
+    report["fecha_habilitacion"] = datetime.datetime.now().isoformat(timespec="seconds")
+    report["motivo_habilitacion"] = (motivo or "Habilitación excepcional para corrección.").strip()
+    return _append_audit_entry(report, "Habilita edición", report["motivo_habilitacion"])
+
+def cerrar_reporte_enviado(report: dict, accion: str = "Envía reporte") -> dict:
+    """Marca el reporte como enviado y bloqueado para edición del establecimiento."""
+    report["estado"] = "enviado"
+    report["bloqueado"] = True
+    report["habilitado_edicion"] = False
+    report["fecha_envio"] = datetime.datetime.now().isoformat(timespec="seconds")
+    return _append_audit_entry(report, accion, "Reporte cerrado para edición del establecimiento.")
+
 def authenticate(u,p):
     users=load_users(); usr=users.get(u.strip().lower())
     if usr and usr.get("activo") and usr["password_hash"]==_hash(p): return {**usr,"username":u.strip().lower()}
@@ -1007,60 +1043,173 @@ def pg_dashboard():
 # ═══════════════════════════════════════════════════════════════════════
 
 def pg_todos_reportes():
-    if st.session_state.user["rol"]!="admin": st.error("Solo administradores."); return
+    if st.session_state.user["rol"] != "admin":
+        st.error("Solo administradores.")
+        return
     import pandas as pd
-    page_header("Todos los reportes","Vista consolidada y gestión — solo administradores")
+
+    page_header("Todos los reportes", "Vista consolidada, desbloqueo excepcional y trazabilidad — solo administradores")
     year = st.session_state.get("selected_year", 2026)
     rid = st.session_state.get("selected_report", "R1")
     apply_period_context(year, rid)
+
     if not periodo_tiene_datos(year, rid):
         mensaje_periodo_sin_datos(year, rid)
         return
-    reports=load_reports()
-    c1,c2,c3=st.columns(3)
-    fp=c1.selectbox("Período",["Todos"]+[p["id"] for p in PERIODOS],format_func=lambda x:"Todos" if x=="Todos" else next(p["label"]+" — "+p["periodo"] for p in PERIODOS if p["id"]==x))
-    fn=c2.selectbox("Nivel",["Todos","Rojo","Amarillo","Verde"])
-    fe=c3.selectbox("Estado",["Todos","Enviado","Borrador","Pendiente"])
-    st.subheader("Estado consolidado")
-    rows=[]
-    for eid,e in ESTABLECIMIENTOS.items():
-        if e["nivel"]=="verde": continue
-        row={"Establecimiento":e["nombre_corto"],"Nivel":e["nivel"].capitalize(),"% TD":f"{e['pct_2026']:.1f}%"}
-        for p in PERIODOS:
-            r=next((x for x in reports if x.get("establecimiento_id")==eid and x.get("reporte_id")==p["id"]),None)
-            row[p["label"]]="✅ Enviado" if r and r.get("estado")=="enviado" else "📝 Borrador" if r else "⬜ Pendiente"
+
+    reports_all = load_reports()
+    # Importante: todo se filtra por año para evitar mezclar períodos/años antiguos.
+    reports = [r for r in reports_all if int(r.get("year", 2026)) == int(year)]
+
+    c1, c2, c3 = st.columns(3)
+    fp = c1.selectbox(
+        "Período",
+        ["Todos"] + [p["id"] for p in PERIODOS if periodo_tiene_datos(year, p["id"])],
+        format_func=lambda x: "Todos" if x == "Todos" else next(p["label"] + " — " + p["periodo"] for p in PERIODOS if p["id"] == x),
+    )
+    fn = c2.selectbox("Nivel", ["Todos", "Rojo", "Amarillo", "Verde"])
+    fe = c3.selectbox("Estado", ["Todos", "Enviado", "Borrador", "Pendiente"])
+
+    st.subheader("Estado consolidado del año/período seleccionado")
+    rows = []
+    for eid, e in ESTABLECIMIENTOS.items():
+        if e["nivel"] == "verde":
+            continue
+        row = {
+            "Establecimiento": e["nombre_corto"],
+            "Nivel": e["nivel"].capitalize(),
+            "% TD": f"{e['pct_2026']:.1f}%",
+        }
+        for pinfo in PERIODOS:
+            if not periodo_tiene_datos(year, pinfo["id"]):
+                row[pinfo["label"]] = "🔒 Sin carga"
+                continue
+            r = next((x for x in reports if x.get("establecimiento_id") == eid and x.get("reporte_id") == pinfo["id"]), None)
+            if r and r.get("estado") == "enviado":
+                row[pinfo["label"]] = "✅ Enviado / bloqueado"
+            elif r and r.get("estado") == "borrador":
+                row[pinfo["label"]] = "📝 Borrador / editable"
+            else:
+                row[pinfo["label"]] = "⬜ Pendiente"
         rows.append(row)
-    st.dataframe(pd.DataFrame(rows),use_container_width=True,hide_index=True)
+    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+
     st.divider()
-    st.subheader("Detalle de reportes")
-    filtered=reports
-    if fp!="Todos": filtered=[r for r in filtered if r.get("reporte_id")==fp]
-    if fn!="Todos": filtered=[r for r in filtered if r.get("nivel_riesgo","").lower()==fn.lower()]
-    if fe!="Todos": filtered=[r for r in filtered if r.get("estado","").lower()==fe.lower()]
-    if not filtered: st.info("No hay reportes con los filtros seleccionados."); return
-    for r in sorted(filtered,key=lambda x:(x.get("reporte_id",""),x.get("nivel_riesgo",""))):
-        estado=r.get("estado","borrador")
-        icon="✅" if estado=="enviado" else "📝"
-        with st.expander(f"{icon} {r.get('establecimiento_nombre','')[:45]} — {r.get('periodo_label','')} — {estado.upper()}"):
-            ca,cb,cc,cd=st.columns(4)
-            ca.metric("Nivel",r.get("nivel_riesgo","").capitalize()); cb.metric("% TD 2026",f"{r.get('pct_2026',0):.2f}%")
-            cc.metric("% TD período",f"{r.get('pct_per',0):.2f}%"); cd.metric("N° procesos TD",r.get("n_proc","—"))
-            if r.get("causas_sel"): st.markdown("**Causales:** "+", ".join(r["causas_sel"]))
-            if r.get("causas_desc"): st.markdown(f"**Descripción:** {r['causas_desc']}")
-            if r.get("compromisos"): st.markdown(f"**Compromisos:** {r['compromisos']}")
-            st.markdown(f"**Responsable:** {r.get('resp_nombre','')} · {r.get('resp_cargo','')} · {r.get('resp_email','')}  \n**Meta próximo período:** {r.get('meta_prox',16):.1f}% · **Fecha:** {r.get('fecha_comp','')}  \n**Ingresado:** {r.get('usuario','')} · {r.get('fecha_ingreso','')[:16]}")
-            col1,col2,_=st.columns([1,1,3])
+    st.subheader("Detalle y administración de reportes")
+
+    filtered = reports
+    if fp != "Todos":
+        filtered = [r for r in filtered if r.get("reporte_id") == fp]
+    if fn != "Todos":
+        filtered = [r for r in filtered if r.get("nivel_riesgo", "").lower() == fn.lower()]
+    if fe != "Todos":
+        filtered = [r for r in filtered if r.get("estado", "").lower() == fe.lower()]
+
+    if not filtered:
+        st.info("No hay reportes con los filtros seleccionados.")
+        return
+
+    for r in sorted(filtered, key=lambda x: (x.get("reporte_id", ""), x.get("nivel_riesgo", ""), x.get("establecimiento_nombre", ""))):
+        estado = r.get("estado", "borrador")
+        estado_txt = "✅ ENVIADO / BLOQUEADO" if estado == "enviado" else "📝 BORRADOR / EDITABLE"
+        icon = "✅" if estado == "enviado" else "📝"
+        pinfo = get_periodo_info(r.get("reporte_id", rid))
+        exp_label = f"{icon} {r.get('establecimiento_nombre','')[:55]} — {r.get('year', year)} · {r.get('periodo_label','')} — {estado_txt}"
+
+        with st.expander(exp_label):
+            ca, cb, cc, cd = st.columns(4)
+            ca.metric("Nivel", r.get("nivel_riesgo", "").capitalize())
+            cb.metric("% TD 2026", f"{r.get('pct_2026', 0):.2f}%")
+            cc.metric("% TD período", f"{r.get('pct_per', 0):.2f}%")
+            cd.metric("N° procesos TD", r.get("n_proc", "—"))
+
+            if r.get("causas_sel"):
+                st.markdown("**Causales:** " + ", ".join(r["causas_sel"]))
+            if r.get("causas_desc"):
+                st.markdown(f"**Descripción:** {r['causas_desc']}")
+            if r.get("compromisos"):
+                st.markdown(f"**Compromisos:** {r['compromisos']}")
+
+            st.markdown(
+                f"**Responsable:** {r.get('resp_nombre','')} · {r.get('resp_cargo','')} · {r.get('resp_email','')}  \n"
+                f"**Meta próximo período:** {r.get('meta_prox',16):.1f}% · **Fecha comprometida:** {_format_fecha_chile(r.get('fecha_comp',''))}  \n"
+                f"**Ingresado por:** {r.get('usuario','')} · {r.get('fecha_ingreso','')[:16]}"
+            )
+
+            if estado == "enviado":
+                st.markdown(
+                    """
+                    <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-left:5px solid #16A34A;border-radius:0 10px 10px 0;padding:12px 14px;margin:10px 0;color:#166534;font-size:12px;line-height:1.5">
+                        <strong>🔒 Reporte bloqueado para el establecimiento.</strong><br>
+                        Si el establecimiento informó un error, el administrador puede habilitarlo excepcionalmente para corrección. Al habilitarlo, el estado vuelve a <strong>Borrador</strong> y el establecimiento podrá editarlo y reenviarlo.
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    """
+                    <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-left:5px solid #1F3864;border-radius:0 10px 10px 0;padding:12px 14px;margin:10px 0;color:#1E3A8A;font-size:12px;line-height:1.5">
+                        <strong>📝 Reporte editable.</strong><br>
+                        El establecimiento puede modificarlo desde “Mis reportes”. Una vez reenviado, quedará nuevamente bloqueado.
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            # Vista previa institucional del Anexo N°1 que saldrá al Excel consolidado.
+            with st.expander("📄 Vista previa Anexo N°1 MINSAL", expanded=False):
+                render_anexo_minsal_preview(r, int(r.get("year", year)), pinfo)
+
+            # Bitácora del reporte.
+            bitacora = r.get("bitacora", []) or []
+            if bitacora:
+                with st.expander("🕓 Bitácora de trazabilidad", expanded=False):
+                    bdf = pd.DataFrame(bitacora)
+                    st.dataframe(bdf, use_container_width=True, hide_index=True)
+
+            st.markdown("---")
+            col1, col2, col3 = st.columns([1.3, 1.3, 2.4])
+
             with col1:
-                if estado=="borrador":
-                    if st.button("✅ Marcar enviado",key=f"s_{r['establecimiento_id']}_{r['reporte_id']}"):
-                        r["estado"]="enviado"; upsert_report(r); st.rerun()
+                if estado == "borrador":
+                    if st.button("✅ Marcar como enviado", key=f"s_{r.get('year',year)}_{r['establecimiento_id']}_{r['reporte_id']}", use_container_width=True):
+                        cerrar_reporte_enviado(r, "Administrador marca como enviado")
+                        upsert_report(r)
+                        st.success("Reporte marcado como enviado y bloqueado.")
+                        st.rerun()
                 else:
-                    if st.button("🔓 Habilitar edición",key=f"b_{r['establecimiento_id']}_{r['reporte_id']}"):
-                        r["estado"]="borrador"; upsert_report(r); st.rerun()
+                    st.button("🔒 Enviado", key=f"locked_{r.get('year',year)}_{r['establecimiento_id']}_{r['reporte_id']}", disabled=True, use_container_width=True)
+
             with col2:
-                if st.button("🗑️ Eliminar",key=f"d_{r['establecimiento_id']}_{r['reporte_id']}",type="secondary"):
-                    delete_report(r["establecimiento_id"], r["reporte_id"], r.get("year", st.session_state.get("selected_year", 2026)))
-                    st.warning(f"Reporte eliminado."); st.rerun()
+                if estado == "enviado":
+                    with st.popover("🔓 Habilitar edición", use_container_width=True):
+                        st.markdown("**Habilitación excepcional para corrección**")
+                        motivo = st.text_area(
+                            "Motivo de habilitación *",
+                            key=f"motivo_{r.get('year',year)}_{r['establecimiento_id']}_{r['reporte_id']}",
+                            placeholder="Ej.: El establecimiento informó por correo que debe corregir compromisos/fecha/responsable.",
+                            height=90,
+                        )
+                        if st.button("Confirmar habilitación", key=f"b_{r.get('year',year)}_{r['establecimiento_id']}_{r['reporte_id']}", type="primary"):
+                            if not motivo.strip():
+                                st.error("Debe ingresar el motivo de habilitación.")
+                            else:
+                                habilitar_edicion_reporte(r, motivo)
+                                upsert_report(r)
+                                st.success("Edición habilitada. El reporte volvió a estado borrador.")
+                                st.rerun()
+                else:
+                    st.button("🔓 Ya editable", key=f"editable_{r.get('year',year)}_{r['establecimiento_id']}_{r['reporte_id']}", disabled=True, use_container_width=True)
+
+            with col3:
+                with st.popover("🗑️ Eliminar reporte", use_container_width=True):
+                    st.warning("Esta acción elimina el reporte del período seleccionado.")
+                    confirmar = st.checkbox("Confirmo que deseo eliminar este reporte", key=f"confdel_{r.get('year',year)}_{r['establecimiento_id']}_{r['reporte_id']}")
+                    if st.button("Eliminar definitivamente", key=f"d_{r.get('year',year)}_{r['establecimiento_id']}_{r['reporte_id']}", type="secondary", disabled=not confirmar):
+                        delete_report(r["establecimiento_id"], r["reporte_id"], r.get("year", year))
+                        st.warning("Reporte eliminado.")
+                        st.rerun()
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -1527,10 +1676,23 @@ def pg_mis_reportes():
                     for e in errs: st.error(e)
                     ok = False
             if ok:
-                data = {"year":year,"establecimiento_id":eid_sel,"establecimiento_nombre":estab["nombre"],"reporte_id":periodo_id,"periodo":pinfo["periodo"],"periodo_label":pinfo["label"],"nivel_riesgo":nivel,"pct_2026":estab.get("pct_2026"),"pct_2025":estab.get("pct_2025"),"pct_per":pct_per,"monto_td":monto_td,"n_proc":n_proc,"causas_sel":causas_sel,"causas_desc":causas_desc,"medidas":med_sel,"med_desc":med_desc,"compromisos":compromisos,"meta_prox":meta_prox,"fecha_comp":str(fecha_comp),"resp_nombre":resp_nombre,"resp_cargo":resp_cargo,"resp_email":resp_email,"obs":obs,"estado":"enviado" if enviar else "borrador","usuario":user["username"],"fecha_ingreso":str(datetime.datetime.now().isoformat())}
-                upsert_report(data)
-                if enviar: st.success(f"✅ **Reporte {pinfo['label']}** enviado exitosamente."); st.balloons()
-                else: st.info("💾 Borrador guardado correctamente.")
+                data = {"year":year,"establecimiento_id":eid_sel,"establecimiento_nombre":estab["nombre"],"reporte_id":periodo_id,"periodo":pinfo["periodo"],"periodo_label":pinfo["label"],"nivel_riesgo":nivel,"pct_2026":estab.get("pct_2026"),"pct_2025":estab.get("pct_2025"),"pct_per":pct_per,"monto_td":monto_td,"n_proc":n_proc,"causas_sel":causas_sel,"causas_desc":causas_desc,"medidas":med_sel,"med_desc":med_desc,"compromisos":compromisos,"meta_prox":meta_prox,"fecha_comp":str(fecha_comp),"resp_nombre":resp_nombre,"resp_cargo":resp_cargo,"resp_email":resp_email,"obs":obs,"estado":"enviado" if enviar else "borrador","usuario":user["username"],"fecha_ingreso":str(datetime.datetime.now().isoformat(timespec="seconds"))}
+                # Mantener trazabilidad si el reporte fue habilitado por el administrador y luego corregido.
+                if existing:
+                    for keep_key in ["bitacora", "habilitado_por", "habilitado_nombre", "fecha_habilitacion", "motivo_habilitacion"]:
+                        if keep_key in existing:
+                            data[keep_key] = existing.get(keep_key)
+
+                if enviar:
+                    cerrar_reporte_enviado(data, "Envía reporte" if not existing else "Reenvía reporte corregido")
+                    upsert_report(data)
+                    st.success(f"✅ **Reporte {pinfo['label']}** enviado exitosamente. Quedó bloqueado para edición.")
+                    st.balloons()
+                else:
+                    data["bloqueado"] = False
+                    _append_audit_entry(data, "Guarda borrador", "Borrador actualizado por el establecimiento/administrador.")
+                    upsert_report(data)
+                    st.info("💾 Borrador guardado correctamente.")
                 st.rerun()
 
 
