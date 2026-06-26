@@ -1095,6 +1095,73 @@ def pg_todos_reportes():
     st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
     st.divider()
+    st.subheader("🔓 Habilitación excepcional de edición")
+
+    enviados_para_habilitar = [
+        r for r in reports
+        if r.get("estado") == "enviado"
+        and periodo_tiene_datos(year, r.get("reporte_id", rid))
+    ]
+
+    if enviados_para_habilitar:
+        st.markdown("""
+        <div style="background:#FFF7ED;border:1px solid #FED7AA;border-left:5px solid #F97316;
+                    border-radius:0 10px 10px 0;padding:12px 14px;margin:8px 0 12px;color:#9A3412;font-size:12px;line-height:1.55">
+            <strong>Uso administrativo:</strong> esta opción se utiliza solo cuando un establecimiento informa por correo que envió antecedentes con error.
+            Al habilitar la edición, el reporte vuelve a estado <strong>Borrador</strong> y el establecimiento podrá corregirlo y reenviarlo.
+        </div>
+        """, unsafe_allow_html=True)
+
+        opciones_hab = {
+            f"{r.get('year', year)}|{r.get('reporte_id')}|{r.get('establecimiento_id')}":
+            f"{r.get('establecimiento_nombre','')} — {r.get('year', year)} · {r.get('periodo_label','')} — ENVIADO"
+            for r in enviados_para_habilitar
+        }
+
+        h1, h2 = st.columns([2.3, 1])
+        with h1:
+            hab_key = st.selectbox(
+                "Reporte enviado a habilitar",
+                list(opciones_hab.keys()),
+                format_func=lambda k: opciones_hab[k],
+                key="admin_unlock_report_key",
+            )
+        with h2:
+            st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
+            st.markdown("🔒 Estado actual: **bloqueado**")
+
+        motivo_global = st.text_area(
+            "Motivo de habilitación *",
+            key="admin_unlock_motivo_global",
+            placeholder="Ej.: El establecimiento solicitó por correo corregir compromisos, responsable o fecha comprometida.",
+            height=80,
+        )
+
+        if st.button("🔓 Habilitar edición del reporte seleccionado", type="primary", use_container_width=True, key="admin_unlock_btn_global"):
+            if not motivo_global.strip():
+                st.error("Debe ingresar el motivo de habilitación.")
+            else:
+                _, rep_id_h, eid_h = hab_key.split("|", 2)
+                reporte_h = next(
+                    (
+                        r for r in reports
+                        if r.get("reporte_id") == rep_id_h
+                        and r.get("establecimiento_id") == eid_h
+                        and r.get("estado") == "enviado"
+                    ),
+                    None,
+                )
+                if not reporte_h:
+                    st.error("No se encontró el reporte seleccionado. Actualice la página e intente nuevamente.")
+                else:
+                    habilitar_edicion_reporte(reporte_h, motivo_global)
+                    upsert_report(reporte_h)
+                    st.success("Edición habilitada correctamente. El establecimiento ya puede modificar y reenviar el reporte.")
+                    st.rerun()
+    else:
+        st.info("No hay reportes enviados/bloqueados disponibles para habilitar edición en el año seleccionado.")
+
+    st.divider()
     st.subheader("Detalle y administración de reportes")
 
     filtered = reports
