@@ -1,5 +1,5 @@
 """
-app.py — Monitor Trato Directo SSMOC v10
+app.py — Monitor Trato Directo SSMOCC v10
 Navegación sin sidebar para evitar problema de colapso en Streamlit Cloud
 """
 import streamlit as st
@@ -7,7 +7,7 @@ import hashlib, json, datetime, io, base64
 from pathlib import Path
 
 st.set_page_config(
-    page_title="Monitor TD — SSMOC",
+    page_title="Monitor TD — SSMOCC",
     page_icon="🏥",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -61,7 +61,7 @@ def _hash(p): return hashlib.sha256(p.encode()).hexdigest()
 
 ESTABLECIMIENTOS = {
     "traumatologico": {"nombre":"Instituto Traumatológico Dr. Teodoro Gebauer","nombre_corto":"Inst. Traumatológico","rut":"61.608.203-5","codigo_deis":"110110","pct_2026":62.17,"pct_2025":37.78,"brecha":46.17,"variacion":24.39,"nivel":"rojo","denominador":5868063249,"numerador":3648430684},
-    "direccion":      {"nombre":"Dirección del Servicio Metropolitano Occidente","nombre_corto":"Dir. SSMOC","rut":"61.608.200-0","codigo_deis":"110010","pct_2026":37.16,"pct_2025":5.30,"brecha":21.16,"variacion":31.86,"nivel":"rojo","denominador":5835193133,"numerador":2168191360},
+    "direccion":      {"nombre":"Dirección del Servicio Metropolitano Occidente","nombre_corto":"Dir. SSMOCC","rut":"61.608.200-0","codigo_deis":"110010","pct_2026":37.16,"pct_2025":5.30,"brecha":21.16,"variacion":31.86,"nivel":"rojo","denominador":5835193133,"numerador":2168191360},
     "felix_bulnes":   {"nombre":"Hospital Dr. Félix Bulnes Cerda","nombre_corto":"H. Félix Bulnes","rut":"61.608.205-1","codigo_deis":"110120","pct_2026":26.44,"pct_2025":21.59,"brecha":10.44,"variacion":4.85,"nivel":"rojo","denominador":19487598854,"numerador":5152786649},
     "san_juan":       {"nombre":"Hospital San Juan de Dios","nombre_corto":"H. San Juan de Dios","rut":"61.608.204-3","codigo_deis":"110100","pct_2026":11.61,"pct_2025":10.70,"brecha":-4.39,"variacion":0.91,"nivel":"amarillo","denominador":39066763291,"numerador":4535664841},
     "crs_allende":    {"nombre":"Centro de Referencia Salud Occidente Salvador Allende","nombre_corto":"CRS Salvador Allende","rut":"61.933.400-0","codigo_deis":"110300","pct_2026":7.07,"pct_2025":4.76,"brecha":-8.93,"variacion":2.31,"nivel":"amarillo","denominador":1954204231,"numerador":138204661},
@@ -80,10 +80,10 @@ CAUSALES = ["Proveedor único / exclusividad","Emergencia o urgencia debidamente
 
 def _default_users():
     raw = {
-        "admin":         ("Administrador SSMOC",            "admin",          "abastecimiento@ssmocc.cl",         None,             "Admin2026*"),
+        "admin":         ("Administrador SSMOCC",            "admin",          "abastecimiento@ssmocc.cl",         None,             "Admin2026*"),
         "bayron":        ("Bayron Retamal González",         "admin",          "bayron.retamal@ssmocc.cl",         None,             "Ssmoc2026*"),
         "traumatologico":("Miguel Jara",                    "establecimiento","miguel.jara@intraumatologico.cl",  "traumatologico", "Trauma2026*"),
-        "direccion":     ("Referente Dir. SSMOC",           "establecimiento","abast.direccion@ssmocc.cl",        "direccion",      "Dir2026*"),
+        "direccion":     ("Referente Dir. SSMOCC",           "establecimiento","abast.direccion@ssmocc.cl",        "direccion",      "Dir2026*"),
         "felix_bulnes":  ("Carolina Castro",                "establecimiento","carolina.castroj@redsalud.gob.cl", "felix_bulnes",   "Felix2026*"),
         "san_juan":      ("Rodrigo Bravo Gajardo",          "establecimiento","rodrigo.bravog@redsalud.gob.cl",   "san_juan",       "Sjd2026*"),
         "crs_allende":   ("Eric Cubillo Antúnez",           "establecimiento","eric.cubillo@redsalud.gob.cl",     "crs_allende",    "Crs2026*"),
@@ -148,7 +148,7 @@ def page_login():
                 usr=authenticate(u,p)
                 if usr: st.session_state.user=usr; st.session_state.page="dashboard"; st.rerun()
                 else: st.error("Usuario o contraseña incorrectos.")
-        st.markdown('<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:11px 14px;margin-top:12px;font-size:12px;color:#1E40AF">Acceso restringido — sistema exclusivo para referentes de abastecimiento SSMOC.</div>', unsafe_allow_html=True)
+        st.markdown('<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:11px 14px;margin-top:12px;font-size:12px;color:#1E40AF">Acceso restringido — sistema exclusivo para referentes de abastecimiento SSMOCC.</div>', unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════════════
 # TOPBAR + NAV (reemplaza al sidebar)
@@ -168,7 +168,7 @@ def render_topbar():
       <div class="topbar-inner">
         <div class="topbar-logo">{logo_img(38)}</div>
         <div class="topbar-title">
-          <div class="t1">Monitor Trato Directo — SSMOC 2026</div>
+          <div class="t1">Monitor Trato Directo — SSMOCC 2026</div>
           <div class="t2">Lineamiento MINSAL v1.0 · Subsecretaría de Redes Asistenciales</div>
         </div>
         <div style="padding:6px 14px;border-left:1px solid rgba(255,255,255,.15);text-align:center;min-width:120px">
@@ -202,6 +202,9 @@ def render_topbar():
                 else:
                     st.session_state.page=pid; st.rerun()
     st.markdown("<hr style='margin:0 0 12px;border-color:#e2e8f0'>",unsafe_allow_html=True)
+    st.markdown('''<div style="text-align:right;font-size:10px;color:#94a3b8;margin-top:-10px;padding-right:4px;margin-bottom:4px">
+        Desarrollado por <strong style="color:#64748b">Bayron Retamal González</strong> &nbsp;·&nbsp; Subdirección RFF &nbsp;·&nbsp; SSMOCC 2026
+    </div>''', unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════════════
 # HELPERS UI
@@ -330,7 +333,7 @@ def pg_dashboard():
         cal_cards(reports, eid_filter=eid_user)
 
         st.markdown('<div style="font-size:12px;font-weight:600;color:#1F3864;margin:14px 0 8px">📅 Plazos — Lineamiento MINSAL v1.0</div>',unsafe_allow_html=True)
-        st.markdown('<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;padding:9px 14px;font-size:11px;color:#1E40AF">Los antecedentes se remiten de manera consolidada por el SSMOC, incluyendo únicamente establecimientos en categoría Amarilla y Roja.</div>',unsafe_allow_html=True)
+        st.markdown('<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;padding:9px 14px;font-size:11px;color:#1E40AF">Los antecedentes se remiten de manera consolidada por el SSMOCC, incluyendo únicamente establecimientos en categoría Amarilla y Roja.</div>',unsafe_allow_html=True)
 
         if nivel in ["rojo","amarillo"]:
             st.markdown("<br>",unsafe_allow_html=True)
@@ -339,7 +342,7 @@ def pg_dashboard():
         return
 
     # ── VISTA ADMIN ───────────────────────────────────────────────────
-    page_header("Monitoreo Trato Directo — Red SSMOC 2026",
+    page_header("Monitoreo Trato Directo — Red SSMOCC 2026",
                 "Lineamiento MINSAL v1.0 · Junio 2026 · Fuente: ChileCompra — OC aceptadas con recepción conforme, monto neto CLP")
 
     total_num=sum(e["numerador"] for e in ESTABLECIMIENTOS.values())
@@ -352,9 +355,9 @@ def pg_dashboard():
     r1_done=len([r for r in reports if r.get("reporte_id")=="R1" and r.get("estado")=="enviado"])
 
     c1,c2,c3,c4=st.columns(4)
-    kpi_card(c1,"Numerador SSMOC",f"${total_num/1e12:.2f} MMM","TD con recepción conforme","#0C447C")
-    kpi_card(c2,"Denominador SSMOC",f"${total_den/1e12:.2f} MMM","Todas las modalidades","#0C447C")
-    kpi_card(c3,"% TD SSMOC 2026",f"{pct_s:.2f}%",f"Meta ≤ 16% · Brecha +{pct_s-16:.2f} pp","#A32D2D")
+    kpi_card(c1,"Numerador SSMOCC",f"${total_num/1e12:.2f} MMM","TD con recepción conforme","#0C447C")
+    kpi_card(c2,"Denominador SSMOCC",f"${total_den/1e12:.2f} MMM","Todas las modalidades","#0C447C")
+    kpi_card(c3,"% TD SSMOCC 2026",f"{pct_s:.2f}%",f"Meta ≤ 16% · Brecha +{pct_s-16:.2f} pp","#A32D2D")
     kpi_card(c4,"1° Reporte (31 Jul)",f"{r1_done}/{r1_req}","Establecimientos enviados","#0F6E56")
 
     st.markdown("<br>",unsafe_allow_html=True)
@@ -408,7 +411,7 @@ def pg_dashboard():
         nc1,nc2,nc3,nc4=st.columns(4)
         nc1.metric("Numerador nacional","$238,1 MMM"); nc2.metric("Denominador nacional","$1.434,9 MMM")
         nc3.metric("% TD nacional 2026","16,6%"); nc4.metric("Variación vs 2025","−4,3 pp")
-        st.markdown("El **Instituto Traumatológico SSMOC** (62,2%) ocupa el **5° lugar nacional** entre establecimientos con mayor % TD.")
+        st.markdown("El **Instituto Traumatológico SSMOCC** (62,2%) ocupa el **5° lugar nacional** entre establecimientos con mayor % TD.")
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -532,12 +535,12 @@ def pg_exportar():
         df[cols_minsal].to_excel(w,sheet_name="Anexo N1 MINSAL",index=False)
         df.to_excel(w,sheet_name="Datos completos",index=False)
         resumen=pd.DataFrame([{"Establecimiento":e["nombre"],"Nivel":e["nivel"].capitalize(),"Pct TD 2026":e["pct_2026"],"Pct TD 2025":e["pct_2025"],"Brecha pp":e["brecha"],"Variacion pp":e["variacion"],"Denominador":e["denominador"],"Numerador":e["numerador"],"Enviado":"Si" if any(r.get("establecimiento_id")==eid and r.get("estado")=="enviado" and r.get("reporte_id")==ps for r in reports) else "No"} for eid,e in ESTABLECIMIENTOS.items()])
-        resumen.to_excel(w,sheet_name="Resumen SSMOC",index=False)
+        resumen.to_excel(w,sheet_name="Resumen SSMOCC",index=False)
     buf.seek(0)
     fecha=datetime.datetime.now().strftime("%Y%m%d_%H%M")
     c1,c2=st.columns(2)
-    c1.download_button("⬇️ Descargar Excel (.xlsx)",buf,f"SSMOC_AnexoN1_{ps}_{fecha}.xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",use_container_width=True,type="primary")
-    c2.download_button("⬇️ Descargar CSV",df.to_csv(index=False,encoding="utf-8-sig").encode("utf-8-sig"),f"SSMOC_AnexoN1_{ps}_{fecha}.csv","text/csv",use_container_width=True)
+    c1.download_button("⬇️ Descargar Excel (.xlsx)",buf,f"SSMOCC_AnexoN1_{ps}_{fecha}.xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",use_container_width=True,type="primary")
+    c2.download_button("⬇️ Descargar CSV",df.to_csv(index=False,encoding="utf-8-sig").encode("utf-8-sig"),f"SSMOCC_AnexoN1_{ps}_{fecha}.csv","text/csv",use_container_width=True)
     pend=[eid for eid,e in ESTABLECIMIENTOS.items() if e["nivel"] in ["rojo","amarillo"] and not any(r.get("establecimiento_id")==eid and r.get("estado")=="enviado" and r.get("reporte_id")==ps for r in reports)]
     if pend:
         st.warning(f"⚠️ {len(pend)} establecimiento(s) sin enviar para {pinfo['label']}:")
@@ -620,7 +623,7 @@ def pg_configuracion():
             st.markdown(f"**{p['label']}** — {p['periodo']} · Plazo: `{p['fecha_txt']}`")
             st.progress(done/req if req else 0,text=f"{done}/{req} enviados")
     st.divider()
-    st.subheader("Datos de referencia SSMOC (CSV MINSAL)")
+    st.subheader("Datos de referencia SSMOCC (CSV MINSAL)")
     df=pd.DataFrame([{"Establecimiento":e["nombre_corto"],"Nivel":e["nivel"].capitalize(),"% TD 2026":e["pct_2026"],"% TD 2025":e["pct_2025"],"Brecha (pp)":e["brecha"],"Var. (pp)":e["variacion"],"Denominador":e["denominador"],"Numerador":e["numerador"]} for e in ESTABLECIMIENTOS.values()])
     st.dataframe(df,use_container_width=True,hide_index=True)
     st.divider()
@@ -665,7 +668,7 @@ def pg_mis_reportes():
                 <div style="font-size:17px;font-weight:700;color:#166534;margin-top:8px">Nivel Verde</div>
                 <div style="font-size:12px;color:#16a34a;margin-top:8px;line-height:1.6">
                     No se requiere remitir antecedentes al MINSAL.<br>
-                    El SSMOC mantendrá el seguimiento interno.
+                    El SSMOCC mantendrá el seguimiento interno.
                 </div>
             </div>""", unsafe_allow_html=True)
             return
@@ -827,7 +830,7 @@ def pg_mis_reportes():
 
         cg,ce,_ = st.columns([1,1,2])
         guardar = cg.form_submit_button("💾  Guardar borrador", use_container_width=True)
-        enviar  = ce.form_submit_button("📤  Enviar a SSMOC",   use_container_width=True, type="primary")
+        enviar  = ce.form_submit_button("📤  Enviar a SSMOCC",   use_container_width=True, type="primary")
 
         if guardar or enviar:
             ok = True
@@ -963,12 +966,12 @@ def pg_exportar():
         df[cols_minsal].to_excel(w,sheet_name="Anexo N1 MINSAL",index=False)
         df.to_excel(w,sheet_name="Datos completos",index=False)
         resumen=pd.DataFrame([{"Establecimiento":e["nombre"],"Nivel":e["nivel"].capitalize(),"Pct TD 2026":e["pct_2026"],"Pct TD 2025":e["pct_2025"],"Brecha pp":e["brecha"],"Variacion pp":e["variacion"],"Denominador":e["denominador"],"Numerador":e["numerador"],"Enviado":"Si" if any(r.get("establecimiento_id")==eid and r.get("estado")=="enviado" and r.get("reporte_id")==ps for r in reports) else "No"} for eid,e in ESTABLECIMIENTOS.items()])
-        resumen.to_excel(w,sheet_name="Resumen SSMOC",index=False)
+        resumen.to_excel(w,sheet_name="Resumen SSMOCC",index=False)
     buf.seek(0)
     fecha=datetime.datetime.now().strftime("%Y%m%d_%H%M")
     c1,c2=st.columns(2)
-    c1.download_button("⬇️ Descargar Excel (.xlsx)",buf,f"SSMOC_AnexoN1_{ps}_{fecha}.xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",use_container_width=True,type="primary")
-    c2.download_button("⬇️ Descargar CSV",df.to_csv(index=False,encoding="utf-8-sig").encode("utf-8-sig"),f"SSMOC_AnexoN1_{ps}_{fecha}.csv","text/csv",use_container_width=True)
+    c1.download_button("⬇️ Descargar Excel (.xlsx)",buf,f"SSMOCC_AnexoN1_{ps}_{fecha}.xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",use_container_width=True,type="primary")
+    c2.download_button("⬇️ Descargar CSV",df.to_csv(index=False,encoding="utf-8-sig").encode("utf-8-sig"),f"SSMOCC_AnexoN1_{ps}_{fecha}.csv","text/csv",use_container_width=True)
     pend=[eid for eid,e in ESTABLECIMIENTOS.items() if e["nivel"] in ["rojo","amarillo"] and not any(r.get("establecimiento_id")==eid and r.get("estado")=="enviado" and r.get("reporte_id")==ps for r in reports)]
     if pend:
         st.warning(f"⚠️ {len(pend)} establecimiento(s) sin enviar para {pinfo['label']}:")
@@ -1051,7 +1054,7 @@ def pg_configuracion():
             st.markdown(f"**{p['label']}** — {p['periodo']} · Plazo: `{p['fecha_txt']}`")
             st.progress(done/req if req else 0,text=f"{done}/{req} enviados")
     st.divider()
-    st.subheader("Datos de referencia SSMOC (CSV MINSAL)")
+    st.subheader("Datos de referencia SSMOCC (CSV MINSAL)")
     df=pd.DataFrame([{"Establecimiento":e["nombre_corto"],"Nivel":e["nivel"].capitalize(),"% TD 2026":e["pct_2026"],"% TD 2025":e["pct_2025"],"Brecha (pp)":e["brecha"],"Var. (pp)":e["variacion"],"Denominador":e["denominador"],"Numerador":e["numerador"]} for e in ESTABLECIMIENTOS.values()])
     st.dataframe(df,use_container_width=True,hide_index=True)
     st.divider()
