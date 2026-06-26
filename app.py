@@ -828,11 +828,11 @@ def pg_todos_reportes():
                     if st.button("✅ Marcar enviado",key=f"s_{r['establecimiento_id']}_{r['reporte_id']}"):
                         r["estado"]="enviado"; upsert_report(r); st.rerun()
                 else:
-                    if st.button("↩️ A borrador",key=f"b_{r['establecimiento_id']}_{r['reporte_id']}"):
+                    if st.button("🔓 Habilitar edición",key=f"b_{r['establecimiento_id']}_{r['reporte_id']}"):
                         r["estado"]="borrador"; upsert_report(r); st.rerun()
             with col2:
                 if st.button("🗑️ Eliminar",key=f"d_{r['establecimiento_id']}_{r['reporte_id']}",type="secondary"):
-                    delete_report(r["establecimiento_id"],r["reporte_id"])
+                    delete_report(r["establecimiento_id"], r["reporte_id"], r.get("year", st.session_state.get("selected_year", 2026)))
                     st.warning(f"Reporte eliminado."); st.rerun()
 
 
@@ -846,14 +846,19 @@ def pg_exportar():
     reports=load_reports()
     ps=st.selectbox("Período",options=[p["id"] for p in PERIODOS],format_func=lambda x:next(f"{p['label']} — {p['periodo']} (plazo: {p['fecha_txt']})" for p in PERIODOS if p["id"]==x))
     pinfo=next(p for p in PERIODOS if p["id"]==ps)
+    year = st.session_state.get("selected_year", 2026)
+    if not periodo_tiene_datos(year, ps):
+        mensaje_periodo_sin_datos(year, ps)
+        return
+    apply_period_context(year, ps)
     inc=st.radio("Incluir",["Solo enviados","Enviados y borradores"],horizontal=True)
-    r_p=[r for r in reports if r.get("reporte_id")==ps]
+    r_p=[r for r in reports if int(r.get("year", 2026)) == int(year) and r.get("reporte_id")==ps]
     if inc=="Solo enviados": r_p=[r for r in r_p if r.get("estado")=="enviado"]
     if not r_p:
         st.warning(f"No hay reportes para {pinfo['label']} con los filtros seleccionados.")
         pend=[eid for eid,e in ESTABLECIMIENTOS.items() if e["nivel"] in ["rojo","amarillo"]]
         for eid in pend:
-            e=ESTABLECIMIENTOS[eid]; r=next((x for x in reports if x.get("establecimiento_id")==eid and x.get("reporte_id")==ps),None)
+            e=ESTABLECIMIENTOS[eid]; r=next((x for x in reports if int(x.get("year", 2026)) == int(year) and x.get("establecimiento_id")==eid and x.get("reporte_id")==ps),None)
             ic="✅" if r and r.get("estado")=="enviado" else "📝" if r else "⬜"
             st.markdown(f"{ic} {e['nombre']} — {e['nivel'].capitalize()}")
         return
@@ -901,14 +906,14 @@ def pg_exportar():
     with pd.ExcelWriter(buf,engine="openpyxl") as w:
         df[cols_minsal].to_excel(w,sheet_name="Anexo N1 MINSAL",index=False)
         df.to_excel(w,sheet_name="Datos completos",index=False)
-        resumen=pd.DataFrame([{"Establecimiento":e["nombre"],"Nivel":e["nivel"].capitalize(),"Pct TD 2026":e["pct_2026"],"Pct TD 2025":e["pct_2025"],"Brecha pp":e["brecha"],"Variacion pp":e["variacion"],"Denominador":e["denominador"],"Numerador":e["numerador"],"Enviado":"Si" if any(r.get("establecimiento_id")==eid and r.get("estado")=="enviado" and r.get("reporte_id")==ps for r in reports) else "No"} for eid,e in ESTABLECIMIENTOS.items()])
+        resumen=pd.DataFrame([{"Establecimiento":e["nombre"],"Nivel":e["nivel"].capitalize(),"Pct TD 2026":e["pct_2026"],"Pct TD 2025":e["pct_2025"],"Brecha pp":e["brecha"],"Variacion pp":e["variacion"],"Denominador":e["denominador"],"Numerador":e["numerador"],"Enviado":"Si" if any(int(r.get("year", 2026)) == int(year) and r.get("establecimiento_id")==eid and r.get("estado")=="enviado" and r.get("reporte_id")==ps for r in reports) else "No"} for eid,e in ESTABLECIMIENTOS.items()])
         resumen.to_excel(w,sheet_name="Resumen SSMOCC",index=False)
     buf.seek(0)
     fecha=datetime.datetime.now().strftime("%Y%m%d_%H%M")
     c1,c2=st.columns(2)
     c1.download_button("⬇️ Descargar Excel (.xlsx)",buf,f"SSMOCC_AnexoN1_{ps}_{fecha}.xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",use_container_width=True,type="primary")
     c2.download_button("⬇️ Descargar CSV",df.to_csv(index=False,encoding="utf-8-sig").encode("utf-8-sig"),f"SSMOCC_AnexoN1_{ps}_{fecha}.csv","text/csv",use_container_width=True)
-    pend=[eid for eid,e in ESTABLECIMIENTOS.items() if e["nivel"] in ["rojo","amarillo"] and not any(r.get("establecimiento_id")==eid and r.get("estado")=="enviado" and r.get("reporte_id")==ps for r in reports)]
+    pend=[eid for eid,e in ESTABLECIMIENTOS.items() if e["nivel"] in ["rojo","amarillo"] and not any(int(r.get("year", 2026)) == int(year) and r.get("establecimiento_id")==eid and r.get("estado")=="enviado" and r.get("reporte_id")==ps for r in reports)]
     if pend:
         st.warning(f"⚠️ {len(pend)} establecimiento(s) sin enviar para {pinfo['label']}:")
         for eid in pend: e=ESTABLECIMIENTOS[eid]; st.markdown(f"- **{e['nombre']}** — {e['nivel'].capitalize()} ({e['pct_2026']:.1f}%)")
@@ -1176,17 +1181,41 @@ def pg_mis_reportes():
 
     st.markdown("<br>", unsafe_allow_html=True)
     if existing:
-        ec = "#166534" if existing.get("estado")=="enviado" else "#1E40AF"
-        eb = "#F0FDF4" if existing.get("estado")=="enviado" else "#EFF6FF"
-        ei = "✅" if existing.get("estado")=="enviado" else "📝"
+        estado_actual = existing.get("estado", "borrador")
+        ec = "#166534" if estado_actual == "enviado" else "#1E40AF"
+        eb = "#F0FDF4" if estado_actual == "enviado" else "#EFF6FF"
+        ei = "✅" if estado_actual == "enviado" else "📝"
+        msg_estado = "Reporte enviado y bloqueado para edición." if estado_actual == "enviado" else "Borrador disponible para edición."
         st.markdown(f"""
-        <div style="background:{eb};border-radius:8px;padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
-            <span style="font-size:22px">{ei}</span>
+        <div style="background:{eb};border-radius:8px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px;border:1px solid {'#BBF7D0' if estado_actual == 'enviado' else '#BFDBFE'}">
+            <span style="font-size:24px">{ei}</span>
             <div>
-                <div style="font-size:13px;font-weight:700;color:{ec}">{pinfo["label"]} — {existing.get("estado","borrador").upper()}</div>
-                <div style="font-size:11px;color:{ec}">Ingresado por {existing.get("usuario","")} · {existing.get("fecha_ingreso","")[:16]} · Puedes editarlo.</div>
+                <div style="font-size:13px;font-weight:800;color:{ec}">{pinfo["label"]} — {estado_actual.upper()}</div>
+                <div style="font-size:11px;color:{ec}">Ingresado por {existing.get("usuario","")} · {existing.get("fecha_ingreso","")[:16]} · {msg_estado}</div>
             </div>
         </div>""", unsafe_allow_html=True)
+
+        # Regla institucional: una vez enviado por el establecimiento, queda cerrado.
+        # Solo el administrador puede devolverlo a borrador desde “Todos los reportes”.
+        if estado_actual == "enviado" and user.get("rol") != "admin":
+            st.success(f"✅ El reporte {pinfo['label']} fue enviado exitosamente al SSMOCC.")
+            st.markdown(f"""
+            <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-left:5px solid #64748B;border-radius:0 10px 10px 0;padding:16px 18px;margin:12px 0;color:#334155;line-height:1.6">
+                <div style="font-size:14px;font-weight:800;margin-bottom:4px">🔒 Reporte cerrado para edición</div>
+                <div style="font-size:12px">
+                    El antecedente ya fue remitido para el período <strong>{year} · {pinfo['label']} · {pinfo['periodo']}</strong>.
+                    Para evitar modificaciones posteriores al envío, el formulario queda bloqueado.
+                    <br><br>
+                    Si el reporte fue enviado con algún error, el establecimiento deberá solicitar por correo al administrador SSMOCC la habilitación del período para corrección.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            with st.expander("Ver resumen del reporte enviado", expanded=False):
+                st.markdown(f"**Principales causas:** {', '.join(existing.get('causas_sel', [])) or '—'}")
+                st.markdown(f"**Descripción:** {existing.get('causas_desc','—')}")
+                st.markdown(f"**Compromisos:** {existing.get('compromisos','—')}")
+                st.markdown(f"**Responsable:** {existing.get('resp_nombre','—')} · {existing.get('resp_cargo','—')} · {existing.get('resp_email','—')}")
+            return
 
     st.markdown(f'''
     <div style="background:#1F3864;border-radius:8px 8px 0 0;padding:12px 20px">
