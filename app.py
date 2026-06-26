@@ -1280,6 +1280,185 @@ def pg_historico():
         pass
 
 
+
+# ═══════════════════════════════════════════════════════════════════════
+# PÁGINA EXPORTAR — ANEXO N°1 MINSAL OFICIAL
+# Esta definición reemplaza la anterior y deja el Excel alineado al formato
+# solicitado: solo establecimientos ROJO/AMARILLO que hayan entregado reporte.
+# ═══════════════════════════════════════════════════════════════════════
+def pg_exportar():
+    if st.session_state.user["rol"] != "admin":
+        st.error("Solo administradores."); return
+    import pandas as pd
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+
+    page_header("Exportar Anexo N°1 MINSAL", "Formato oficial de entrega de antecedentes por Servicio de Salud")
+    reports = load_reports()
+    year = st.session_state.get("selected_year", 2026)
+    ps = st.selectbox(
+        "Período",
+        options=[p["id"] for p in PERIODOS],
+        index=[p["id"] for p in PERIODOS].index(st.session_state.get("selected_report", "R1")) if st.session_state.get("selected_report", "R1") in [p["id"] for p in PERIODOS] else 0,
+        format_func=lambda x: next(f"{p['label']} — {p['periodo']} (plazo: {p['fecha_txt']})" for p in PERIODOS if p["id"] == x)
+    )
+    pinfo = next(p for p in PERIODOS if p["id"] == ps)
+    st.session_state.selected_report = ps
+    st.session_state.selected_year = year
+    apply_period_context(year, ps)
+
+    # Solo deben reportar los establecimientos categorizados en rojo o amarillo.
+    obligatorios = {eid: e for eid, e in ESTABLECIMIENTOS.items() if e.get("nivel") in ["rojo", "amarillo"]}
+    enviados = []
+    borradores = []
+    pendientes = []
+
+    for eid, e in obligatorios.items():
+        r = next((x for x in reports if x.get("establecimiento_id") == eid and x.get("reporte_id") == ps and x.get("estado") == "enviado"), None)
+        b = next((x for x in reports if x.get("establecimiento_id") == eid and x.get("reporte_id") == ps and x.get("estado") == "borrador"), None)
+        if r:
+            enviados.append(r)
+        elif b:
+            borradores.append(b)
+        else:
+            pendientes.append((eid, e))
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Obligatorios rojo/amarillo", len(obligatorios))
+    c2.metric("Reportes enviados", len(enviados))
+    c3.metric("Pendientes", len(pendientes))
+
+    st.markdown(f"""
+    <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-left:4px solid #1F3864;border-radius:0 8px 8px 0;padding:12px 16px;margin:10px 0 16px;font-size:12px;color:#1E40AF;line-height:1.6">
+        Este módulo genera el <strong>Anexo N°1 MINSAL</strong> usando exclusivamente los antecedentes entregados por los establecimientos en categoría <strong>roja y amarilla</strong> para <strong>{year} · {pinfo['periodo']}</strong>.<br>
+        Los establecimientos verdes quedan fuera del Anexo, salvo que el lineamiento solicite lo contrario.
+    </div>
+    """, unsafe_allow_html=True)
+
+    def _texto_causas(r):
+        causas = "; ".join(r.get("causas_sel", []))
+        desc = r.get("causas_desc", "")
+        return (causas + (" | " if causas and desc else "") + desc).strip()
+
+    def _texto_medidas(r):
+        med = r.get("medidas", {})
+        med_labels = {
+            "pac": "Actualización Plan Anual de Compras",
+            "lic": "Inicio procesos licitatorios",
+            "cm": "Migración a Convenio Marco",
+            "cenabast": "Gestión CENABAST",
+            "cap": "Capacitación equipo Ley 21.634",
+            "venc": "Control vencimiento contratos",
+        }
+        txt = "; ".join(lbl for k, lbl in med_labels.items() if med.get(k))
+        desc = r.get("med_desc", "")
+        return (txt + (" | " if txt and desc else "") + desc).strip()
+
+    rows = []
+    for r in sorted(enviados, key=lambda x: (x.get("nivel_riesgo", ""), x.get("establecimiento_nombre", ""))):
+        rows.append({
+            "Servicio de salud": "Servicio de Salud Metropolitano Occidente",
+            "Establecimiento": r.get("establecimiento_nombre", ""),
+            "Nivel de Riesgo": r.get("nivel_riesgo", "").capitalize(),
+            "Período informado": f"{year} · {r.get('periodo', pinfo['periodo'])}",
+            "Principales causas": _texto_causas(r),
+            "Medidas implementadas": _texto_medidas(r),
+            "Compromisos": r.get("compromisos", ""),
+            "Responsable": (r.get("resp_nombre", "") + " - " + r.get("resp_cargo", "")).strip(" -"),
+            "Fecha comprometida": r.get("fecha_comp", ""),
+        })
+
+    cols_minsal = ["Servicio de salud", "Establecimiento", "Nivel de Riesgo", "Período informado", "Principales causas", "Medidas implementadas", "Compromisos", "Responsable", "Fecha comprometida"]
+
+    if rows:
+        df = pd.DataFrame(rows, columns=cols_minsal)
+        st.markdown("**Vista previa del Anexo N°1 MINSAL**")
+        st.dataframe(df, use_container_width=True, hide_index=True)
+    else:
+        df = pd.DataFrame(columns=cols_minsal)
+        st.warning("Aún no existen reportes enviados para establecimientos rojos/amarillos en este período.")
+
+    if borradores:
+        with st.expander(f"📝 {len(borradores)} reporte(s) en borrador, no incluidos en el Excel oficial"):
+            for r in borradores:
+                st.markdown(f"- **{r.get('establecimiento_nombre','')}** — {r.get('nivel_riesgo','').capitalize()}")
+    if pendientes:
+        with st.expander(f"⚠️ {len(pendientes)} establecimiento(s) pendiente(s) de enviar"):
+            for eid, e in pendientes:
+                st.markdown(f"- **{e['nombre']}** — {e['nivel'].capitalize()} ({e['pct_2026']:.2f}%)")
+
+    # Construcción Excel con formato similar al Anexo del lineamiento.
+    buf = io.BytesIO()
+    with pd.ExcelWriter(buf, engine="openpyxl") as w:
+        # Hoja oficial exacta
+        df.to_excel(w, sheet_name="Anexo N1 MINSAL", startrow=5, index=False)
+        ws = w.book["Anexo N1 MINSAL"]
+        ws.merge_cells("A1:I1")
+        ws["A1"] = "6.    Anexo N° 1. Formato de entrega de antecedentes por Servicio de Salud"
+        ws["A1"].font = Font(bold=True, size=14)
+        ws["A1"].alignment = Alignment(horizontal="center")
+        ws.merge_cells("A3:I4")
+        ws["A3"] = "Los antecedentes deberán ser remitidos utilizando el siguiente formato, con el propósito de estandarizar la información consolidada enviada por cada Servicio de Salud."
+        ws["A3"].alignment = Alignment(wrap_text=True, vertical="center")
+        ws["A3"].font = Font(size=12)
+
+        header_fill = PatternFill("solid", fgColor="F3F4F6")
+        thin = Side(style="thin", color="000000")
+        border = Border(left=thin, right=thin, top=thin, bottom=thin)
+        for cell in ws[6]:
+            cell.font = Font(bold=True, size=11)
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = border
+        for row in ws.iter_rows(min_row=7, max_row=ws.max_row, min_col=1, max_col=9):
+            for cell in row:
+                cell.alignment = Alignment(vertical="top", wrap_text=True)
+                cell.border = border
+        widths = [20, 34, 16, 18, 38, 38, 38, 30, 20]
+        for i, width in enumerate(widths, start=1):
+            ws.column_dimensions[get_column_letter(i)].width = width
+        ws.row_dimensions[1].height = 28
+        ws.row_dimensions[3].height = 46
+        ws.row_dimensions[6].height = 48
+        for r in range(7, max(ws.max_row + 1, 8)):
+            ws.row_dimensions[r].height = 72
+        ws.freeze_panes = "A7"
+
+        # Hoja de control interno SSMOCC
+        control_rows = []
+        for eid, e in obligatorios.items():
+            estado = "Enviado" if any(r.get("establecimiento_id") == eid for r in enviados) else "Borrador" if any(r.get("establecimiento_id") == eid for r in borradores) else "Pendiente"
+            control_rows.append({
+                "Establecimiento": e["nombre"],
+                "Nivel": e["nivel"].capitalize(),
+                "% TD 2026": e.get("pct_2026", 0),
+                "Estado reporte": estado,
+                "Incluido Anexo": "Sí" if estado == "Enviado" else "No",
+            })
+        pd.DataFrame(control_rows).to_excel(w, sheet_name="Control interno", index=False)
+
+    buf.seek(0)
+    fecha = datetime.datetime.now().strftime("%Y%m%d_%H%M")
+    st.download_button(
+        "⬇️ Descargar Excel Anexo N°1 MINSAL",
+        buf,
+        f"SSMOCC_AnexoN1_MINSAL_{year}_{ps}_{fecha}.xlsx",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use_container_width=True,
+        type="primary",
+        disabled=df.empty,
+    )
+
+    csv_bytes = df.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
+    st.download_button(
+        "⬇️ Descargar CSV Anexo N°1",
+        csv_bytes,
+        f"SSMOCC_AnexoN1_MINSAL_{year}_{ps}_{fecha}.csv",
+        "text/csv",
+        use_container_width=True,
+        disabled=df.empty,
+    )
+
 # ═══════════════════════════════════════════════════════════════════════
 # ROUTING
 # ═══════════════════════════════════════════════════════════════════════
