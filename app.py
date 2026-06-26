@@ -414,98 +414,438 @@ def pg_dashboard():
 # ═══════════════════════════════════════════════════════════════════════
 # PÁGINA MIS REPORTES
 # ═══════════════════════════════════════════════════════════════════════
-def pg_mis_reportes():
-    user=st.session_state.user
-    page_header("Ingreso de antecedentes","Anexo N°1 · Lineamiento MINSAL v1.0 · Junio 2026")
-    if user["rol"]=="admin":
-        opciones={eid:e["nombre_corto"] for eid,e in ESTABLECIMIENTOS.items() if e["nivel"] in ["rojo","amarillo"]}
-        eid_sel=st.selectbox("Establecimiento",options=list(opciones.keys()),format_func=lambda x:opciones[x])
-    else:
-        eid_sel=user.get("establecimiento")
-        if not eid_sel: st.error("Sin establecimiento asignado."); return
-        if ESTABLECIMIENTOS.get(eid_sel,{}).get("nivel")=="verde":
-            st.success(f"✅ **{ESTABLECIMIENTOS[eid_sel]['nombre']}** está en nivel Verde. No se requiere remitir antecedentes al MINSAL.")
-            return
-    estab=ESTABLECIMIENTOS.get(eid_sel,{})
-    nivel=estab.get("nivel","verde")
-    nb={"rojo":"#FEF2F2","amarillo":"#FFFBEB"}.get(nivel,"#F0FDF4")
-    nt={"rojo":"#991B1B","amarillo":"#92400E"}.get(nivel,"#166534")
-    nc_b={"rojo":"#FECACA","amarillo":"#FDE68A"}.get(nivel,"#BBF7D0")
-    st.markdown(f"""
-    <div style="background:#1F3864;color:white;padding:10px 16px;border-radius:10px 10px 0 0">
-        <div style="font-size:15px;font-weight:700">{estab.get('nombre','')}</div>
-        <div style="font-size:11px;opacity:.6">RUT: {estab.get('rut','')} · DEIS: {estab.get('codigo_deis','')}</div>
-    </div>
-    <div style="background:{nb};color:{nt};padding:8px 16px;border-radius:0 0 6px 6px;margin-bottom:14px;border:1px solid {nc_b};border-top:none;display:flex;justify-content:space-between">
-        <span style="font-weight:700">Nivel: {nivel.capitalize()}</span>
-        <span>% TD 2026: <strong>{estab.get('pct_2026',0):.2f}%</strong> · 2025: {estab.get('pct_2025',0):.2f}% · Brecha: {'+' if estab.get('brecha',0)>0 else ''}{estab.get('brecha',0):.2f} pp</span>
-    </div>""", unsafe_allow_html=True)
 
-    periodo_id=st.selectbox("Período a informar",options=[p["id"] for p in PERIODOS],
-                            format_func=lambda x:next(f"{p['label']} — {p['periodo']} (plazo: {p['fecha_txt']})" for p in PERIODOS if p["id"]==x))
-    pinfo=next(p for p in PERIODOS if p["id"]==periodo_id)
-    existing=next((r for r in load_reports() if r.get("establecimiento_id")==eid_sel and r.get("reporte_id")==periodo_id),None)
-    if existing:
-        ic="✅" if existing.get("estado")=="enviado" else "📝"
-        st.info(f"{ic} Reporte {pinfo['label']} en estado **{existing.get('estado','borrador').upper()}** — puedes editarlo.")
+def pg_todos_reportes():
+    if st.session_state.user["rol"]!="admin": st.error("Solo administradores."); return
+    import pandas as pd
+    page_header("Todos los reportes","Vista consolidada y gestión — solo administradores")
+    reports=load_reports()
+    c1,c2,c3=st.columns(3)
+    fp=c1.selectbox("Período",["Todos"]+[p["id"] for p in PERIODOS],format_func=lambda x:"Todos" if x=="Todos" else next(p["label"]+" — "+p["periodo"] for p in PERIODOS if p["id"]==x))
+    fn=c2.selectbox("Nivel",["Todos","Rojo","Amarillo","Verde"])
+    fe=c3.selectbox("Estado",["Todos","Enviado","Borrador","Pendiente"])
+    st.subheader("Estado consolidado")
+    rows=[]
+    for eid,e in ESTABLECIMIENTOS.items():
+        if e["nivel"]=="verde": continue
+        row={"Establecimiento":e["nombre_corto"],"Nivel":e["nivel"].capitalize(),"% TD":f"{e['pct_2026']:.1f}%"}
+        for p in PERIODOS:
+            r=next((x for x in reports if x.get("establecimiento_id")==eid and x.get("reporte_id")==p["id"]),None)
+            row[p["label"]]="✅ Enviado" if r and r.get("estado")=="enviado" else "📝 Borrador" if r else "⬜ Pendiente"
+        rows.append(row)
+    st.dataframe(pd.DataFrame(rows),use_container_width=True,hide_index=True)
+    st.divider()
+    st.subheader("Detalle de reportes")
+    filtered=reports
+    if fp!="Todos": filtered=[r for r in filtered if r.get("reporte_id")==fp]
+    if fn!="Todos": filtered=[r for r in filtered if r.get("nivel_riesgo","").lower()==fn.lower()]
+    if fe!="Todos": filtered=[r for r in filtered if r.get("estado","").lower()==fe.lower()]
+    if not filtered: st.info("No hay reportes con los filtros seleccionados."); return
+    for r in sorted(filtered,key=lambda x:(x.get("reporte_id",""),x.get("nivel_riesgo",""))):
+        estado=r.get("estado","borrador")
+        icon="✅" if estado=="enviado" else "📝"
+        with st.expander(f"{icon} {r.get('establecimiento_nombre','')[:45]} — {r.get('periodo_label','')} — {estado.upper()}"):
+            ca,cb,cc,cd=st.columns(4)
+            ca.metric("Nivel",r.get("nivel_riesgo","").capitalize()); cb.metric("% TD 2026",f"{r.get('pct_2026',0):.2f}%")
+            cc.metric("% TD período",f"{r.get('pct_per',0):.2f}%"); cd.metric("N° procesos TD",r.get("n_proc","—"))
+            if r.get("causas_sel"): st.markdown("**Causales:** "+", ".join(r["causas_sel"]))
+            if r.get("causas_desc"): st.markdown(f"**Descripción:** {r['causas_desc']}")
+            if r.get("compromisos"): st.markdown(f"**Compromisos:** {r['compromisos']}")
+            st.markdown(f"**Responsable:** {r.get('resp_nombre','')} · {r.get('resp_cargo','')} · {r.get('resp_email','')}  \n**Meta próximo período:** {r.get('meta_prox',16):.1f}% · **Fecha:** {r.get('fecha_comp','')}  \n**Ingresado:** {r.get('usuario','')} · {r.get('fecha_ingreso','')[:16]}")
+            col1,col2,_=st.columns([1,1,3])
+            with col1:
+                if estado=="borrador":
+                    if st.button("✅ Marcar enviado",key=f"s_{r['establecimiento_id']}_{r['reporte_id']}"):
+                        r["estado"]="enviado"; upsert_report(r); st.rerun()
+                else:
+                    if st.button("↩️ A borrador",key=f"b_{r['establecimiento_id']}_{r['reporte_id']}"):
+                        r["estado"]="borrador"; upsert_report(r); st.rerun()
+            with col2:
+                if st.button("🗑️ Eliminar",key=f"d_{r['establecimiento_id']}_{r['reporte_id']}",type="secondary"):
+                    delete_report(r["establecimiento_id"],r["reporte_id"])
+                    st.warning(f"Reporte eliminado."); st.rerun()
 
-    with st.form(f"frm_{eid_sel}_{periodo_id}"):
-        st.markdown(f"#### {pinfo['label']} · {pinfo['periodo']}")
-        st.markdown("**1. Principales causas del resultado observado**")
-        _dc=[c for c in (existing.get("causas_sel",[]) if existing else []) if c in CAUSALES]
-        causas_sel=st.multiselect("Causales de Trato Directo identificadas",CAUSALES,default=_dc)
-        causas_desc=st.text_area("Descripción detallada",value=existing.get("causas_desc","") if existing else "",height=100,placeholder="Describa el contexto específico del establecimiento durante el período...")
-        c1,c2,c3=st.columns(3)
-        monto_td=c1.number_input("Monto TD período ($CLP)",min_value=0,step=1_000_000,value=int(existing.get("monto_td",0)) if existing else 0,format="%d")
-        n_proc=c2.number_input("N° procesos TD",min_value=0,step=1,value=int(existing.get("n_proc",0)) if existing else 0)
-        pct_per=c3.number_input("% TD período (MINSAL)",min_value=0.0,max_value=100.0,step=0.01,value=float(existing.get("pct_per",estab.get("pct_2026",0.0))) if existing else float(estab.get("pct_2026",0.0)),format="%.2f")
-        st.divider()
-        st.markdown("**2. Medidas implementadas**")
-        med_labels={"pac":"Actualización Plan Anual de Compras","lic":"Inicio procesos licitatorios","cm":"Migración a Convenio Marco","cenabast":"Gestión CENABAST","cap":"Capacitación equipo Ley 21.634","venc":"Control vencimiento contratos"}
-        ex_med=existing.get("medidas",{}) if existing else {}
-        med_sel={}
-        cols_m=st.columns(2)
-        for i,(k,lbl) in enumerate(med_labels.items()):
-            med_sel[k]=cols_m[i%2].checkbox(lbl,value=ex_med.get(k,False),key=f"m_{k}")
-        med_desc=st.text_area("Descripción de medidas",value=existing.get("med_desc","") if existing else "",height=80)
-        st.divider()
-        st.markdown("**3. Compromisos para el próximo período**")
-        compromisos=st.text_area("Compromisos adoptados",value=existing.get("compromisos","") if existing else "",height=100,placeholder="1. Iniciar licitación para [insumo] antes del [fecha]...\n2. Reducir % TD a menos de 16%...")
-        c4,c5=st.columns(2)
-        meta_prox=c4.number_input("Meta % TD próximo período",min_value=0.0,max_value=100.0,step=0.5,value=float(existing.get("meta_prox",16.0)) if existing else 16.0,format="%.1f")
-        fecha_comp=c5.date_input("Fecha comprometida",value=datetime.date.fromisoformat(existing["fecha_comp"]) if existing and existing.get("fecha_comp") else datetime.date(2026,8,31))
-        st.divider()
-        st.markdown("**4. Responsable**")
-        c6,c7,c8=st.columns(3)
-        resp_nombre=c6.text_input("Nombre",value=existing.get("resp_nombre",user["nombre"]) if existing else user["nombre"])
-        resp_cargo=c7.text_input("Cargo",value=existing.get("resp_cargo","Jefe/a Abastecimiento") if existing else "Jefe/a Abastecimiento")
-        resp_email=c8.text_input("Correo",value=existing.get("resp_email",user.get("email","")) if existing else user.get("email",""))
-        obs=st.text_area("Observaciones adicionales",value=existing.get("obs","") if existing else "",height=60)
-        st.divider()
-        cb1,cb2,_=st.columns([1,1,2])
-        guardar=cb1.form_submit_button("💾 Guardar borrador",use_container_width=True)
-        enviar=cb2.form_submit_button("📤 Enviar a SSMOC",use_container_width=True,type="primary")
-        if guardar or enviar:
-            ok=True
-            if enviar:
+
+# ═══════════════════════════════════════════════════════════════════════
+# PÁGINA EXPORTAR
+# ═══════════════════════════════════════════════════════════════════════
+def pg_exportar():
+    if st.session_state.user["rol"]!="admin": st.error("Solo administradores."); return
+    import pandas as pd
+    page_header("Exportar reporte consolidado","Formato Anexo N°1 — Lineamiento MINSAL v1.0")
+    reports=load_reports()
+    ps=st.selectbox("Período",options=[p["id"] for p in PERIODOS],format_func=lambda x:next(f"{p['label']} — {p['periodo']} (plazo: {p['fecha_txt']})" for p in PERIODOS if p["id"]==x))
+    pinfo=next(p for p in PERIODOS if p["id"]==ps)
+    inc=st.radio("Incluir",["Solo enviados","Enviados y borradores"],horizontal=True)
+    r_p=[r for r in reports if r.get("reporte_id")==ps]
+    if inc=="Solo enviados": r_p=[r for r in r_p if r.get("estado")=="enviado"]
+    if not r_p:
+        st.warning(f"No hay reportes para {pinfo['label']} con los filtros seleccionados.")
+        pend=[eid for eid,e in ESTABLECIMIENTOS.items() if e["nivel"] in ["rojo","amarillo"]]
+        for eid in pend:
+            e=ESTABLECIMIENTOS[eid]; r=next((x for x in reports if x.get("establecimiento_id")==eid and x.get("reporte_id")==ps),None)
+            ic="✅" if r and r.get("estado")=="enviado" else "📝" if r else "⬜"
+            st.markdown(f"{ic} {e['nombre']} — {e['nivel'].capitalize()}")
+        return
+    rows=[]
+    for r in r_p:
+        eid=r["establecimiento_id"]; estab_d=ESTABLECIMIENTOS.get(eid,{})
+        med=r.get("medidas",{})
+        med_labels={"pac":"Actualizacion Plan Anual Compras","lic":"Inicio procesos licitatorios","cm":"Migracion Convenio Marco","cenabast":"Gestion CENABAST","cap":"Capacitacion equipo Ley 21.634","venc":"Control vencimiento contratos"}
+        med_txt="; ".join(lbl for k,lbl in med_labels.items() if med.get(k))
+        if r.get("med_desc"): med_txt=(med_txt+" | " if med_txt else "")+r.get("med_desc","")
+        causas_txt="; ".join(r.get("causas_sel",[]))
+        if r.get("causas_desc"): causas_txt=(causas_txt+" | " if causas_txt else "")+r.get("causas_desc","")
+        rows.append({
+            "Servicio de salud":"Metropolitano Occidente",
+            "Establecimiento":r.get("establecimiento_nombre",""),
+            "Nivel de Riesgo":r.get("nivel_riesgo","").capitalize(),
+            "Periodo informado":r.get("periodo",""),
+            "Principales causas":causas_txt,
+            "Medidas implementadas":med_txt,
+            "Compromisos":r.get("compromisos",""),
+            "Responsable":r.get("resp_nombre","")+" - "+r.get("resp_cargo",""),
+            "Fecha comprometida":r.get("fecha_comp",""),
+            "Codigo DEIS":estab_d.get("codigo_deis",""),
+            "RUT":estab_d.get("rut",""),
+            "Pct TD 2026":r.get("pct_2026",""),
+            "Pct TD 2025":r.get("pct_2025",""),
+            "Brecha pp":estab_d.get("brecha",""),
+            "Variacion pp":estab_d.get("variacion",""),
+            "Denominador CLP":estab_d.get("denominador",""),
+            "Numerador CLP":estab_d.get("numerador",""),
+            "Monto TD periodo CLP":r.get("monto_td",0),
+            "N procesos TD":r.get("n_proc",0),
+            "Correo responsable":r.get("resp_email",""),
+            "Meta proximo periodo":r.get("meta_prox",""),
+            "Observaciones":r.get("obs",""),
+            "Estado reporte":r.get("estado","").upper(),
+            "Fecha ingreso":r.get("fecha_ingreso","")[:16],
+        })
+    df=pd.DataFrame(rows)
+    cols_minsal=["Servicio de salud","Establecimiento","Nivel de Riesgo","Periodo informado","Principales causas","Medidas implementadas","Compromisos","Responsable","Fecha comprometida"]
+    st.markdown("**Vista previa Anexo N°1 MINSAL** (columnas exactas del lineamiento):")
+    st.dataframe(df[cols_minsal],use_container_width=True,hide_index=True)
+    st.markdown(f"**{len(rows)} establecimiento(s)** · Generado: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}")
+    buf=io.BytesIO()
+    with pd.ExcelWriter(buf,engine="openpyxl") as w:
+        df[cols_minsal].to_excel(w,sheet_name="Anexo N1 MINSAL",index=False)
+        df.to_excel(w,sheet_name="Datos completos",index=False)
+        resumen=pd.DataFrame([{"Establecimiento":e["nombre"],"Nivel":e["nivel"].capitalize(),"Pct TD 2026":e["pct_2026"],"Pct TD 2025":e["pct_2025"],"Brecha pp":e["brecha"],"Variacion pp":e["variacion"],"Denominador":e["denominador"],"Numerador":e["numerador"],"Enviado":"Si" if any(r.get("establecimiento_id")==eid and r.get("estado")=="enviado" and r.get("reporte_id")==ps for r in reports) else "No"} for eid,e in ESTABLECIMIENTOS.items()])
+        resumen.to_excel(w,sheet_name="Resumen SSMOC",index=False)
+    buf.seek(0)
+    fecha=datetime.datetime.now().strftime("%Y%m%d_%H%M")
+    c1,c2=st.columns(2)
+    c1.download_button("⬇️ Descargar Excel (.xlsx)",buf,f"SSMOC_AnexoN1_{ps}_{fecha}.xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",use_container_width=True,type="primary")
+    c2.download_button("⬇️ Descargar CSV",df.to_csv(index=False,encoding="utf-8-sig").encode("utf-8-sig"),f"SSMOC_AnexoN1_{ps}_{fecha}.csv","text/csv",use_container_width=True)
+    pend=[eid for eid,e in ESTABLECIMIENTOS.items() if e["nivel"] in ["rojo","amarillo"] and not any(r.get("establecimiento_id")==eid and r.get("estado")=="enviado" and r.get("reporte_id")==ps for r in reports)]
+    if pend:
+        st.warning(f"⚠️ {len(pend)} establecimiento(s) sin enviar para {pinfo['label']}:")
+        for eid in pend: e=ESTABLECIMIENTOS[eid]; st.markdown(f"- **{e['nombre']}** — {e['nivel'].capitalize()} ({e['pct_2026']:.1f}%)")
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# PÁGINA USUARIOS
+# ═══════════════════════════════════════════════════════════════════════
+def pg_usuarios():
+    if st.session_state.user["rol"]!="admin": st.error("Solo administradores."); return
+    import pandas as pd
+    page_header("Gestión de usuarios","Alta, baja y restablecimiento de contraseñas")
+    users=load_users()
+    tab1,tab2=st.tabs(["📋 Usuarios","➕ Crear/Editar"])
+    with tab1:
+        rows=[{"Usuario":uid,"Nombre":u["nombre"],"Rol":u["rol"].capitalize(),"Establecimiento":ESTABLECIMIENTOS.get(u.get("establecimiento"),{}).get("nombre_corto","— Admin —"),"Email":u.get("email",""),"Activo":"✅" if u.get("activo") else "❌"} for uid,u in users.items()]
+        st.dataframe(pd.DataFrame(rows),use_container_width=True,hide_index=True)
+        ca,cb=st.columns(2)
+        uid_sel=ca.selectbox("Usuario",list(users.keys()),format_func=lambda x:f"{x} — {users[x]['nombre']}")
+        act=users.get(uid_sel,{}).get("activo",True)
+        if cb.button(f"{'🔴 Desactivar' if act else '🟢 Activar'}",use_container_width=True):
+            users[uid_sel]["activo"]=not act; save_users(users); st.success("Actualizado."); st.rerun()
+        with st.expander("🔑 Restablecer contraseña"):
+            ur=st.selectbox("Usuario",list(users.keys()),format_func=lambda x:f"{x} — {users[x]['nombre']}",key="ur")
+            np=st.text_input("Nueva contraseña",type="password",key="np")
+            if st.button("Restablecer"):
+                if len(np)<8: st.error("Mínimo 8 caracteres.")
+                else: users[ur]["password_hash"]=_hash(np); save_users(users); st.success(f"Contraseña restablecida para '{ur}'.")
+        with st.expander("📋 Credenciales por defecto"):
+            st.markdown("""| Usuario | Contraseña | Referente |\n|---------|-----------|----------|\n| `admin` | `Admin2026*` | Administrador |\n| `bayron` | `Ssmoc2026*` | Bayron Retamal |\n| `san_juan` | `Sjd2026*` | Rodrigo Bravo |\n| `traumatologico` | `Trauma2026*` | Miguel Jara |\n| `felix_bulnes` | `Felix2026*` | Carolina Castro |\n| `talagante` | `Tala2026*` | M.A. Villegas |\n| `penaflor` | `Pen2026*` | Gissela Salvo |\n| `melipilla` | `Meli2026*` | M.A. Morales |\n| `curacavi` | `Cura2026*` | Pablo Yévenes |\n| `crs_allende` | `Crs2026*` | Eric Cubillo |""")
+    with tab2:
+        modo=st.radio("Modo",["Crear nuevo","Editar existente"],horizontal=True)
+        uid_e=None; u_e={}
+        if modo=="Editar existente":
+            uid_e=st.selectbox("Usuario a editar",list(users.keys()),format_func=lambda x:f"{x} — {users[x]['nombre']}",key="ue"); u_e=users.get(uid_e,{})
+        with st.form("fu"):
+            c1,c2=st.columns(2)
+            nuevo_uid=c1.text_input("Nombre de usuario") if modo=="Crear nuevo" else st.text_input("Usuario",value=uid_e,disabled=True)
+            nombre=c1.text_input("Nombre completo",value=u_e.get("nombre",""))
+            email=c1.text_input("Correo",value=u_e.get("email",""))
+            rol=c2.selectbox("Rol",["establecimiento","admin"],index=0 if u_e.get("rol","establecimiento")=="establecimiento" else 1)
+            estab_ops={"":"— Solo admin —"}; estab_ops.update({eid:e["nombre_corto"] for eid,e in ESTABLECIMIENTOS.items()})
+            estab_sel=c2.selectbox("Establecimiento",list(estab_ops.keys()),format_func=lambda x:estab_ops[x],index=list(estab_ops.keys()).index(u_e.get("establecimiento","") or ""))
+            pwd=c2.text_input("Contraseña"+" (vacío=no cambiar)" if modo=="Editar existente" else "",type="password")
+            activo=c2.checkbox("Activo",value=u_e.get("activo",True))
+            if st.form_submit_button("💾 Guardar",use_container_width=True,type="primary"):
+                uid_f=(nuevo_uid if modo=="Crear nuevo" else uid_e).strip().lower()
                 errs=[]
-                if not causas_sel: errs.append("Seleccione al menos una causal.")
-                if not causas_desc.strip(): errs.append("Complete la descripción de causas.")
-                if not compromisos.strip(): errs.append("Complete los compromisos.")
+                if not uid_f: errs.append("Usuario vacío.")
+                if not nombre.strip(): errs.append("Nombre requerido.")
+                if modo=="Crear nuevo" and uid_f in users: errs.append(f"'{uid_f}' ya existe.")
+                if modo=="Crear nuevo" and not pwd: errs.append("Contraseña requerida.")
                 if errs:
                     for e in errs: st.error(e)
-                    ok=False
+                else:
+                    if uid_f not in users: users[uid_f]={}
+                    users[uid_f].update({"nombre":nombre.strip(),"rol":rol,"email":email.strip(),"establecimiento":estab_sel or None,"activo":activo})
+                    if pwd: users[uid_f]["password_hash"]=_hash(pwd)
+                    save_users(users); st.success(f"✅ Usuario '{uid_f}' guardado."); st.rerun()
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# PÁGINA CONFIGURACIÓN
+# ═══════════════════════════════════════════════════════════════════════
+def pg_configuracion():
+    if st.session_state.user["rol"]!="admin": st.error("Solo administradores."); return
+    import pandas as pd
+    page_header("Configuración del sistema","Estado y mantenimiento de la plataforma")
+    reports=load_reports()
+    c1,c2=st.columns(2)
+    with c1:
+        st.subheader("Resumen del sistema")
+        st.markdown(f"""| Parámetro | Valor |\n|-----------|-------|\n| Versión | 1.0.0 |\n| Lineamiento | MINSAL v1.0 · Jun 2026 |\n| Meta | ≤ 16% |\n| Establecimientos | {len(ESTABLECIMIENTOS)} |\n| Períodos | {len(PERIODOS)} |\n| Reportes totales | {len(reports)} |\n| Enviados | {len([r for r in reports if r.get("estado")=="enviado"])} |\n| Borradores | {len([r for r in reports if r.get("estado")=="borrador"])} |""")
+    with c2:
+        st.subheader("Avance por período")
+        req=len([e for e in ESTABLECIMIENTOS.values() if e["nivel"] in ["rojo","amarillo"]])
+        for p in PERIODOS:
+            done=len([r for r in reports if r.get("reporte_id")==p["id"] and r.get("estado")=="enviado"])
+            st.markdown(f"**{p['label']}** — {p['periodo']} · Plazo: `{p['fecha_txt']}`")
+            st.progress(done/req if req else 0,text=f"{done}/{req} enviados")
+    st.divider()
+    st.subheader("Datos de referencia SSMOC (CSV MINSAL)")
+    df=pd.DataFrame([{"Establecimiento":e["nombre_corto"],"Nivel":e["nivel"].capitalize(),"% TD 2026":e["pct_2026"],"% TD 2025":e["pct_2025"],"Brecha (pp)":e["brecha"],"Var. (pp)":e["variacion"],"Denominador":e["denominador"],"Numerador":e["numerador"]} for e in ESTABLECIMIENTOS.values()])
+    st.dataframe(df,use_container_width=True,hide_index=True)
+    st.divider()
+    with st.expander("🗑️ Mantenimiento"):
+        st.warning("⚠️ Acción irreversible.")
+        if st.button("Eliminar TODOS los reportes"):
+            save_reports([]); st.success("Reportes eliminados."); st.rerun()
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# ROUTING
+# ═══════════════════════════════════════════════════════════════════════
+if st.session_state.user is None:
+    page_login()
+else:
+    render_topbar()
+    pg=st.session_state.page
+    if   pg=="dashboard":      pg_dashboard()
+    elif pg=="mis_reportes":   pg_mis_reportes()
+    elif pg=="todos_reportes": pg_todos_reportes()
+    elif pg=="exportar":       pg_exportar()
+    elif pg=="usuarios":       pg_usuarios()
+    elif pg=="configuracion":  pg_configuracion()
+    else:                      pg_dashboard()
+
+def pg_mis_reportes():
+    user = st.session_state.user
+    page_header("Ingreso de antecedentes — Anexo N°1",
+                "Lineamiento MINSAL v1.0 · Jun 2026 · Subsecretaría de Redes Asistenciales")
+
+    if user["rol"] == "admin":
+        opciones = {eid: e["nombre_corto"] for eid, e in ESTABLECIMIENTOS.items() if e["nivel"] in ["rojo","amarillo"]}
+        eid_sel = st.selectbox("Establecimiento", options=list(opciones.keys()), format_func=lambda x: opciones[x])
+    else:
+        eid_sel = user.get("establecimiento")
+        if not eid_sel: st.error("Sin establecimiento asignado."); return
+        if ESTABLECIMIENTOS.get(eid_sel,{}).get("nivel") == "verde":
+            st.markdown(f"""
+            <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-left:5px solid #22C55E;
+                        border-radius:8px;padding:24px;text-align:center;margin-top:20px">
+                <div style="font-size:42px">✅</div>
+                <div style="font-size:17px;font-weight:700;color:#166534;margin-top:8px">Nivel Verde</div>
+                <div style="font-size:12px;color:#16a34a;margin-top:8px;line-height:1.6">
+                    No se requiere remitir antecedentes al MINSAL.<br>
+                    El SSMOC mantendrá el seguimiento interno.
+                </div>
+            </div>""", unsafe_allow_html=True)
+            return
+
+    estab = ESTABLECIMIENTOS.get(eid_sel, {})
+    nivel = estab.get("nivel","verde")
+    nc = {"rojo":"#E24B4A","amarillo":"#F59E0B","verde":"#22C55E"}[nivel]
+    nt = {"rojo":"#991B1B","amarillo":"#92400E","verde":"#166534"}[nivel]
+    nb = {"rojo":"#FEF2F2","amarillo":"#FFFBEB","verde":"#F0FDF4"}[nivel]
+    nivel_icon = {"rojo":"🔴","amarillo":"🟡","verde":"🟢"}[nivel]
+    brecha_s = ("+" if estab.get("brecha",0)>0 else "") + f'{estab.get("brecha",0):.2f} pp'
+
+    st.markdown(f"""
+    <div style="background:#1F3864;border-radius:12px 12px 0 0;padding:16px 22px;
+                display:flex;justify-content:space-between;align-items:center">
+        <div>
+            <div style="font-size:16px;font-weight:700;color:white">{estab.get("nombre","")}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:3px">
+                RUT: {estab.get("rut","")} &nbsp;·&nbsp; DEIS: {estab.get("codigo_deis","")}
+            </div>
+        </div>
+        <div style="background:{nb};color:{nt};border-radius:8px;padding:6px 16px;font-size:13px;font-weight:700">
+            {nivel_icon} {nivel.upper()}
+        </div>
+    </div>
+    <div style="background:{nb};border:1px solid {nc};border-top:none;border-radius:0 0 12px 12px;
+                padding:10px 22px;margin-bottom:20px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        <div style="text-align:center">
+            <div style="font-size:10px;color:{nt};text-transform:uppercase;letter-spacing:.05em">% TD 2026</div>
+            <div style="font-size:22px;font-weight:800;color:{nt}">{estab.get("pct_2026",0):.2f}%</div>
+        </div>
+        <div style="text-align:center">
+            <div style="font-size:10px;color:{nt};text-transform:uppercase;letter-spacing:.05em">% TD 2025</div>
+            <div style="font-size:22px;font-weight:700;color:{nt}">{estab.get("pct_2025",0):.2f}%</div>
+        </div>
+        <div style="text-align:center">
+            <div style="font-size:10px;color:{nt};text-transform:uppercase;letter-spacing:.05em">Brecha vs meta</div>
+            <div style="font-size:22px;font-weight:700;color:{nt}">{brecha_s}</div>
+        </div>
+        <div style="text-align:center">
+            <div style="font-size:10px;color:{nt};text-transform:uppercase;letter-spacing:.05em">Meta 2026</div>
+            <div style="font-size:22px;font-weight:700;color:{nt}">16%</div>
+        </div>
+    </div>""", unsafe_allow_html=True)
+
+    reports_all = load_reports()
+    if f"per_{eid_sel}" not in st.session_state:
+        st.session_state[f"per_{eid_sel}"] = "R1"
+
+    st.markdown('<div style="font-size:13px;font-weight:600;color:#1F3864;margin-bottom:8px">Seleccionar período</div>', unsafe_allow_html=True)
+    cols_per = st.columns(4)
+    for i, p in enumerate(PERIODOS):
+        r_ex = next((x for x in reports_all if x.get("establecimiento_id")==eid_sel and x.get("reporte_id")==p["id"]), None)
+        est_ex = r_ex.get("estado","pendiente") if r_ex else "pendiente"
+        icon_p = {"enviado":"✅","borrador":"📝","pendiente":"⬜"}[est_ex]
+        sel = st.session_state[f"per_{eid_sel}"] == p["id"]
+        border = "3px solid #1F3864" if sel else "1px solid #e2e8f0"
+        bg_p = {"enviado":"#F0FDF4","borrador":"#EFF6FF","pendiente":"white"}[est_ex]
+        tc_p = {"enviado":"#166534","borrador":"#1E40AF","pendiente":"#64748b"}[est_ex]
+        with cols_per[i]:
+            st.markdown(f"""
+            <div style="background:{bg_p};border:{border};border-radius:10px;padding:12px 8px;text-align:center">
+                <div style="font-size:24px">{icon_p}</div>
+                <div style="font-size:12px;font-weight:700;color:#1F3864;margin-top:4px">{p["label"]}</div>
+                <div style="font-size:10px;color:#64748b">{p["periodo"]}</div>
+                <div style="font-size:10px;color:#94a3b8">Plazo: {p["fecha_txt"]}</div>
+                <div style="font-size:10px;font-weight:600;color:{tc_p};margin-top:4px">{est_ex.upper()}</div>
+            </div>""", unsafe_allow_html=True)
+            if st.button(f"Selec. {p['label']}", key=f"selp_{p['id']}_{eid_sel}", use_container_width=True):
+                st.session_state[f"per_{eid_sel}"] = p["id"]; st.rerun()
+
+    periodo_id = st.session_state[f"per_{eid_sel}"]
+    pinfo = next(p for p in PERIODOS if p["id"] == periodo_id)
+    existing = next((r for r in reports_all if r.get("establecimiento_id")==eid_sel and r.get("reporte_id")==periodo_id), None)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    if existing:
+        ec = "#166534" if existing.get("estado")=="enviado" else "#1E40AF"
+        eb = "#F0FDF4" if existing.get("estado")=="enviado" else "#EFF6FF"
+        ei = "✅" if existing.get("estado")=="enviado" else "📝"
+        st.markdown(f"""
+        <div style="background:{eb};border-radius:8px;padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+            <span style="font-size:22px">{ei}</span>
+            <div>
+                <div style="font-size:13px;font-weight:700;color:{ec}">
+                    {pinfo["label"]} — {existing.get("estado","borrador").upper()}
+                </div>
+                <div style="font-size:11px;color:{ec}">
+                    Ingresado por {existing.get("usuario","")} · {existing.get("fecha_ingreso","")[:16]} · Puedes editarlo.
+                </div>
+            </div>
+        </div>""", unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div style="background:#1F3864;border-radius:8px 8px 0 0;padding:12px 20px">
+        <div style="font-size:14px;font-weight:700;color:white">📋 {pinfo["label"]} — {pinfo["periodo"]}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px">Plazo de entrega: {pinfo["fecha_txt"]}</div>
+    </div>""", unsafe_allow_html=True)
+
+    with st.form(f"frm_{eid_sel}_{periodo_id}", clear_on_submit=False):
+        st.markdown("""<div style="background:#EFF6FF;border-left:4px solid #1F3864;border-radius:0 6px 6px 0;padding:10px 16px;margin:12px 0 10px">
+            <div style="font-size:13px;font-weight:700;color:#1F3864">1 · Principales causas del resultado observado</div>
+            <div style="font-size:11px;color:#3B82F6;margin-top:2px">Seleccione todas las causales aplicables y describa el contexto</div>
+        </div>""", unsafe_allow_html=True)
+
+        _dc = [c for c in (existing.get("causas_sel",[]) if existing else []) if c in CAUSALES]
+        causas_sel = st.multiselect("Causales de Trato Directo *", CAUSALES, default=_dc)
+        causas_desc = st.text_area("Descripción detallada *", value=existing.get("causas_desc","") if existing else "", height=110,
+                                   placeholder="Describa las causas específicas: quiebres de stock, vencimientos de contrato, proveedor exclusivo...")
+
+        st.markdown('<div style="font-size:12px;font-weight:600;color:#374151;margin:10px 0 4px">Datos cuantitativos</div>', unsafe_allow_html=True)
+        c1,c2,c3 = st.columns(3)
+        monto_td = c1.number_input("💰 Monto TD ($CLP)", min_value=0, step=1_000_000, value=int(existing.get("monto_td",0)) if existing else 0, format="%d")
+        n_proc   = c2.number_input("📦 N° procesos TD", min_value=0, step=1, value=int(existing.get("n_proc",0)) if existing else 0)
+        pct_per  = c3.number_input("📊 % TD período MINSAL", min_value=0.0, max_value=100.0, step=0.01, value=float(existing.get("pct_per",estab.get("pct_2026",0.0))) if existing else float(estab.get("pct_2026",0.0)), format="%.2f")
+
+        st.markdown("""<div style="background:#F0FDF4;border-left:4px solid #22C55E;border-radius:0 6px 6px 0;padding:10px 16px;margin:16px 0 10px">
+            <div style="font-size:13px;font-weight:700;color:#166534">2 · Medidas implementadas</div>
+            <div style="font-size:11px;color:#16A34A;margin-top:2px">Acciones ejecutadas para reducir el uso del Trato Directo</div>
+        </div>""", unsafe_allow_html=True)
+
+        med_labels = {"pac":("📅","Actualización Plan Anual de Compras"),"lic":("📄","Inicio procesos licitatorios"),
+                      "cm":("🛒","Migración a Convenio Marco"),"cenabast":("🏥","Gestión CENABAST"),
+                      "cap":("📚","Capacitación equipo Ley 21.634"),"venc":("⏰","Control vencimiento contratos")}
+        ex_med = existing.get("medidas",{}) if existing else {}
+        med_sel = {}
+        cols_m = st.columns(3)
+        for i,(k,(icon_m,lbl)) in enumerate(med_labels.items()):
+            med_sel[k] = cols_m[i%3].checkbox(f"{icon_m} {lbl}", value=ex_med.get(k,False), key=f"m_{k}")
+        med_desc = st.text_area("Descripción de medidas", value=existing.get("med_desc","") if existing else "", height=80,
+                                placeholder="Describa el resultado de las acciones y el impacto observado...")
+
+        st.markdown("""<div style="background:#FFF7ED;border-left:4px solid #F59E0B;border-radius:0 6px 6px 0;padding:10px 16px;margin:16px 0 10px">
+            <div style="font-size:13px;font-weight:700;color:#92400E">3 · Compromisos para el próximo período</div>
+            <div style="font-size:11px;color:#D97706;margin-top:2px">Acciones concretas con plazos verificables</div>
+        </div>""", unsafe_allow_html=True)
+
+        compromisos = st.text_area("Compromisos adoptados *", value=existing.get("compromisos","") if existing else "", height=110,
+                                   placeholder="1. Iniciar licitación para [insumo] antes del [fecha] | 2. Gestionar CENABAST | 3. Reducir % TD < 16%")
+        c4,c5 = st.columns(2)
+        meta_prox  = c4.number_input("🎯 Meta % TD próximo período", min_value=0.0, max_value=100.0, step=0.5, value=float(existing.get("meta_prox",16.0)) if existing else 16.0, format="%.1f")
+        fecha_comp = c5.date_input("📆 Fecha comprometida", value=datetime.date.fromisoformat(existing["fecha_comp"]) if existing and existing.get("fecha_comp") else datetime.date(2026,8,31))
+
+        st.markdown("""<div style="background:#F8FAFC;border-left:4px solid #64748B;border-radius:0 6px 6px 0;padding:10px 16px;margin:16px 0 10px">
+            <div style="font-size:13px;font-weight:700;color:#374151">4 · Responsable del reporte</div>
+            <div style="font-size:11px;color:#64748B;margin-top:2px">Funcionario que suscribe los antecedentes</div>
+        </div>""", unsafe_allow_html=True)
+
+        c6,c7,c8 = st.columns(3)
+        resp_nombre = c6.text_input("👤 Nombre completo", value=existing.get("resp_nombre",user["nombre"]) if existing else user["nombre"])
+        resp_cargo  = c7.text_input("💼 Cargo", value=existing.get("resp_cargo","Jefe/a de Abastecimiento") if existing else "Jefe/a de Abastecimiento")
+        resp_email  = c8.text_input("📧 Correo electrónico", value=existing.get("resp_email",user.get("email","")) if existing else user.get("email",""))
+        obs = st.text_area("💬 Observaciones (opcional)", value=existing.get("obs","") if existing else "", height=60, placeholder="Información adicional para la Subsecretaría...")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("""<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:11px;color:#64748b">
+            <strong>* Campos obligatorios para enviar.</strong> Guarda como borrador y completa después si necesitas.
+        </div>""", unsafe_allow_html=True)
+
+        cg,ce,_ = st.columns([1,1,2])
+        guardar = cg.form_submit_button("💾  Guardar borrador", use_container_width=True)
+        enviar  = ce.form_submit_button("📤  Enviar a SSMOC",   use_container_width=True, type="primary")
+
+        if guardar or enviar:
+            ok = True
+            if enviar:
+                errs = []
+                if not causas_sel:          errs.append("⚠️ Seleccione al menos una causal.")
+                if not causas_desc.strip(): errs.append("⚠️ Complete la descripción de causas.")
+                if not compromisos.strip(): errs.append("⚠️ Complete los compromisos.")
+                if not resp_nombre.strip(): errs.append("⚠️ Ingrese el nombre del responsable.")
+                if errs:
+                    for e in errs: st.error(e)
+                    ok = False
             if ok:
-                data={"establecimiento_id":eid_sel,"establecimiento_nombre":estab["nombre"],"reporte_id":periodo_id,"periodo":pinfo["periodo"],"periodo_label":pinfo["label"],"nivel_riesgo":nivel,"pct_2026":estab.get("pct_2026"),"pct_2025":estab.get("pct_2025"),"pct_per":pct_per,"monto_td":monto_td,"n_proc":n_proc,"causas_sel":causas_sel,"causas_desc":causas_desc,"medidas":med_sel,"med_desc":med_desc,"compromisos":compromisos,"meta_prox":meta_prox,"fecha_comp":str(fecha_comp),"resp_nombre":resp_nombre,"resp_cargo":resp_cargo,"resp_email":resp_email,"obs":obs,"estado":"enviado" if enviar else "borrador","usuario":user["username"],"fecha_ingreso":str(datetime.datetime.now().isoformat())}
+                data = {"establecimiento_id":eid_sel,"establecimiento_nombre":estab["nombre"],"reporte_id":periodo_id,"periodo":pinfo["periodo"],"periodo_label":pinfo["label"],"nivel_riesgo":nivel,"pct_2026":estab.get("pct_2026"),"pct_2025":estab.get("pct_2025"),"pct_per":pct_per,"monto_td":monto_td,"n_proc":n_proc,"causas_sel":causas_sel,"causas_desc":causas_desc,"medidas":med_sel,"med_desc":med_desc,"compromisos":compromisos,"meta_prox":meta_prox,"fecha_comp":str(fecha_comp),"resp_nombre":resp_nombre,"resp_cargo":resp_cargo,"resp_email":resp_email,"obs":obs,"estado":"enviado" if enviar else "borrador","usuario":user["username"],"fecha_ingreso":str(datetime.datetime.now().isoformat())}
                 upsert_report(data)
-                if enviar: st.success(f"✅ Reporte {pinfo['label']} enviado exitosamente."); st.balloons()
-                else: st.info("💾 Borrador guardado.")
+                if enviar: st.success(f"✅ **Reporte {pinfo['label']}** enviado exitosamente."); st.balloons()
+                else: st.info("💾 Borrador guardado correctamente.")
                 st.rerun()
-
-
-# ═══════════════════════════════════════════════════════════════════════
-# PÁGINA TODOS LOS REPORTES (admin)
-# ═══════════════════════════════════════════════════════════════════════
 def pg_todos_reportes():
     if st.session_state.user["rol"]!="admin": st.error("Solo administradores."); return
     import pandas as pd
