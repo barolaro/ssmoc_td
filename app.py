@@ -396,7 +396,8 @@ def pg_mis_reportes():
         st.markdown(f"#### {pinfo['label']} · {pinfo['periodo']}")
 
         st.markdown("**1. Principales causas del resultado observado**")
-        causas_sel=st.multiselect("Causales de Trato Directo identificadas",CAUSALES,default=existing.get("causas_sel",[]) if existing else [])
+        _dc=[c for c in (existing.get("causas_sel",[]) if existing else []) if c in CAUSALES]
+        causas_sel=st.multiselect("Causales de Trato Directo identificadas",CAUSALES,default=_dc)
         causas_desc=st.text_area("Descripción detallada",value=existing.get("causas_desc","") if existing else "",height=110,placeholder="Describa el contexto específico del establecimiento durante el período...")
 
         c1,c2,c3=st.columns(3)
@@ -435,6 +436,7 @@ def pg_mis_reportes():
         enviar=cb2.form_submit_button("📤 Enviar a SSMOC",use_container_width=True,type="primary")
 
         if guardar or enviar:
+            ok_to_save = True
             if enviar:
                 errs=[]
                 if not causas_sel: errs.append("Seleccione al menos una causal.")
@@ -442,12 +444,13 @@ def pg_mis_reportes():
                 if not compromisos.strip(): errs.append("Complete los compromisos.")
                 if errs:
                     for e in errs: st.error(e)
-                    st.stop()
-            data={"establecimiento_id":eid_sel,"establecimiento_nombre":estab["nombre"],"reporte_id":periodo_id,"periodo":pinfo["periodo"],"periodo_label":pinfo["label"],"nivel_riesgo":nivel,"pct_2026":estab.get("pct_2026"),"pct_2025":estab.get("pct_2025"),"pct_per":pct_per,"monto_td":monto_td,"n_proc":n_proc,"causas_sel":causas_sel,"causas_desc":causas_desc,"medidas":med_sel,"med_desc":med_desc,"compromisos":compromisos,"meta_prox":meta_prox,"fecha_comp":str(fecha_comp),"resp_nombre":resp_nombre,"resp_cargo":resp_cargo,"resp_email":resp_email,"obs":obs,"estado":"enviado" if enviar else "borrador","usuario":user["username"],"fecha_ingreso":str(datetime.datetime.now().isoformat())}
-            upsert_report(data)
-            if enviar: st.success(f"✅ Reporte {pinfo['label']} enviado exitosamente."); st.balloons()
-            else: st.info("💾 Borrador guardado.")
-            st.rerun()
+                    ok_to_save = False
+            if ok_to_save:
+                data={"establecimiento_id":eid_sel,"establecimiento_nombre":estab["nombre"],"reporte_id":periodo_id,"periodo":pinfo["periodo"],"periodo_label":pinfo["label"],"nivel_riesgo":nivel,"pct_2026":estab.get("pct_2026"),"pct_2025":estab.get("pct_2025"),"pct_per":pct_per,"monto_td":monto_td,"n_proc":n_proc,"causas_sel":causas_sel,"causas_desc":causas_desc,"medidas":med_sel,"med_desc":med_desc,"compromisos":compromisos,"meta_prox":meta_prox,"fecha_comp":str(fecha_comp),"resp_nombre":resp_nombre,"resp_cargo":resp_cargo,"resp_email":resp_email,"obs":obs,"estado":"enviado" if enviar else "borrador","usuario":user["username"],"fecha_ingreso":str(datetime.datetime.now().isoformat())}
+                upsert_report(data)
+                if enviar: st.success(f"✅ Reporte {pinfo['label']} enviado exitosamente."); st.balloons()
+                else: st.info("💾 Borrador guardado.")
+                st.rerun()
 
 
 def pg_todos_reportes():
