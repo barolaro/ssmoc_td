@@ -217,20 +217,36 @@ def periodo_display(year: int, reporte_id: str):
     p = get_periodo_info(reporte_id)
     return f"{year} · {p['label']} · {p['periodo']}"
 
+def periodo_tiene_datos(year: int = None, reporte_id: str = None) -> bool:
+    """Indica si el año/período seleccionado tiene una carga oficial MINSAL registrada."""
+    year = year or st.session_state.get("selected_year", 2026)
+    reporte_id = reporte_id or st.session_state.get("selected_report", "R1")
+    data = load_datos_periodos()
+    return bool(data.get(str(year), {}).get(reporte_id, {}).get("establecimientos"))
+
+def mensaje_periodo_sin_datos(year: int = None, reporte_id: str = None, detalle: bool = True):
+    """Mensaje institucional cuando el período aún no tiene carga oficial."""
+    year = year or st.session_state.get("selected_year", 2026)
+    reporte_id = reporte_id or st.session_state.get("selected_report", "R1")
+    pinfo = get_periodo_info(reporte_id)
+    texto_detalle = ""
+    if detalle:
+        texto_detalle = "<br>Para evitar distorsiones, no se muestran indicadores, semáforos, reportes, boletines ni exportaciones hasta cargar el CSV oficial MINSAL del período seleccionado."
+    st.markdown(f"""
+    <div style="background:#FFFBEB;border:1px solid #FDE68A;border-left:5px solid #F59E0B;border-radius:0 10px 10px 0;padding:18px 20px;margin:14px 0;color:#92400E;line-height:1.6">
+        <div style="font-size:15px;font-weight:800;margin-bottom:4px">⚠️ Período sin carga oficial MINSAL</div>
+        <div style="font-size:13px">Aún no se han cargado datos para <strong>{year} · {pinfo['label']} · {pinfo['periodo']}</strong>.{texto_detalle}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
 def apply_period_context(year: int = None, reporte_id: str = None):
-    """Actualiza ESTABLECIMIENTOS según el período seleccionado, sin perder la base original."""
+    """Actualiza ESTABLECIMIENTOS solo si existe carga del período. No arrastra datos de otros períodos."""
     year = year or st.session_state.get("selected_year", 2026)
     reporte_id = reporte_id or st.session_state.get("selected_report", "R1")
     ESTABLECIMIENTOS.clear()
     ESTABLECIMIENTOS.update(json.loads(json.dumps(BASE_ESTABLECIMIENTOS)))
     data = load_datos_periodos()
     period_data = data.get(str(year), {}).get(reporte_id, {}).get("establecimientos", {})
-    if not period_data:
-        try:
-            current = _load_json_persistent(DATOS_FILE, "datos_minsal.json", {})
-            period_data = current if isinstance(current, dict) else {}
-        except Exception:
-            period_data = {}
     for eid, vals in period_data.items():
         if eid in ESTABLECIMIENTOS:
             ESTABLECIMIENTOS[eid].update(vals)
@@ -253,7 +269,9 @@ def selected_year_report_controls():
         st.rerun()
     apply_period_context(year, rid)
     with c3:
-        st.markdown(f"<div style='padding-top:28px;font-size:12px;color:#64748b'>Base activa: <b>{periodo_display(year, rid)}</b></div>", unsafe_allow_html=True)
+        estado = "✅ Con carga oficial" if periodo_tiene_datos(year, rid) else "⚠️ Sin carga oficial"
+        color = "#166534" if periodo_tiene_datos(year, rid) else "#92400E"
+        st.markdown(f"<div style='padding-top:28px;font-size:12px;color:#64748b'>Base activa: <b>{periodo_display(year, rid)}</b> &nbsp;·&nbsp; <b style='color:{color}'>{estado}</b></div>", unsafe_allow_html=True)
 
 def parse_csv_minsal(file_bytes) -> dict:
     """
@@ -535,6 +553,14 @@ def cal_cards(reports, eid_filter=None):
 def pg_dashboard():
     import plotly.graph_objects as go
     import pandas as pd
+    year = st.session_state.get("selected_year", 2026)
+    rid = st.session_state.get("selected_report", "R1")
+    apply_period_context(year, rid)
+    if not periodo_tiene_datos(year, rid):
+        page_header("Monitoreo Trato Directo — Red SSMOCC", "Dashboard ejecutivo por año y período")
+        mensaje_periodo_sin_datos(year, rid)
+        st.info("Ingrese al módulo **Carga MINSAL** para cargar el CSV oficial del período. Una vez cargado, se habilitarán automáticamente KPIs, semáforos, ranking, boletín y exportaciones.")
+        return
     user=st.session_state.user
     es_admin=user["rol"]=="admin"
     eid_user=user.get("establecimiento")
@@ -683,6 +709,12 @@ def pg_todos_reportes():
     if st.session_state.user["rol"]!="admin": st.error("Solo administradores."); return
     import pandas as pd
     page_header("Todos los reportes","Vista consolidada y gestión — solo administradores")
+    year = st.session_state.get("selected_year", 2026)
+    rid = st.session_state.get("selected_report", "R1")
+    apply_period_context(year, rid)
+    if not periodo_tiene_datos(year, rid):
+        mensaje_periodo_sin_datos(year, rid)
+        return
     reports=load_reports()
     c1,c2,c3=st.columns(3)
     fp=c1.selectbox("Período",["Todos"]+[p["id"] for p in PERIODOS],format_func=lambda x:"Todos" if x=="Todos" else next(p["label"]+" — "+p["periodo"] for p in PERIODOS if p["id"]==x))
@@ -949,6 +981,13 @@ def pg_mis_reportes():
     user = st.session_state.user
     page_header("Ingreso de antecedentes — Anexo N°1",
                 "Lineamiento MINSAL v1.0 · Jun 2026 · Subsecretaría de Redes Asistenciales")
+    year = st.session_state.get("selected_year", 2026)
+    rid_activo = st.session_state.get("selected_report", "R1")
+    apply_period_context(year, rid_activo)
+    if not periodo_tiene_datos(year, rid_activo):
+        mensaje_periodo_sin_datos(year, rid_activo)
+        st.info("Los establecimientos no podrán ingresar causas, medidas ni compromisos hasta que exista una carga oficial del período. Esto evita que se informen antecedentes usando indicadores de otro trimestre.")
+        return
 
     if user["rol"] == "admin":
         opciones = {eid: e["nombre_corto"] for eid, e in ESTABLECIMIENTOS.items() if e["nivel"] in ["rojo","amarillo"]}
@@ -1162,10 +1201,13 @@ def pg_actualizar_datos():
     st.subheader(f"Estado actual — {periodo_display(year, reporte_id)}")
     apply_period_context(year, reporte_id)
     import pandas as pd
-    rows_act = []
-    for eid, e in ESTABLECIMIENTOS.items():
-        rows_act.append({"Establecimiento": e["nombre_corto"], "Nivel": e["nivel"].capitalize(), "% TD 2026": f"{e['pct_2026']:.2f}%", "% TD 2025": f"{e['pct_2025']:.2f}%", "Brecha": f"{e['brecha']:+.2f} pp", "Denominador ($)": f"${e['denominador']:,.0f}", "Numerador ($)": f"${e['numerador']:,.0f}", "Última actualización": e.get("ultima_actualizacion", "Sin carga histórica")})
-    st.dataframe(pd.DataFrame(rows_act), use_container_width=True, hide_index=True)
+    if not periodo_tiene_datos(year, reporte_id):
+        mensaje_periodo_sin_datos(year, reporte_id, detalle=False)
+    else:
+        rows_act = []
+        for eid, e in ESTABLECIMIENTOS.items():
+            rows_act.append({"Establecimiento": e["nombre_corto"], "Nivel": e["nivel"].capitalize(), "% TD 2026": f"{e['pct_2026']:.2f}%", "% TD 2025": f"{e['pct_2025']:.2f}%", "Brecha": f"{e['brecha']:+.2f} pp", "Denominador ($)": f"${e['denominador']:,.0f}", "Numerador ($)": f"${e['numerador']:,.0f}", "Última actualización": e.get("ultima_actualizacion", "Sin carga histórica")})
+        st.dataframe(pd.DataFrame(rows_act), use_container_width=True, hide_index=True)
     st.markdown("---")
     st.subheader("📤 Subir CSV oficial MINSAL")
     st.markdown("""<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:12px;color:#92400E"><strong>Formato esperado:</strong> CSV con separador <code>;</code> y columnas: <code>Codigo DEIS · RUT · Establecimiento · Servicio de Salud · Denominador · Numerador · % Trato Directo 2026 · % Trato Directo periodo equivalente 2025 · Brecha vs meta · Variacion vs 2025 · Nivel de riesgo</code>.</div>""", unsafe_allow_html=True)
@@ -1243,6 +1285,9 @@ def pg_boletines():
     rid = st.session_state.get("selected_report", "R1")
     apply_period_context(year, rid)
     st.markdown(f"**Período activo:** {periodo_display(year, rid)}")
+    if not periodo_tiene_datos(year, rid):
+        mensaje_periodo_sin_datos(year, rid)
+        st.stop()
     df = _resumen_establecimientos_df()
     st.dataframe(df, use_container_width=True, hide_index=True)
     html = generar_boletin_html(year, rid)
@@ -1306,6 +1351,10 @@ def pg_exportar():
     st.session_state.selected_report = ps
     st.session_state.selected_year = year
     apply_period_context(year, ps)
+    if not periodo_tiene_datos(year, ps):
+        mensaje_periodo_sin_datos(year, ps)
+        st.info("El Anexo N°1 MINSAL queda bloqueado hasta cargar la base oficial del período. Así se evita exportar información del período anterior.")
+        return
 
     # Solo deben reportar los establecimientos categorizados en rojo o amarillo.
     obligatorios = {eid: e for eid, e in ESTABLECIMIENTOS.items() if e.get("nivel") in ["rojo", "amarillo"]}

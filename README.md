@@ -1,55 +1,55 @@
-# Monitor Trato Directo SSMOCC — Versión 2.0
+# Monitor Trato Directo SSMOCC v2
 
-Esta versión incorpora una lógica histórica por **Año + Período**, para que cada carga oficial MINSAL quede guardada sin sobrescribir los períodos anteriores.
+Versión institucional del Monitor de Trato Directo del Servicio de Salud Metropolitano Occidente.
 
-## Flujo de uso
+## Flujo principal
 
-1. Ingresar como administrador.
-2. Ir a **Carga MINSAL**.
-3. Seleccionar año y período:
-   - R1: Enero–Marzo, entrega 31 de julio.
-   - R2: Abril–Junio, entrega 31 de agosto.
-   - R3: Julio–Septiembre, entrega 30 de noviembre.
-   - R4: Octubre–Diciembre, entrega 28 de febrero.
-4. Subir CSV oficial MINSAL.
-5. Confirmar carga histórica.
-6. Revisar **Dashboard**.
-7. Generar **Boletín Ejecutivo**.
-8. Descargar **Excel MINSAL** desde Exportar.
-9. Revisar comparativos en **Histórico**.
+1. El administrador selecciona año y período.
+2. Carga el CSV oficial MINSAL.
+3. El dashboard se actualiza para ese período.
+4. Los establecimientos en nivel rojo y amarillo ingresan sus causas, medidas, compromisos, responsable y fecha comprometida.
+5. El administrador genera el Anexo N°1 MINSAL con el formato oficial.
+6. El sistema mantiene histórico por período para comparar evolución.
 
-## Archivos principales
+## Ajuste clave incluido
+
+El módulo **Exportar Anexo N°1 MINSAL** se alimenta exclusivamente de los reportes enviados por establecimientos en nivel **rojo** y **amarillo**.
+
+El Excel generado contiene las columnas solicitadas por MINSAL:
+
+- Servicio de salud
+- Establecimiento
+- Nivel de Riesgo
+- Período informado
+- Principales causas
+- Medidas implementadas
+- Compromisos
+- Responsable
+- Fecha comprometida
+
+Los establecimientos verdes quedan fuera del Anexo, salvo que el lineamiento solicite incluirlos.
+
+## Archivos
 
 - `app.py`: aplicación Streamlit completa.
-- `logo_ssmocc.jpg`: logo institucional usado por la aplicación.
 - `requirements.txt`: dependencias.
-- `.gitignore`: configuración Git.
+- `logo_ssmocc.jpg`: imagen institucional.
+- `.gitignore`: reglas de repositorio.
+
+## Ejecución local
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
 
 ## Persistencia
 
-La app mantiene compatibilidad con la persistencia anterior y agrega:
-
-- `data/datos_periodos.json`: base histórica por año y período.
-- `data/datos_minsal.json`: compatibilidad con la versión previa.
-- `data/reports.json`: reportes ingresados por establecimientos.
-- `data/users.json`: usuarios.
-
-En Streamlit Cloud, para persistencia real, mantener configurado GitHub en `st.secrets`:
+La app usa archivos JSON locales y puede guardar en GitHub si se configuran secrets de Streamlit:
 
 ```toml
 [github]
-token = "ghp_xxxxx"
+token = "ghp_TU_TOKEN"
 repo = "usuario/repositorio"
 branch = "main"
 ```
-
-## Mejora incorporada
-
-La plataforma ahora permite trabajar sucesivamente con enero–marzo, abril–junio, julio–septiembre y octubre–diciembre, generando para cada período:
-
-- Dashboard ejecutivo.
-- Boletín institucional HTML.
-- Respaldo Excel del boletín.
-- Exportación Anexo N°1 MINSAL.
-- Histórico y comparativos.
-
