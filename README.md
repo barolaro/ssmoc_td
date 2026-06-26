@@ -1,41 +1,10 @@
-# SIMOTD — Sistema de Monitoreo del Indicador de Trato Directo
+# SIMOTD - Corrector ortográfico básico
 
-Plataforma institucional para el Servicio de Salud Metropolitano Occidente (SSMOCC), orientada al seguimiento del indicador de Trato Directo, gestión de reportes por establecimiento, generación del Anexo N°1 MINSAL y trazabilidad por año/período.
+Esta versión incorpora un corrector básico para campos libres del reporte:
 
-## Funcionalidades principales
+- Descripción de causas
+- Medidas implementadas
+- Compromisos
+- Observaciones
 
-- Identidad institucional **SIMOTD**.
-- Dashboard ejecutivo por año y período.
-- Carga oficial MINSAL por CSV.
-- Control de períodos con carga oficial.
-- Reportes por establecimientos.
-- Bloqueo automático del reporte una vez enviado.
-- Habilitación excepcional de edición por administrador.
-- Bitácora de trazabilidad del reporte.
-- Vista previa institucional del Anexo N°1.
-- Exportación consolidada MINSAL.
-- Histórico y boletín ejecutivo.
-
-## Ejecución local
-
-```bash
-pip install -r requirements.txt
-streamlit run app.py
-```
-
-## Persistencia en Streamlit Cloud
-
-Configurar `st.secrets`:
-
-```toml
-[github]
-token = "ghp_xxxxxxxxx"
-repo = "barolaro/ssmoc_td"
-branch = "main"
-```
-
-## Nombre institucional
-
-**SIMOTD**  
-Sistema de Monitoreo del Indicador de Trato Directo  
-Servicio de Salud Metropolitano Occidente
+La corrección se aplica automáticamente al guardar borrador o enviar reporte. No usa servicios externos ni IA: corrige espacios, puntuación, mayúsculas iniciales y términos frecuentes del lenguaje institucional.

@@ -683,6 +683,105 @@ def _format_fecha_chile(fecha: str) -> str:
     except Exception:
         return fecha or "—"
 
+
+# ═══════════════════════════════════════════════════════════════════════
+# CORRECTOR ORTOGRÁFICO BÁSICO
+# ═══════════════════════════════════════════════════════════════════════
+def corrector_ortografico_basico(texto: str) -> str:
+    """
+    Corrector básico sin servicios externos.
+    Corrige espacios, puntuación, mayúsculas iniciales y términos frecuentes
+    usados en reportes institucionales de compras/abastecimiento.
+    """
+    import re
+
+    if texto is None:
+        return ""
+
+    t = str(texto).strip()
+    if not t:
+        return ""
+
+    t = t.replace("\r\n", "\n").replace("\r", "\n")
+    t = re.sub(r"[ \t]+", " ", t)
+    t = re.sub(r" *([,.;:]) *", r"\1 ", t)
+    t = re.sub(r"\s+\n", "\n", t)
+    t = re.sub(r"\n\s+", "\n", t)
+    t = re.sub(r" {2,}", " ", t).strip()
+
+    reemplazos = {
+        "accion": "acción",
+        "adquisicion": "adquisición",
+        "adquisiciones": "adquisiciones",
+        "analisis": "análisis",
+        "a traves": "a través",
+        "atraves": "a través",
+        "autorizacion": "autorización",
+        "capacitacion": "capacitación",
+        "coordinacion": "coordinación",
+        "correccion": "corrección",
+        "ejecucion": "ejecución",
+        "evaluacion": "evaluación",
+        "gestion": "gestión",
+        "implementacion": "implementación",
+        "informacion": "información",
+        "institucion": "institución",
+        "licitacion": "licitación",
+        "licitaciones": "licitaciones",
+        "migracion": "migración",
+        "observacion": "observación",
+        "observaciones": "observaciones",
+        "periodo": "período",
+        "periodos": "períodos",
+        "planificacion": "planificación",
+        "recepcion": "recepción",
+        "revision": "revisión",
+        "servicio de salud": "Servicio de Salud",
+        "subdireccion": "Subdirección",
+        "trato directo": "Trato Directo",
+    }
+
+    for mal, bien in reemplazos.items():
+        t = re.sub(rf"\b{re.escape(mal)}\b", bien, t, flags=re.IGNORECASE)
+
+    expresiones = {
+        r"\bno habia\b": "no había",
+        r"\bno existia\b": "no existía",
+        r"\bse realizo\b": "se realizó",
+        r"\bse efectuo\b": "se efectuó",
+        r"\bse envio\b": "se envió",
+        r"\bse informo\b": "se informó",
+        r"\bse solicito\b": "se solicitó",
+        r"\bse comprometio\b": "se comprometió",
+        r"\bdebera\b": "deberá",
+        r"\bdeberia\b": "debería",
+        r"\bpodra\b": "podrá",
+        r"\bsera\b": "será",
+        r"\btambien\b": "también",
+        r"\bmas\b": "más",
+    }
+    for patron, bien in expresiones.items():
+        t = re.sub(patron, bien, t, flags=re.IGNORECASE)
+
+    def cap_sentence(match):
+        return match.group(1) + match.group(2).upper()
+
+    if t:
+        t = t[0].upper() + t[1:]
+    t = re.sub(r"(^|[.!?]\s+)([a-záéíóúñ])", cap_sentence, t)
+
+    if re.search(r"[A-Za-zÁÉÍÓÚáéíóúÑñ0-9]$", t):
+        t += "."
+
+    return t
+
+def aplicar_corrector_reporte(campos: dict) -> dict:
+    """Aplica corrector básico a los campos libres del reporte."""
+    corregido = dict(campos)
+    for campo in ["causas_desc", "med_desc", "compromisos", "obs"]:
+        corregido[campo] = corrector_ortografico_basico(corregido.get(campo, ""))
+    return corregido
+
 def _html_list_from_text(texto: str, icon: str = "•") -> str:
     """Convierte texto separado por ; o | en lista HTML limpia."""
     import html, re
@@ -1656,6 +1755,10 @@ def pg_mis_reportes():
         obs = st.text_area("💬 Observaciones (opcional)", value=existing.get("obs","") if existing else "", height=60)
 
         st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('''<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-left:4px solid #1F3864;border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:10px;font-size:11px;color:#1E3A8A;line-height:1.5">
+            ✍️ <strong>Corrector ortográfico básico activado:</strong> al guardar o enviar, SIMOTD ajustará automáticamente espacios, puntuación, mayúsculas iniciales y términos frecuentes de redacción institucional.
+        </div>''', unsafe_allow_html=True)
+
         st.markdown('''<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:11px;color:#64748b">
             <strong>* Obligatorios para enviar.</strong> Puedes guardar como borrador y completar después.
         </div>''', unsafe_allow_html=True)
@@ -1676,7 +1779,13 @@ def pg_mis_reportes():
                     for e in errs: st.error(e)
                     ok = False
             if ok:
-                data = {"year":year,"establecimiento_id":eid_sel,"establecimiento_nombre":estab["nombre"],"reporte_id":periodo_id,"periodo":pinfo["periodo"],"periodo_label":pinfo["label"],"nivel_riesgo":nivel,"pct_2026":estab.get("pct_2026"),"pct_2025":estab.get("pct_2025"),"pct_per":pct_per,"monto_td":monto_td,"n_proc":n_proc,"causas_sel":causas_sel,"causas_desc":causas_desc,"medidas":med_sel,"med_desc":med_desc,"compromisos":compromisos,"meta_prox":meta_prox,"fecha_comp":str(fecha_comp),"resp_nombre":resp_nombre,"resp_cargo":resp_cargo,"resp_email":resp_email,"obs":obs,"estado":"enviado" if enviar else "borrador","usuario":user["username"],"fecha_ingreso":str(datetime.datetime.now().isoformat(timespec="seconds"))}
+                textos_corregidos = aplicar_corrector_reporte({
+                    "causas_desc": causas_desc,
+                    "med_desc": med_desc,
+                    "compromisos": compromisos,
+                    "obs": obs,
+                })
+                data = {"year":year,"establecimiento_id":eid_sel,"establecimiento_nombre":estab["nombre"],"reporte_id":periodo_id,"periodo":pinfo["periodo"],"periodo_label":pinfo["label"],"nivel_riesgo":nivel,"pct_2026":estab.get("pct_2026"),"pct_2025":estab.get("pct_2025"),"pct_per":pct_per,"monto_td":monto_td,"n_proc":n_proc,"causas_sel":causas_sel,"causas_desc":textos_corregidos["causas_desc"],"medidas":med_sel,"med_desc":textos_corregidos["med_desc"],"compromisos":textos_corregidos["compromisos"],"meta_prox":meta_prox,"fecha_comp":str(fecha_comp),"resp_nombre":resp_nombre.strip(),"resp_cargo":resp_cargo.strip(),"resp_email":resp_email.strip(),"obs":textos_corregidos["obs"],"estado":"enviado" if enviar else "borrador","usuario":user["username"],"fecha_ingreso":str(datetime.datetime.now().isoformat(timespec="seconds"))}
                 # Mantener trazabilidad si el reporte fue habilitado por el administrador y luego corregido.
                 if existing:
                     for keep_key in ["bitacora", "habilitado_por", "habilitado_nombre", "fecha_habilitacion", "motivo_habilitacion"]:
@@ -1686,13 +1795,13 @@ def pg_mis_reportes():
                 if enviar:
                     cerrar_reporte_enviado(data, "Envía reporte" if not existing else "Reenvía reporte corregido")
                     upsert_report(data)
-                    st.success(f"✅ **Reporte {pinfo['label']}** enviado exitosamente. Quedó bloqueado para edición.")
+                    st.success(f"✅ **Reporte {pinfo['label']}** enviado exitosamente. Quedó bloqueado para edición y con corrección ortográfica básica aplicada.")
                     st.balloons()
                 else:
                     data["bloqueado"] = False
                     _append_audit_entry(data, "Guarda borrador", "Borrador actualizado por el establecimiento/administrador.")
                     upsert_report(data)
-                    st.info("💾 Borrador guardado correctamente.")
+                    st.info("💾 Borrador guardado correctamente con corrección ortográfica básica aplicada.")
                 st.rerun()
 
 
