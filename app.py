@@ -66,6 +66,7 @@ DATA_DIR.mkdir(exist_ok=True)
 USERS_FILE   = DATA_DIR / "users.json"
 REPORTS_FILE = DATA_DIR / "reports.json"
 DATOS_FILE   = DATA_DIR / "datos_minsal.json"
+DATOS_PERIODOS_FILE = DATA_DIR / "datos_periodos.json"
 
 def _gh_cfg():
     """Retorna config de GitHub desde secrets si está disponible."""
@@ -169,6 +170,9 @@ ESTABLECIMIENTOS = {
     "talagante":      {"nombre":"Hospital Adalberto Steeger (Talagante)","nombre_corto":"H. Talagante","rut":"61.602.121-4","codigo_deis":"110130","pct_2026":3.21,"pct_2025":10.63,"brecha":-12.79,"variacion":-7.42,"nivel":"verde","denominador":7242041556,"numerador":232416794},
 }
 
+# Copia base para poder cambiar de período sin arrastrar datos del período anterior.
+BASE_ESTABLECIMIENTOS = json.loads(json.dumps(ESTABLECIMIENTOS))
+
 # Mapa de DEIS → clave interna (para actualización desde CSV MINSAL)
 DEIS_MAP = {
     "110110": "traumatologico",
@@ -193,6 +197,63 @@ def load_datos_minsal():
 def save_datos_minsal(updates: dict):
     """Guarda datos MINSAL en GitHub + local. Persiste entre reinicios."""
     _save_json_persistent(DATOS_FILE, "datos_minsal.json", updates)
+
+def load_datos_periodos():
+    """Carga la base histórica: año → período → establecimientos."""
+    return _load_json_persistent(DATOS_PERIODOS_FILE, "datos_periodos.json", {})
+
+def save_datos_periodo(year: int, reporte_id: str, updates: dict, fuente: str = "CSV MINSAL"):
+    """Guarda una carga oficial MINSAL asociada a un año y período específico."""
+    data = load_datos_periodos()
+    y = str(year)
+    data.setdefault(y, {})
+    data[y][reporte_id] = {"metadata": {"year": year, "reporte_id": reporte_id, "fuente": fuente, "fecha_carga": datetime.datetime.now().isoformat(timespec="seconds"), "establecimientos": len(updates)}, "establecimientos": updates}
+    _save_json_persistent(DATOS_PERIODOS_FILE, "datos_periodos.json", data)
+
+def get_periodo_info(reporte_id: str):
+    return next((p for p in PERIODOS if p["id"] == reporte_id), PERIODOS[0])
+
+def periodo_display(year: int, reporte_id: str):
+    p = get_periodo_info(reporte_id)
+    return f"{year} · {p['label']} · {p['periodo']}"
+
+def apply_period_context(year: int = None, reporte_id: str = None):
+    """Actualiza ESTABLECIMIENTOS según el período seleccionado, sin perder la base original."""
+    year = year or st.session_state.get("selected_year", 2026)
+    reporte_id = reporte_id or st.session_state.get("selected_report", "R1")
+    ESTABLECIMIENTOS.clear()
+    ESTABLECIMIENTOS.update(json.loads(json.dumps(BASE_ESTABLECIMIENTOS)))
+    data = load_datos_periodos()
+    period_data = data.get(str(year), {}).get(reporte_id, {}).get("establecimientos", {})
+    if not period_data:
+        try:
+            current = _load_json_persistent(DATOS_FILE, "datos_minsal.json", {})
+            period_data = current if isinstance(current, dict) else {}
+        except Exception:
+            period_data = {}
+    for eid, vals in period_data.items():
+        if eid in ESTABLECIMIENTOS:
+            ESTABLECIMIENTOS[eid].update(vals)
+
+def selected_year_report_controls():
+    """Selector global Año + Período."""
+    st.session_state.setdefault("selected_year", 2026)
+    st.session_state.setdefault("selected_report", "R1")
+    years = list(range(2026, 2031))
+    rids = [p["id"] for p in PERIODOS]
+    c1, c2, c3 = st.columns([1, 2, 4])
+    with c1:
+        year = st.selectbox("Año", years, index=years.index(st.session_state.selected_year), key="sel_year_widget")
+    with c2:
+        rid = st.selectbox("Período de trabajo", rids, index=rids.index(st.session_state.selected_report), format_func=lambda x: f"{get_periodo_info(x)['label']} — {get_periodo_info(x)['periodo']}", key="sel_report_widget")
+    if year != st.session_state.selected_year or rid != st.session_state.selected_report:
+        st.session_state.selected_year = year
+        st.session_state.selected_report = rid
+        apply_period_context(year, rid)
+        st.rerun()
+    apply_period_context(year, rid)
+    with c3:
+        st.markdown(f"<div style='padding-top:28px;font-size:12px;color:#64748b'>Base activa: <b>{periodo_display(year, rid)}</b></div>", unsafe_allow_html=True)
 
 def parse_csv_minsal(file_bytes) -> dict:
     """
@@ -387,7 +448,7 @@ def render_topbar():
     # Nav pills
     nav=[("📊","Dashboard","dashboard"),("📋","Mis reportes","mis_reportes")]
     if user["rol"]=="admin":
-        nav+=[("📁","Todos los reportes","todos_reportes"),("📤","Exportar MINSAL","exportar"),("📂","Actualizar datos","actualizar_datos"),("👥","Usuarios","usuarios"),("⚙️","Config.","configuracion")]
+        nav+=[("📁","Todos los reportes","todos_reportes"),("📤","Exportar MINSAL","exportar"),("📰","Boletines","boletines"),("📈","Histórico","historico"),("📂","Carga MINSAL","actualizar_datos"),("👥","Usuarios","usuarios"),("⚙️","Config.","configuracion")]
     nav.append(("🚪","Cerrar sesión","__logout__"))
 
     cols=st.columns(len(nav))
@@ -401,6 +462,7 @@ def render_topbar():
                 else:
                     st.session_state.page=pid; st.rerun()
     st.markdown("<hr style='margin:0 0 12px;border-color:#e2e8f0'>",unsafe_allow_html=True)
+    selected_year_report_controls()
     st.markdown('''<div style="text-align:right;font-size:10px;color:#94a3b8;margin-top:-10px;padding-right:4px;margin-bottom:4px">
         Desarrollado por <strong style="color:#64748b">Bayron Retamal González</strong> &nbsp;·&nbsp; Subdirección RFF &nbsp;·&nbsp; SSMOCC 2026
     </div>''', unsafe_allow_html=True)
@@ -1087,135 +1149,135 @@ def pg_mis_reportes():
 
 
 def pg_actualizar_datos():
-    """Página para actualizar datos MINSAL desde CSV mensual."""
+    """Página para cargar datos oficiales MINSAL por Año + Período, con trazabilidad histórica."""
     if st.session_state.user["rol"] != "admin":
         st.error("Solo administradores."); return
-
-    page_header("Actualización de datos MINSAL",
-                "Sube el CSV mensual de ChileCompra · Lineamiento 3.1 — Monitoreo Mensual")
-
-    # Estado actual
-    st.markdown('''<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-left:4px solid #1F3864;
-                border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:16px">
-        <div style="font-size:13px;font-weight:700;color:#1F3864;margin-bottom:6px">
-            📋 Proceso de actualización — Lineamiento MINSAL v1.0 · Art. 3.1
-        </div>
-        <div style="font-size:12px;color:#1E40AF;line-height:1.7">
-            La Subsecretaría de Redes Asistenciales envía mensualmente un Dashboard con datos de ChileCompra.<br>
-            Cuando recibas el nuevo CSV, súbelo aquí para actualizar los indicadores de todos los establecimientos.<br>
-            <strong>Los reportes ya ingresados por los establecimientos NO se pierden.</strong>
-        </div>
-    </div>''', unsafe_allow_html=True)
-
-    # Datos actuales
-    st.subheader("Estado actual de los datos")
+    page_header("Carga Oficial MINSAL", "Carga histórica por año y período · dashboard, boletín y Excel se actualizan automáticamente")
+    st.markdown("""<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-left:4px solid #1F3864;border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:16px"><div style="font-size:13px;font-weight:700;color:#1F3864;margin-bottom:6px">📋 Flujo institucional de actualización</div><div style="font-size:12px;color:#1E40AF;line-height:1.7">Selecciona <strong>año + período</strong>, sube el CSV oficial MINSAL y confirma la carga.<br>La información queda archivada históricamente y puede reutilizarse para dashboard, boletín ejecutivo y Excel MINSAL.<br><strong>Los reportes ingresados por los establecimientos se mantienen separados por período.</strong></div></div>""", unsafe_allow_html=True)
+    c1, c2 = st.columns([1, 2])
+    with c1:
+        year = st.selectbox("Año de reporte", list(range(2026, 2031)), index=0)
+    with c2:
+        reporte_id = st.selectbox("Período", [p["id"] for p in PERIODOS], format_func=lambda x: f"{get_periodo_info(x)['label']} — {get_periodo_info(x)['periodo']} · entrega {get_periodo_info(x)['fecha_txt']}")
+    st.subheader(f"Estado actual — {periodo_display(year, reporte_id)}")
+    apply_period_context(year, reporte_id)
     import pandas as pd
     rows_act = []
     for eid, e in ESTABLECIMIENTOS.items():
-        ult = e.get("ultima_actualizacion", "Datos originales Jun 2026")
-        rows_act.append({
-            "Establecimiento": e["nombre_corto"],
-            "Nivel": e["nivel"].capitalize(),
-            "% TD 2026": f"{e['pct_2026']:.2f}%",
-            "% TD 2025": f"{e['pct_2025']:.2f}%",
-            "Brecha": f"{e['brecha']:+.2f} pp",
-            "Denominador ($)": f"${e['denominador']:,.0f}",
-            "Numerador ($)": f"${e['numerador']:,.0f}",
-            "Última actualización": ult,
-        })
+        rows_act.append({"Establecimiento": e["nombre_corto"], "Nivel": e["nivel"].capitalize(), "% TD 2026": f"{e['pct_2026']:.2f}%", "% TD 2025": f"{e['pct_2025']:.2f}%", "Brecha": f"{e['brecha']:+.2f} pp", "Denominador ($)": f"${e['denominador']:,.0f}", "Numerador ($)": f"${e['numerador']:,.0f}", "Última actualización": e.get("ultima_actualizacion", "Sin carga histórica")})
     st.dataframe(pd.DataFrame(rows_act), use_container_width=True, hide_index=True)
-
     st.markdown("---")
-
-    # Subir CSV
-    st.subheader("📤 Subir nuevo CSV MINSAL")
-    st.markdown('''<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:12px;color:#92400E">
-        <strong>Formato esperado:</strong> CSV con separador <code>;</code> y columnas:
-        <code>Codigo DEIS · RUT · Establecimiento · Servicio de Salud · Denominador · Numerador ·
-        % Trato Directo 2026 · % Trato Directo periodo equivalente 2025 · Brecha vs meta ·
-        Variacion vs 2025 · Nivel de riesgo</code><br>
-        Exactamente el mismo formato que envía el MINSAL mensualmente.
-    </div>''', unsafe_allow_html=True)
-
-    uploaded = st.file_uploader(
-        "Seleccionar archivo CSV del MINSAL",
-        type=["csv"],
-        help="Archivo CSV enviado por la Subsecretaría de Redes Asistenciales con datos de ChileCompra"
-    )
-
+    st.subheader("📤 Subir CSV oficial MINSAL")
+    st.markdown("""<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:12px;color:#92400E"><strong>Formato esperado:</strong> CSV con separador <code>;</code> y columnas: <code>Codigo DEIS · RUT · Establecimiento · Servicio de Salud · Denominador · Numerador · % Trato Directo 2026 · % Trato Directo periodo equivalente 2025 · Brecha vs meta · Variacion vs 2025 · Nivel de riesgo</code>.</div>""", unsafe_allow_html=True)
+    uploaded = st.file_uploader("Seleccionar archivo CSV del MINSAL", type=["csv"])
     if uploaded:
         try:
             file_bytes = uploaded.read()
             updates, errors, rows_found = parse_csv_minsal(file_bytes)
-
-            st.markdown(f"""
-            <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:12px 14px;margin-bottom:12px">
-                <div style="font-size:13px;font-weight:700;color:#166534">✅ Archivo leído correctamente</div>
-                <div style="font-size:12px;color:#16a34a;margin-top:4px">
-                    {rows_found} establecimiento(s) reconocidos en el CSV
-                    {f" · {len(errors)} advertencia(s)" if errors else ""}
-                </div>
-            </div>""", unsafe_allow_html=True)
-
+            st.success(f"Archivo leído correctamente: {rows_found} establecimiento(s) reconocidos.")
             if errors:
                 with st.expander(f"⚠️ {len(errors)} advertencia(s)"):
                     for e in errors: st.warning(e)
-
             if updates:
-                # Preview
-                st.markdown("**Vista previa de los cambios:**")
                 preview_rows = []
                 for eid, vals in updates.items():
                     e_old = ESTABLECIMIENTOS.get(eid, {})
-                    cambio_nivel = "⚠️ CAMBIA" if vals["nivel"] != e_old.get("nivel","") else "—"
-                    cambio_pct = f"{vals['pct_2026']:.2f}% (era {e_old.get('pct_2026',0):.2f}%)"
-                    preview_rows.append({
-                        "Establecimiento": e_old.get("nombre_corto", eid),
-                        "% TD nuevo": f"{vals['pct_2026']:.2f}%",
-                        "% TD anterior": f"{e_old.get('pct_2026',0):.2f}%",
-                        "Variación": f"{vals['pct_2026']-e_old.get('pct_2026',0):+.2f} pp",
-                        "Nivel nuevo": vals["nivel"].capitalize(),
-                        "Nivel anterior": e_old.get("nivel","").capitalize(),
-                        "Cambio nivel": cambio_nivel,
-                    })
+                    preview_rows.append({"Establecimiento": e_old.get("nombre_corto", eid), "% TD nuevo": f"{vals['pct_2026']:.2f}%", "% TD anterior período activo": f"{e_old.get('pct_2026',0):.2f}%", "Variación": f"{vals['pct_2026']-e_old.get('pct_2026',0):+.2f} pp", "Nivel nuevo": vals["nivel"].capitalize(), "Nivel anterior": e_old.get("nivel","").capitalize()})
+                st.markdown("**Vista previa antes de guardar:**")
                 st.dataframe(pd.DataFrame(preview_rows), use_container_width=True, hide_index=True)
-
                 col1, col2 = st.columns([1, 3])
                 with col1:
-                    if st.button("✅ Confirmar y guardar", type="primary", use_container_width=True):
+                    if st.button("✅ Confirmar carga histórica", type="primary", use_container_width=True):
+                        save_datos_periodo(year, reporte_id, updates, uploaded.name)
                         save_datos_minsal(updates)
-                        # Apply to in-memory ESTABLECIMIENTOS
-                        for eid, vals in updates.items():
-                            if eid in ESTABLECIMIENTOS:
-                                ESTABLECIMIENTOS[eid].update(vals)
-                        st.success(f"✅ Datos MINSAL actualizados correctamente para {len(updates)} establecimiento(s).")
-                        st.info("Los indicadores del dashboard y los formularios de reporte ahora reflejan los nuevos datos.")
+                        st.session_state.selected_year = year
+                        st.session_state.selected_report = reporte_id
+                        apply_period_context(year, reporte_id)
+                        st.success(f"Datos guardados para {periodo_display(year, reporte_id)}.")
+                        st.info("Ya puedes revisar el dashboard, generar el boletín y exportar el Excel MINSAL.")
                         st.rerun()
                 with col2:
-                    st.markdown('<div style="padding:8px 0;font-size:12px;color:#64748b">Los reportes ya enviados por los establecimientos NO se modifican. Solo se actualizan los datos de referencia MINSAL.</div>', unsafe_allow_html=True)
+                    st.markdown(f"<div style='padding:8px 0;font-size:12px;color:#64748b'>Esta carga quedará archivada como <b>{periodo_display(year, reporte_id)}</b>. No sobrescribe otros períodos.</div>", unsafe_allow_html=True)
             else:
-                st.error("No se reconoció ningún establecimiento SSMOCC en el CSV. Verifica el formato y los códigos DEIS.")
-
+                st.error("No se reconoció ningún establecimiento SSMOCC en el CSV.")
         except Exception as ex:
             st.error(f"Error al leer el archivo: {ex}")
-            st.markdown("Verifica que el archivo sea un CSV con separador `;` y el formato correcto del MINSAL.")
-
     st.markdown("---")
+    data = load_datos_periodos()
+    st.subheader("📚 Cargas históricas registradas")
+    hist = []
+    for y, periods in sorted(data.items()):
+        for rid, obj in periods.items():
+            meta = obj.get("metadata", {})
+            hist.append({"Año": y, "Período": f"{rid} — {get_periodo_info(rid)['periodo']}", "Establecimientos": meta.get("establecimientos", len(obj.get("establecimientos", {}))), "Fuente": meta.get("fuente", "—"), "Fecha carga": meta.get("fecha_carga", "—")})
+    if hist:
+        st.dataframe(pd.DataFrame(hist), use_container_width=True, hide_index=True)
+    else:
+        st.info("Aún no existen cargas históricas. La primera carga creará la base del período.")
 
-    # Historial
-    if DATOS_FILE.exists():
-        with st.expander("🔄 Restaurar datos originales (Jun 2026)"):
-            st.warning("Esto elimina los datos actualizados y vuelve a los datos del CSV original de junio 2026.")
-            if st.button("🗑️ Restaurar datos originales", type="secondary"):
-                DATOS_FILE.unlink()
-                st.success("Datos restaurados. Recarga la página para ver los cambios.")
-                st.rerun()
 
-    st.markdown('''<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 14px;margin-top:16px;font-size:11px;color:#64748b">
-        <strong>Lineamiento MINSAL v1.0 · Art. 3.1:</strong> La Subsecretaría de Redes Asistenciales realizará mensualmente la
-        consolidación de información de ChileCompra, el cálculo del % TD, la clasificación de riesgo y la elaboración del
-        Dashboard de seguimiento. La emisión de reportes estará sujeta a la disponibilidad de ChileCompra.
-    </div>''', unsafe_allow_html=True)
+def _resumen_establecimientos_df():
+    import pandas as pd
+    return pd.DataFrame([{"Establecimiento": e["nombre_corto"], "Nivel": e["nivel"].capitalize(), "% TD 2026": e["pct_2026"], "% TD 2025": e["pct_2025"], "Brecha pp": e["brecha"], "Variación pp": e["variacion"], "Numerador": e["numerador"], "Denominador": e["denominador"]} for e in ESTABLECIMIENTOS.values()]).sort_values("% TD 2026", ascending=False)
+
+
+def generar_boletin_html(year:int, reporte_id:str):
+    apply_period_context(year, reporte_id)
+    pinfo = get_periodo_info(reporte_id)
+    total_num = sum(e["numerador"] for e in ESTABLECIMIENTOS.values())
+    total_den = sum(e["denominador"] for e in ESTABLECIMIENTOS.values())
+    pct = round(total_num/total_den*100, 2) if total_den else 0
+    rojos = [e for e in ESTABLECIMIENTOS.values() if e["nivel"] == "rojo"]
+    amarillos = [e for e in ESTABLECIMIENTOS.values() if e["nivel"] == "amarillo"]
+    verdes = [e for e in ESTABLECIMIENTOS.values() if e["nivel"] == "verde"]
+    rows = "".join([f"<tr><td>{e['nombre_corto']}</td><td>{e['pct_2026']:.2f}%</td><td>{e['pct_2025']:.2f}%</td><td>{e['brecha']:+.2f}</td><td><b>{e['nivel'].capitalize()}</b></td></tr>" for e in sorted(ESTABLECIMIENTOS.values(), key=lambda x: -x['pct_2026'])])
+    fecha = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+    return f"""<!doctype html><html><head><meta charset='utf-8'><title>Boletín TD SSMOCC</title><style>body{{font-family:Arial,sans-serif;margin:0;background:#f8fafc;color:#0f172a}}.cover{{background:#1F3864;color:white;padding:34px 46px;border-bottom:8px solid #C0392B}}.cover h1{{margin:0;font-size:30px}}.wrap{{padding:26px 46px}}.kpis{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}}.card{{background:white;border:1px solid #e2e8f0;border-top:4px solid #1F3864;border-radius:10px;padding:16px}}.lbl{{font-size:11px;color:#64748b;text-transform:uppercase}}.val{{font-size:26px;font-weight:800;color:#1F3864;margin-top:6px}}table{{width:100%;border-collapse:collapse;background:white;margin-top:18px}}th{{background:#1F3864;color:white;text-align:left;padding:10px;font-size:12px}}td{{border-bottom:1px solid #e2e8f0;padding:9px;font-size:12px}}.box{{background:white;border-left:5px solid #C0392B;padding:14px;margin:18px 0;border-radius:6px}}</style></head><body><div class='cover'><h1>Boletín Ejecutivo · Indicador Trato Directo</h1><p>Servicio de Salud Metropolitano Occidente · {year} · {pinfo['periodo']} · plazo MINSAL {pinfo['fecha_txt']}</p></div><div class='wrap'><div class='kpis'><div class='card'><div class='lbl'>% TD SSMOCC</div><div class='val'>{pct:.2f}%</div></div><div class='card'><div class='lbl'>Numerador</div><div class='val'>${total_num/1e9:.1f} MM</div></div><div class='card'><div class='lbl'>Denominador</div><div class='val'>${total_den/1e9:.1f} MM</div></div><div class='card'><div class='lbl'>Semáforo</div><div class='val'>{len(rojos)} R · {len(amarillos)} A · {len(verdes)} V</div></div></div><div class='box'><b>Resumen ejecutivo:</b> El indicador consolidado del Servicio alcanza <b>{pct:.2f}%</b>, con meta institucional de referencia ≤16%. Los establecimientos en nivel rojo y amarillo requieren análisis de causas, medidas correctivas y compromisos para el siguiente período.</div><h2>Ranking por establecimiento</h2><table><thead><tr><th>Establecimiento</th><th>% TD 2026</th><th>% TD 2025</th><th>Brecha pp</th><th>Nivel</th></tr></thead><tbody>{rows}</tbody></table><h2>Recomendaciones de gestión</h2><ul><li>Priorizar revisión de establecimientos en rojo.</li><li>Migrar compras recurrentes a mecanismos competitivos o convenios disponibles.</li><li>Controlar vencimiento de contratos y plan anual de compras.</li><li>Revisar compromisos pendientes antes de la siguiente fecha de reporte.</li></ul><p style='font-size:11px;color:#64748b'>Generado automáticamente por Monitor TD SSMOCC · {fecha}</p></div></body></html>"""
+
+
+def pg_boletines():
+    if st.session_state.user["rol"] != "admin": st.error("Solo administradores."); return
+    import pandas as pd
+    page_header("Boletines Ejecutivos", "Generación automática del boletín general del dashboard")
+    year = st.session_state.get("selected_year", 2026)
+    rid = st.session_state.get("selected_report", "R1")
+    apply_period_context(year, rid)
+    st.markdown(f"**Período activo:** {periodo_display(year, rid)}")
+    df = _resumen_establecimientos_df()
+    st.dataframe(df, use_container_width=True, hide_index=True)
+    html = generar_boletin_html(year, rid)
+    fecha = datetime.datetime.now().strftime("%Y%m%d_%H%M")
+    st.download_button("⬇️ Descargar boletín ejecutivo HTML", html.encode("utf-8"), f"Boletin_TD_SSMOCC_{year}_{rid}_{fecha}.html", "text/html", type="primary", use_container_width=True)
+    buf = io.BytesIO()
+    with pd.ExcelWriter(buf, engine="openpyxl") as w:
+        df.to_excel(w, sheet_name="Resumen dashboard", index=False)
+    buf.seek(0)
+    st.download_button("⬇️ Descargar respaldo Excel del boletín", buf, f"Boletin_TD_SSMOCC_{year}_{rid}_{fecha}.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
+
+
+def pg_historico():
+    if st.session_state.user["rol"] != "admin": st.error("Solo administradores."); return
+    import pandas as pd
+    page_header("Histórico y Comparativos", "Evolución por año y período")
+    data = load_datos_periodos()
+    rows = []
+    for y, periods in sorted(data.items()):
+        for rid, obj in sorted(periods.items()):
+            ests = obj.get("establecimientos", {})
+            den = sum(v.get("denominador",0) for v in ests.values())
+            num = sum(v.get("numerador",0) for v in ests.values())
+            rows.append({"Año": y, "Período": f"{rid} — {get_periodo_info(rid)['periodo']}", "% TD SSMOCC": round(num/den*100,2) if den else 0, "Rojo": sum(1 for v in ests.values() if v.get("nivel")=="rojo"), "Amarillo": sum(1 for v in ests.values() if v.get("nivel")=="amarillo"), "Verde": sum(1 for v in ests.values() if v.get("nivel")=="verde"), "Fecha carga": obj.get("metadata",{}).get("fecha_carga", "—")})
+    if not rows:
+        st.info("Aún no existen períodos cargados históricamente."); return
+    df = pd.DataFrame(rows)
+    st.dataframe(df, use_container_width=True, hide_index=True)
+    try:
+        import plotly.express as px
+        fig = px.line(df, x="Período", y="% TD SSMOCC", markers=True, title="Evolución % TD SSMOCC")
+        fig.add_hline(y=16, line_dash="dash", line_color="#1F3864", annotation_text="Meta 16%")
+        st.plotly_chart(fig, use_container_width=True)
+    except Exception:
+        pass
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -1230,6 +1292,8 @@ else:
     elif pg == "mis_reportes":   pg_mis_reportes()
     elif pg == "todos_reportes": pg_todos_reportes()
     elif pg == "exportar":       pg_exportar()
+    elif pg == "boletines":      pg_boletines()
+    elif pg == "historico":      pg_historico()
     elif pg == "usuarios":       pg_usuarios()
     elif pg == "configuracion":   pg_configuracion()
     elif pg == "actualizar_datos": pg_actualizar_datos()
