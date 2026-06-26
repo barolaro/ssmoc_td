@@ -78,9 +78,10 @@ def _gh_cfg():
     return None
 
 def _gh_read(filename: str):
-    """Lee un archivo JSON desde GitHub."""
+    """Lee un archivo JSON desde GitHub. Nunca lanza excepción."""
     cfg = _gh_cfg()
-    if not cfg: return None
+    if not cfg:
+        return None, ""
     url = f"https://api.github.com/repos/{cfg['repo']}/contents/data/{filename}"
     req = urllib.request.Request(url, headers={
         "Authorization": f"token {cfg['token']}",
@@ -91,10 +92,8 @@ def _gh_read(filename: str):
             data = json.loads(r.read())
             content_b64 = data.get("content","").replace("\n","")
             return json.loads(base64.b64decode(content_b64).decode("utf-8")), data.get("sha","")
-    except urllib.error.HTTPError as e:
-        if e.code == 404: return None, ""
-        raise
     except Exception:
+        # 404 = archivo no existe aún, otros errores = red o token
         return None, ""
 
 def _gh_write(filename: str, content_obj, sha: str = ""):
@@ -122,33 +121,39 @@ def _gh_write(filename: str, content_obj, sha: str = ""):
         return False
 
 def _load_json_persistent(local_path: Path, filename: str, default):
-    """Carga JSON: primero GitHub, luego local, luego default."""
-    # Try GitHub
-    result = _gh_read(filename)
-    if result and result[0] is not None:
-        data, sha = result
-        # Cache locally
-        local_path.write_text(json.dumps(data, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
-        return data
-    # Try local
-    if local_path.exists():
-        try:
+    """Carga JSON: primero GitHub, luego local, luego default. Nunca lanza excepción."""
+    try:
+        result = _gh_read(filename)
+        if result and result[0] is not None:
+            data, sha = result
+            try:
+                local_path.write_text(json.dumps(data, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+            except Exception:
+                pass
+            return data
+    except Exception:
+        pass
+    # Try local cache
+    try:
+        if local_path.exists():
             return json.loads(local_path.read_text(encoding="utf-8"))
-        except Exception:
-            pass
+    except Exception:
+        pass
     return default
 
 def _save_json_persistent(local_path: Path, filename: str, data):
-    """Guarda JSON: local + GitHub."""
-    txt = json.dumps(data, ensure_ascii=False, indent=2, default=str)
-    local_path.write_text(txt, encoding="utf-8")
-    # Try GitHub
+    """Guarda JSON: local + GitHub. Nunca lanza excepción."""
     try:
-        existing = _gh_read(filename)
-        sha = existing[1] if existing and existing[1] else ""
+        txt = json.dumps(data, ensure_ascii=False, indent=2, default=str)
+        local_path.write_text(txt, encoding="utf-8")
+    except Exception:
+        pass
+    try:
+        result = _gh_read(filename)
+        sha = result[1] if result and result[1] else ""
         _gh_write(filename, data, sha)
     except Exception:
-        pass  # Local save is enough if GitHub fails
+        pass
 
 def _hash(p): return hashlib.sha256(p.encode()).hexdigest()
 
