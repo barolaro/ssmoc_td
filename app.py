@@ -3,7 +3,7 @@ app.py — Monitor Trato Directo SSMOCC v10
 Navegación sin sidebar para evitar problema de colapso en Streamlit Cloud
 """
 import streamlit as st
-import hashlib, json, datetime, io, base64
+import hashlib, json, datetime, io, base64, csv
 from pathlib import Path
 
 st.set_page_config(
@@ -56,6 +56,7 @@ DATA_DIR = Path(__file__).parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
 USERS_FILE   = DATA_DIR / "users.json"
 REPORTS_FILE = DATA_DIR / "reports.json"
+DATOS_FILE   = DATA_DIR / "datos_minsal.json"
 
 def _hash(p): return hashlib.sha256(p.encode()).hexdigest()
 
@@ -70,6 +71,103 @@ ESTABLECIMIENTOS = {
     "curacavi":       {"nombre":"Hospital de Curacaví","nombre_corto":"H. Curacaví","rut":"61.602.125-7","codigo_deis":"110160","pct_2026":5.62,"pct_2025":14.42,"brecha":-10.38,"variacion":-8.80,"nivel":"verde","denominador":1001068453,"numerador":56257312},
     "talagante":      {"nombre":"Hospital Adalberto Steeger (Talagante)","nombre_corto":"H. Talagante","rut":"61.602.121-4","codigo_deis":"110130","pct_2026":3.21,"pct_2025":10.63,"brecha":-12.79,"variacion":-7.42,"nivel":"verde","denominador":7242041556,"numerador":232416794},
 }
+
+# Mapa de DEIS → clave interna (para actualización desde CSV MINSAL)
+DEIS_MAP = {
+    "110110": "traumatologico",
+    "110010": "direccion",
+    "110120": "felix_bulnes",
+    "110100": "san_juan",
+    "110300": "crs_allende",
+    "110150": "melipilla",
+    "110140": "penaflor",
+    "110160": "curacavi",
+    "110130": "talagante",
+}
+
+def load_datos_minsal():
+    """Carga datos MINSAL desde JSON guardado (si existe), si no usa los hardcoded."""
+    if DATOS_FILE.exists():
+        try:
+            saved = json.loads(DATOS_FILE.read_text(encoding="utf-8"))
+            # Merge saved data into ESTABLECIMIENTOS
+            for eid, vals in saved.items():
+                if eid in ESTABLECIMIENTOS:
+                    ESTABLECIMIENTOS[eid].update(vals)
+        except Exception:
+            pass
+
+def save_datos_minsal(updates: dict):
+    """Guarda datos actualizados de MINSAL en JSON."""
+    DATOS_FILE.write_text(json.dumps(updates, ensure_ascii=False, indent=2), encoding="utf-8")
+
+def parse_csv_minsal(file_bytes) -> dict:
+    """
+    Parsea el CSV oficial MINSAL con columnas:
+    Codigo DEIS | RUT | Establecimiento | Servicio de Salud |
+    Denominador | Numerador | % Trato Directo 2026 |
+    % Trato Directo periodo equivalente 2025 | Brecha vs meta |
+    Variacion vs 2025 | Nivel de riesgo
+    Retorna dict con clave = eid_interno, valor = campos actualizados.
+    """
+    import io as _io
+    content_str = file_bytes.decode("utf-8-sig")
+    reader = csv.DictReader(_io.StringIO(content_str), delimiter=";")
+    updates = {}
+    errors = []
+    rows_found = 0
+
+    for row in reader:
+        # Normalizar claves (strip espacios)
+        row = {k.strip(): v.strip() for k, v in row.items() if k}
+        deis = row.get("Codigo DEIS","").strip().zfill(6)
+        eid = DEIS_MAP.get(deis)
+        if not eid:
+            # Intentar por nombre
+            nombre_csv = row.get("Establecimiento","").lower()
+            for k, e in ESTABLECIMIENTOS.items():
+                if e["nombre"].lower() in nombre_csv or nombre_csv in e["nombre"].lower():
+                    eid = k; break
+
+        if not eid:
+            errors.append(f"DEIS {deis} no reconocido: {row.get('Establecimiento','')}")
+            continue
+
+        rows_found += 1
+        try:
+            def parse_float(v):
+                v = v.replace(",",".").replace(" ","").replace("$","").replace("%","")
+                return float(v) if v else 0.0
+
+            pct_2026 = parse_float(row.get("% Trato Directo 2026", "0"))
+            pct_2025 = parse_float(row.get("% Trato Directo periodo equivalente 2025", "0"))
+            brecha   = parse_float(row.get("Brecha vs meta", "0"))
+            variacion= parse_float(row.get("Variacion vs 2025", "0"))
+            den      = int(float(row.get("Denominador","0").replace(",",".").replace(" ","")))
+            num      = int(float(row.get("Numerador","0").replace(",",".").replace(" ","")))
+            nivel_raw= row.get("Nivel de riesgo","verde").strip().lower()
+            nivel    = nivel_raw if nivel_raw in ["rojo","amarillo","verde"] else "verde"
+
+            updates[eid] = {
+                "pct_2026":  pct_2026,
+                "pct_2025":  pct_2025,
+                "brecha":    brecha,
+                "variacion": variacion,
+                "denominador": den,
+                "numerador":   num,
+                "nivel":       nivel,
+                "rut":  row.get("RUT", ESTABLECIMIENTOS[eid].get("rut","")),
+                "codigo_deis": deis,
+                "ultima_actualizacion": datetime.datetime.now().isoformat()[:10],
+                "fuente_csv": row.get("Establecimiento",""),
+            }
+        except Exception as ex:
+            errors.append(f"{eid}: {ex}")
+
+    return updates, errors, rows_found
+
+# Cargar datos actualizados al iniciar
+load_datos_minsal()
 PERIODOS = [
     {"id":"R1","label":"1° Reporte","periodo":"Enero–Marzo 2026",     "fecha_limite":"2026-07-31","fecha_txt":"31 Jul 2026"},
     {"id":"R2","label":"2° Reporte","periodo":"Abril–Junio 2026",     "fecha_limite":"2026-08-31","fecha_txt":"31 Ago 2026"},
@@ -188,7 +286,7 @@ def render_topbar():
     # Nav pills
     nav=[("📊","Dashboard","dashboard"),("📋","Mis reportes","mis_reportes")]
     if user["rol"]=="admin":
-        nav+=[("📁","Todos los reportes","todos_reportes"),("📤","Exportar MINSAL","exportar"),("👥","Usuarios","usuarios"),("⚙️","Config.","configuracion")]
+        nav+=[("📁","Todos los reportes","todos_reportes"),("📤","Exportar MINSAL","exportar"),("📂","Actualizar datos","actualizar_datos"),("👥","Usuarios","usuarios"),("⚙️","Config.","configuracion")]
     nav.append(("🚪","Cerrar sesión","__logout__"))
 
     cols=st.columns(len(nav))
@@ -836,6 +934,138 @@ def pg_mis_reportes():
                 st.rerun()
 
 
+def pg_actualizar_datos():
+    """Página para actualizar datos MINSAL desde CSV mensual."""
+    if st.session_state.user["rol"] != "admin":
+        st.error("Solo administradores."); return
+
+    page_header("Actualización de datos MINSAL",
+                "Sube el CSV mensual de ChileCompra · Lineamiento 3.1 — Monitoreo Mensual")
+
+    # Estado actual
+    st.markdown('''<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-left:4px solid #1F3864;
+                border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;color:#1F3864;margin-bottom:6px">
+            📋 Proceso de actualización — Lineamiento MINSAL v1.0 · Art. 3.1
+        </div>
+        <div style="font-size:12px;color:#1E40AF;line-height:1.7">
+            La Subsecretaría de Redes Asistenciales envía mensualmente un Dashboard con datos de ChileCompra.<br>
+            Cuando recibas el nuevo CSV, súbelo aquí para actualizar los indicadores de todos los establecimientos.<br>
+            <strong>Los reportes ya ingresados por los establecimientos NO se pierden.</strong>
+        </div>
+    </div>''', unsafe_allow_html=True)
+
+    # Datos actuales
+    st.subheader("Estado actual de los datos")
+    import pandas as pd
+    rows_act = []
+    for eid, e in ESTABLECIMIENTOS.items():
+        ult = e.get("ultima_actualizacion", "Datos originales Jun 2026")
+        rows_act.append({
+            "Establecimiento": e["nombre_corto"],
+            "Nivel": e["nivel"].capitalize(),
+            "% TD 2026": f"{e['pct_2026']:.2f}%",
+            "% TD 2025": f"{e['pct_2025']:.2f}%",
+            "Brecha": f"{e['brecha']:+.2f} pp",
+            "Denominador ($)": f"${e['denominador']:,.0f}",
+            "Numerador ($)": f"${e['numerador']:,.0f}",
+            "Última actualización": ult,
+        })
+    st.dataframe(pd.DataFrame(rows_act), use_container_width=True, hide_index=True)
+
+    st.markdown("---")
+
+    # Subir CSV
+    st.subheader("📤 Subir nuevo CSV MINSAL")
+    st.markdown('''<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:12px;color:#92400E">
+        <strong>Formato esperado:</strong> CSV con separador <code>;</code> y columnas:
+        <code>Codigo DEIS · RUT · Establecimiento · Servicio de Salud · Denominador · Numerador ·
+        % Trato Directo 2026 · % Trato Directo periodo equivalente 2025 · Brecha vs meta ·
+        Variacion vs 2025 · Nivel de riesgo</code><br>
+        Exactamente el mismo formato que envía el MINSAL mensualmente.
+    </div>''', unsafe_allow_html=True)
+
+    uploaded = st.file_uploader(
+        "Seleccionar archivo CSV del MINSAL",
+        type=["csv"],
+        help="Archivo CSV enviado por la Subsecretaría de Redes Asistenciales con datos de ChileCompra"
+    )
+
+    if uploaded:
+        try:
+            file_bytes = uploaded.read()
+            updates, errors, rows_found = parse_csv_minsal(file_bytes)
+
+            st.markdown(f"""
+            <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:12px 14px;margin-bottom:12px">
+                <div style="font-size:13px;font-weight:700;color:#166534">✅ Archivo leído correctamente</div>
+                <div style="font-size:12px;color:#16a34a;margin-top:4px">
+                    {rows_found} establecimiento(s) reconocidos en el CSV
+                    {f" · {len(errors)} advertencia(s)" if errors else ""}
+                </div>
+            </div>""", unsafe_allow_html=True)
+
+            if errors:
+                with st.expander(f"⚠️ {len(errors)} advertencia(s)"):
+                    for e in errors: st.warning(e)
+
+            if updates:
+                # Preview
+                st.markdown("**Vista previa de los cambios:**")
+                preview_rows = []
+                for eid, vals in updates.items():
+                    e_old = ESTABLECIMIENTOS.get(eid, {})
+                    cambio_nivel = "⚠️ CAMBIA" if vals["nivel"] != e_old.get("nivel","") else "—"
+                    cambio_pct = f"{vals['pct_2026']:.2f}% (era {e_old.get('pct_2026',0):.2f}%)"
+                    preview_rows.append({
+                        "Establecimiento": e_old.get("nombre_corto", eid),
+                        "% TD nuevo": f"{vals['pct_2026']:.2f}%",
+                        "% TD anterior": f"{e_old.get('pct_2026',0):.2f}%",
+                        "Variación": f"{vals['pct_2026']-e_old.get('pct_2026',0):+.2f} pp",
+                        "Nivel nuevo": vals["nivel"].capitalize(),
+                        "Nivel anterior": e_old.get("nivel","").capitalize(),
+                        "Cambio nivel": cambio_nivel,
+                    })
+                st.dataframe(pd.DataFrame(preview_rows), use_container_width=True, hide_index=True)
+
+                col1, col2 = st.columns([1, 3])
+                with col1:
+                    if st.button("✅ Confirmar y guardar", type="primary", use_container_width=True):
+                        save_datos_minsal(updates)
+                        # Apply to in-memory ESTABLECIMIENTOS
+                        for eid, vals in updates.items():
+                            if eid in ESTABLECIMIENTOS:
+                                ESTABLECIMIENTOS[eid].update(vals)
+                        st.success(f"✅ Datos MINSAL actualizados correctamente para {len(updates)} establecimiento(s).")
+                        st.info("Los indicadores del dashboard y los formularios de reporte ahora reflejan los nuevos datos.")
+                        st.rerun()
+                with col2:
+                    st.markdown('<div style="padding:8px 0;font-size:12px;color:#64748b">Los reportes ya enviados por los establecimientos NO se modifican. Solo se actualizan los datos de referencia MINSAL.</div>', unsafe_allow_html=True)
+            else:
+                st.error("No se reconoció ningún establecimiento SSMOCC en el CSV. Verifica el formato y los códigos DEIS.")
+
+        except Exception as ex:
+            st.error(f"Error al leer el archivo: {ex}")
+            st.markdown("Verifica que el archivo sea un CSV con separador `;` y el formato correcto del MINSAL.")
+
+    st.markdown("---")
+
+    # Historial
+    if DATOS_FILE.exists():
+        with st.expander("🔄 Restaurar datos originales (Jun 2026)"):
+            st.warning("Esto elimina los datos actualizados y vuelve a los datos del CSV original de junio 2026.")
+            if st.button("🗑️ Restaurar datos originales", type="secondary"):
+                DATOS_FILE.unlink()
+                st.success("Datos restaurados. Recarga la página para ver los cambios.")
+                st.rerun()
+
+    st.markdown('''<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 14px;margin-top:16px;font-size:11px;color:#64748b">
+        <strong>Lineamiento MINSAL v1.0 · Art. 3.1:</strong> La Subsecretaría de Redes Asistenciales realizará mensualmente la
+        consolidación de información de ChileCompra, el cálculo del % TD, la clasificación de riesgo y la elaboración del
+        Dashboard de seguimiento. La emisión de reportes estará sujeta a la disponibilidad de ChileCompra.
+    </div>''', unsafe_allow_html=True)
+
+
 # ═══════════════════════════════════════════════════════════════════════
 # ROUTING
 # ═══════════════════════════════════════════════════════════════════════
@@ -849,5 +1079,6 @@ else:
     elif pg == "todos_reportes": pg_todos_reportes()
     elif pg == "exportar":       pg_exportar()
     elif pg == "usuarios":       pg_usuarios()
-    elif pg == "configuracion":  pg_configuracion()
-    else:                        pg_dashboard()
+    elif pg == "configuracion":   pg_configuracion()
+    elif pg == "actualizar_datos": pg_actualizar_datos()
+    else:                         pg_dashboard()
