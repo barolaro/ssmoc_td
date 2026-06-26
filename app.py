@@ -599,6 +599,82 @@ def cal_cards(reports, eid_filter=None):
                 <div style="font-size:10px;color:{tc};margin-top:2px">{sub}</div>
             </div>""", unsafe_allow_html=True)
 
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# HELPERS ANEXO N°1 MINSAL
+# ═══════════════════════════════════════════════════════════════════════
+def _anexo_texto_causas(r: dict) -> str:
+    causas = "; ".join(r.get("causas_sel", []) or [])
+    desc = (r.get("causas_desc", "") or "").strip()
+    return (causas + (" | " if causas and desc else "") + desc).strip() or "—"
+
+def _anexo_texto_medidas(r: dict) -> str:
+    med = r.get("medidas", {}) or {}
+    med_labels = {
+        "pac": "Actualización Plan Anual de Compras",
+        "lic": "Inicio procesos licitatorios",
+        "cm": "Migración a Convenio Marco",
+        "cenabast": "Gestión CENABAST",
+        "cap": "Capacitación equipo Ley 21.634",
+        "venc": "Control vencimiento contratos",
+    }
+    txt = "; ".join(lbl for k, lbl in med_labels.items() if med.get(k))
+    desc = (r.get("med_desc", "") or "").strip()
+    return (txt + (" | " if txt and desc else "") + desc).strip() or "—"
+
+def build_anexo_minsal_row(r: dict, year: int = None, pinfo: dict = None) -> dict:
+    """Construye una fila exacta del Anexo N°1 MINSAL desde un reporte de establecimiento."""
+    year = year or r.get("year", st.session_state.get("selected_year", 2026))
+    if pinfo is None:
+        pinfo = get_periodo_info(r.get("reporte_id", st.session_state.get("selected_report", "R1")))
+    return {
+        "Servicio de salud": "Servicio de Salud Metropolitano Occidente",
+        "Establecimiento": r.get("establecimiento_nombre", ""),
+        "Nivel de Riesgo": (r.get("nivel_riesgo", "") or "").capitalize(),
+        "Período informado": f"{year} · {r.get('periodo', pinfo.get('periodo',''))}",
+        "Principales causas": _anexo_texto_causas(r),
+        "Medidas implementadas": _anexo_texto_medidas(r),
+        "Compromisos": r.get("compromisos", "") or "—",
+        "Responsable": ((r.get("resp_nombre", "") or "") + " - " + (r.get("resp_cargo", "") or "")).strip(" -") or "—",
+        "Fecha comprometida": r.get("fecha_comp", "") or "—",
+    }
+
+def render_anexo_minsal_preview(r: dict, year: int = None, pinfo: dict = None):
+    """Muestra al establecimiento/admin la misma información que irá al Excel oficial."""
+    import html
+    row = build_anexo_minsal_row(r, year, pinfo)
+    nivel = (row.get("Nivel de Riesgo", "") or "").lower()
+    nivel_color = {"rojo":"#991B1B", "amarillo":"#92400E", "verde":"#166534"}.get(nivel, "#334155")
+    nivel_bg = {"rojo":"#FEF2F2", "amarillo":"#FFFBEB", "verde":"#F0FDF4"}.get(nivel, "#F8FAFC")
+    nivel_icon = {"rojo":"🔴", "amarillo":"🟡", "verde":"🟢"}.get(nivel, "⚪")
+    def esc(v): return html.escape(str(v or "—")).replace("\n", "<br>")
+    st.markdown(f"""
+    <div style="border:1px solid #CBD5E1;border-radius:12px;overflow:hidden;background:white;margin-top:8px">
+        <div style="background:#1F3864;color:white;padding:12px 16px;font-weight:800;font-size:14px">
+            📄 Vista previa del Anexo N°1 MINSAL
+        </div>
+        <div style="padding:14px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;font-size:12px;color:#475569">
+            Esta es la información que será incorporada al Excel consolidado que remitirá el Servicio de Salud al MINSAL.
+        </div>
+        <div style="display:grid;grid-template-columns:1.2fr 1.8fr 1fr 1.2fr;border-bottom:1px solid #E2E8F0">
+            <div style="padding:12px;border-right:1px solid #E2E8F0"><b>Servicio de salud</b><br>{esc(row['Servicio de salud'])}</div>
+            <div style="padding:12px;border-right:1px solid #E2E8F0"><b>Establecimiento</b><br>{esc(row['Establecimiento'])}</div>
+            <div style="padding:12px;border-right:1px solid #E2E8F0;background:{nivel_bg};color:{nivel_color}"><b>Nivel de Riesgo</b><br>{nivel_icon} {esc(row['Nivel de Riesgo'])}</div>
+            <div style="padding:12px"><b>Período informado</b><br>{esc(row['Período informado'])}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #E2E8F0">
+            <div style="padding:12px;border-right:1px solid #E2E8F0"><b>Principales causas</b><br>{esc(row['Principales causas'])}</div>
+            <div style="padding:12px"><b>Medidas implementadas</b><br>{esc(row['Medidas implementadas'])}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1.6fr 1fr 0.8fr">
+            <div style="padding:12px;border-right:1px solid #E2E8F0"><b>Compromisos</b><br>{esc(row['Compromisos'])}</div>
+            <div style="padding:12px;border-right:1px solid #E2E8F0"><b>Responsable</b><br>{esc(row['Responsable'])}</div>
+            <div style="padding:12px"><b>Fecha comprometida</b><br>{esc(row['Fecha comprometida'])}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 # ═══════════════════════════════════════════════════════════════════════
 # PÁGINA DASHBOARD
 # ═══════════════════════════════════════════════════════════════════════
@@ -1210,11 +1286,8 @@ def pg_mis_reportes():
                 </div>
             </div>
             """, unsafe_allow_html=True)
-            with st.expander("Ver resumen del reporte enviado", expanded=False):
-                st.markdown(f"**Principales causas:** {', '.join(existing.get('causas_sel', [])) or '—'}")
-                st.markdown(f"**Descripción:** {existing.get('causas_desc','—')}")
-                st.markdown(f"**Compromisos:** {existing.get('compromisos','—')}")
-                st.markdown(f"**Responsable:** {existing.get('resp_nombre','—')} · {existing.get('resp_cargo','—')} · {existing.get('resp_email','—')}")
+            with st.expander("📄 Vista previa del Anexo N°1 MINSAL", expanded=True):
+                render_anexo_minsal_preview(existing, year, pinfo)
             return
 
     st.markdown(f'''
