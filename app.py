@@ -663,8 +663,14 @@ def _html_list_from_text(texto: str, icon: str = "•") -> str:
     )
 
 def render_anexo_minsal_preview(r: dict, year: int = None, pinfo: dict = None):
-    """Vista ejecutiva institucional del Anexo N°1. El Excel oficial conserva la tabla MINSAL."""
+    """Vista ejecutiva institucional del Anexo N°1.
+
+    Se renderiza con components.html para evitar que Streamlit muestre el HTML como texto plano.
+    El Excel oficial se mantiene como tabla MINSAL en el módulo de exportación.
+    """
     import html
+    import streamlit.components.v1 as components
+
     row = build_anexo_minsal_row(r, year, pinfo)
     nivel = (row.get("Nivel de Riesgo", "") or "").lower()
     nivel_cfg = {
@@ -682,124 +688,143 @@ def render_anexo_minsal_preview(r: dict, year: int = None, pinfo: dict = None):
     medidas_html = _html_list_from_text(row.get("Medidas implementadas", ""), "✓")
     compromisos_html = _html_list_from_text(row.get("Compromisos", ""), "→")
 
-    st.markdown(f"""
+    html_doc = f"""
+    <!doctype html>
+    <html lang="es">
+    <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-    .anexo-card {{
-        background:#FFFFFF;
-        border:1px solid #E2E8F0;
-        border-radius:18px;
-        overflow:hidden;
-        box-shadow:0 10px 28px rgba(15,23,42,.07);
-        margin-top:10px;
-        font-family:Arial, sans-serif;
-    }}
-    .anexo-hero {{
-        background:linear-gradient(135deg,#0A3964 0%,#1F3864 78%);
-        color:white;
-        padding:22px 26px;
-        display:flex;
-        justify-content:space-between;
-        gap:18px;
-        align-items:flex-start;
-    }}
-    .anexo-kicker {{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.65);font-weight:700}}
-    .anexo-title {{font-size:22px;font-weight:900;margin-top:4px;line-height:1.15}}
-    .anexo-sub {{font-size:12px;color:rgba(255,255,255,.75);margin-top:6px;line-height:1.45}}
-    .risk-pill {{
-        background:{nivel_cfg['bg']};
-        color:{nivel_cfg['fg']};
-        border:1px solid {nivel_cfg['bd']};
-        border-radius:999px;
-        padding:10px 14px;
-        font-size:13px;
-        font-weight:900;
-        white-space:nowrap;
-        box-shadow:0 4px 10px rgba(0,0,0,.08);
-    }}
-    .risk-dot {{display:inline-block;width:11px;height:11px;border-radius:50%;background:{nivel_cfg['dot']};margin-right:7px;vertical-align:-1px}}
-    .anexo-body {{padding:22px 26px;background:#F8FAFC}}
-    .identity-grid {{display:grid;grid-template-columns:1.2fr 1.4fr .9fr;gap:14px;margin-bottom:14px}}
-    .mini-card {{background:white;border:1px solid #E2E8F0;border-radius:14px;padding:16px 18px;min-height:92px}}
-    .mini-label {{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#64748B;font-weight:800;margin-bottom:7px}}
-    .mini-value {{font-size:17px;color:#0F172A;font-weight:800;line-height:1.35}}
-    .section-grid {{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}}
-    .section-card {{background:white;border:1px solid #E2E8F0;border-radius:14px;padding:17px 18px}}
-    .section-card.full {{grid-column:1 / -1}}
-    .section-title {{font-size:14px;color:#1F3864;font-weight:900;margin-bottom:9px;display:flex;gap:8px;align-items:center}}
-    .section-content {{font-size:14px;color:#1F2937;line-height:1.55}}
-    .footer-note {{
-        margin-top:14px;
-        background:#EFF6FF;
-        border:1px solid #BFDBFE;
-        border-left:5px solid #1F3864;
-        border-radius:0 12px 12px 0;
-        padding:13px 16px;
-        color:#1E3A8A;
-        font-size:12px;
-        line-height:1.55;
-    }}
-    @media (max-width: 900px) {{
-        .anexo-hero, .identity-grid, .section-grid {{display:block}}
-        .mini-card, .section-card {{margin-bottom:12px}}
-        .risk-pill {{display:inline-block;margin-top:10px}}
-    }}
+        * {{ box-sizing: border-box; }}
+        body {{
+            margin:0;
+            padding:4px 2px 18px 2px;
+            background:transparent;
+            font-family: Arial, Helvetica, sans-serif;
+            color:#0F172A;
+        }}
+        .anexo-card {{
+            background:#FFFFFF;
+            border:1px solid #E2E8F0;
+            border-radius:18px;
+            overflow:hidden;
+            box-shadow:0 10px 28px rgba(15,23,42,.07);
+            width:100%;
+        }}
+        .anexo-hero {{
+            background:linear-gradient(135deg,#0A3964 0%,#1F3864 78%);
+            color:white;
+            padding:22px 26px;
+            display:flex;
+            justify-content:space-between;
+            gap:18px;
+            align-items:flex-start;
+        }}
+        .anexo-kicker {{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.65);font-weight:700}}
+        .anexo-title {{font-size:24px;font-weight:900;margin-top:4px;line-height:1.15}}
+        .anexo-sub {{font-size:12px;color:rgba(255,255,255,.78);margin-top:6px;line-height:1.45;max-width:720px}}
+        .risk-pill {{
+            background:{nivel_cfg['bg']};
+            color:{nivel_cfg['fg']};
+            border:1px solid {nivel_cfg['bd']};
+            border-radius:999px;
+            padding:10px 14px;
+            font-size:13px;
+            font-weight:900;
+            white-space:nowrap;
+            box-shadow:0 4px 10px rgba(0,0,0,.08);
+        }}
+        .risk-dot {{display:inline-block;width:11px;height:11px;border-radius:50%;background:{nivel_cfg['dot']};margin-right:7px;vertical-align:-1px}}
+        .anexo-body {{padding:22px 26px;background:#F8FAFC}}
+        .identity-grid {{display:grid;grid-template-columns:1.2fr 1.4fr .9fr;gap:14px;margin-bottom:14px}}
+        .mini-card {{background:white;border:1px solid #E2E8F0;border-radius:14px;padding:16px 18px;min-height:92px}}
+        .mini-label {{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#64748B;font-weight:800;margin-bottom:7px}}
+        .mini-value {{font-size:17px;color:#0F172A;font-weight:800;line-height:1.35}}
+        .section-grid {{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}}
+        .section-card {{background:white;border:1px solid #E2E8F0;border-radius:14px;padding:17px 18px}}
+        .section-card.full {{grid-column:1 / -1}}
+        .section-title {{font-size:14px;color:#1F3864;font-weight:900;margin-bottom:9px;display:flex;gap:8px;align-items:center}}
+        .section-content {{font-size:14px;color:#1F2937;line-height:1.55}}
+        .footer-note {{
+            margin-top:14px;
+            background:#EFF6FF;
+            border:1px solid #BFDBFE;
+            border-left:5px solid #1F3864;
+            border-radius:0 12px 12px 0;
+            padding:13px 16px;
+            color:#1E3A8A;
+            font-size:12px;
+            line-height:1.55;
+        }}
+        @media (max-width: 900px) {{
+            .anexo-hero {{display:block}}
+            .risk-pill {{display:inline-block;margin-top:14px}}
+            .identity-grid, .section-grid {{grid-template-columns:1fr}}
+            .section-card.full {{grid-column:auto}}
+        }}
     </style>
-
-    <div class="anexo-card">
-        <div class="anexo-hero">
-            <div>
-                <div class="anexo-kicker">Vista previa institucional</div>
-                <div class="anexo-title">Anexo N°1 MINSAL</div>
-                <div class="anexo-sub">Formato de entrega de antecedentes por Servicio de Salud · Esta vista es referencial; el Excel se genera con la tabla oficial solicitada por MINSAL.</div>
+    </head>
+    <body>
+        <div class="anexo-card">
+            <div class="anexo-hero">
+                <div>
+                    <div class="anexo-kicker">Vista previa institucional</div>
+                    <div class="anexo-title">Anexo N°1 MINSAL</div>
+                    <div class="anexo-sub">Formato de entrega de antecedentes por Servicio de Salud. Esta vista es referencial; el Excel se genera con la tabla oficial solicitada por MINSAL.</div>
+                </div>
+                <div class="risk-pill"><span class="risk-dot"></span>NIVEL {nivel_cfg['txt']}</div>
             </div>
-            <div class="risk-pill"><span class="risk-dot"></span>NIVEL {nivel_cfg['txt']}</div>
+
+            <div class="anexo-body">
+                <div class="identity-grid">
+                    <div class="mini-card">
+                        <div class="mini-label">Servicio de salud</div>
+                        <div class="mini-value">{servicio}</div>
+                    </div>
+                    <div class="mini-card">
+                        <div class="mini-label">Establecimiento</div>
+                        <div class="mini-value">{establecimiento}</div>
+                    </div>
+                    <div class="mini-card">
+                        <div class="mini-label">Período informado</div>
+                        <div class="mini-value">{periodo}</div>
+                    </div>
+                </div>
+
+                <div class="section-grid">
+                    <div class="section-card">
+                        <div class="section-title">📌 Principales causas</div>
+                        <div class="section-content">{causas_html}</div>
+                    </div>
+                    <div class="section-card">
+                        <div class="section-title">✅ Medidas implementadas</div>
+                        <div class="section-content">{medidas_html}</div>
+                    </div>
+                    <div class="section-card full">
+                        <div class="section-title">🎯 Compromisos</div>
+                        <div class="section-content">{compromisos_html}</div>
+                    </div>
+                    <div class="section-card">
+                        <div class="section-title">👤 Responsable</div>
+                        <div class="section-content"><strong>{responsable}</strong></div>
+                    </div>
+                    <div class="section-card">
+                        <div class="section-title">📅 Fecha comprometida</div>
+                        <div class="section-content"><strong>{fecha}</strong></div>
+                    </div>
+                </div>
+
+                <div class="footer-note">
+                    <strong>Integración automática:</strong> este antecedente será incorporado al Anexo N°1 consolidado que remitirá el Servicio de Salud Metropolitano Occidente al Ministerio de Salud.
+                </div>
+            </div>
         </div>
+    </body>
+    </html>
+    """
 
-        <div class="anexo-body">
-            <div class="identity-grid">
-                <div class="mini-card">
-                    <div class="mini-label">Servicio de salud</div>
-                    <div class="mini-value">{servicio}</div>
-                </div>
-                <div class="mini-card">
-                    <div class="mini-label">Establecimiento</div>
-                    <div class="mini-value">{establecimiento}</div>
-                </div>
-                <div class="mini-card">
-                    <div class="mini-label">Período informado</div>
-                    <div class="mini-value">{periodo}</div>
-                </div>
-            </div>
-
-            <div class="section-grid">
-                <div class="section-card">
-                    <div class="section-title">📌 Principales causas</div>
-                    <div class="section-content">{causas_html}</div>
-                </div>
-                <div class="section-card">
-                    <div class="section-title">✅ Medidas implementadas</div>
-                    <div class="section-content">{medidas_html}</div>
-                </div>
-                <div class="section-card full">
-                    <div class="section-title">🎯 Compromisos</div>
-                    <div class="section-content">{compromisos_html}</div>
-                </div>
-                <div class="section-card">
-                    <div class="section-title">👤 Responsable</div>
-                    <div class="section-content"><strong>{responsable}</strong></div>
-                </div>
-                <div class="section-card">
-                    <div class="section-title">📅 Fecha comprometida</div>
-                    <div class="section-content"><strong>{fecha}</strong></div>
-                </div>
-            </div>
-
-            <div class="footer-note">
-                <strong>Integración automática:</strong> este antecedente será incorporado al Anexo N°1 consolidado que remitirá el Servicio de Salud Metropolitano Occidente al Ministerio de Salud.
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # components.html evita que la ficha se vea como código HTML en pantalla.
+    components.html(html_doc, height=760, scrolling=True)
 
 # ═══════════════════════════════════════════════════════════════════════
 # PÁGINA DASHBOARD
