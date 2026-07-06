@@ -1,0 +1,90 @@
+{
+  "admin": {
+    "nombre": "Administrador SSMOCC",
+    "rol": "admin",
+    "email": "abastecimiento@ssmocc.cl",
+    "establecimiento": null,
+    "password_hash": "8d90ed647b948fa80c3c9bbf5316c78f151723f52fb9d6101f818af8afff69ec",
+    "activo": true
+  },
+  "bayron": {
+    "nombre": "Bayron Retamal González",
+    "rol": "admin",
+    "email": "bayron.retamal@ssmocc.cl",
+    "establecimiento": null,
+    "password_hash": "1285536a5c35006ee6aa9524c68fc347c73d6103f705c9dce6389513c61e573b",
+    "activo": true
+  },
+  "traumatologico": {
+    "nombre": "Miguel Jara",
+    "rol": "establecimiento",
+    "email": "miguel.jara@intraumatologico.cl",
+    "establecimiento": "traumatologico",
+    "password_hash": "a26aa46662df3229a9c02ee6106f66ec681d8bdfd4c1ad93784bfb95a603858a",
+    "activo": true
+  },
+  "direccion": {
+    "nombre": "Referente Dir. SSMOCC",
+    "rol": "establecimiento",
+    "email": "abast.direccion@ssmocc.cl",
+    "establecimiento": "direccion",
+    "password_hash": "5bfe8368d91ee55fc4da394d1dda70575eb10df3485ba900cdefcc1a0b6e9814",
+    "activo": true
+  },
+  "felix_bulnes": {
+    "nombre": "Carolina Castro",
+    "rol": "establecimiento",
+    "email": "carolina.castroj@redsalud.gob.cl",
+    "establecimiento": "felix_bulnes",
+    "password_hash": "9cfafb55e9a3fbb9e2084a8843da1deb161a615deb517b9fa8195294c2bc5eb6",
+    "activo": true
+  },
+  "san_juan": {
+    "nombre": "Rodrigo Bravo Gajardo",
+    "rol": "establecimiento",
+    "email": "rodrigo.bravog@redsalud.gob.cl",
+    "establecimiento": "san_juan",
+    "password_hash": "39c8cfdfe5a44b60ae6c506d86536406d102d2fe6b34ce9994fdd662b95e897f",
+    "activo": true
+  },
+  "crs_allende": {
+    "nombre": "Eric Cubillo Antúnez",
+    "rol": "establecimiento",
+    "email": "eric.cubillo@redsalud.gob.cl",
+    "establecimiento": "crs_allende",
+    "password_hash": "e4188fe311fb1304a2f0776741ce65d2d3dcfca6c4a8bd3fd5a02ed48384514f",
+    "activo": true
+  },
+  "melipilla": {
+    "nombre": "María de los Ángeles Morales",
+    "rol": "establecimiento",
+    "email": "maria.moralesj@redsalud.gob.cl",
+    "establecimiento": "melipilla",
+    "password_hash": "bf31e6fcfb53fc19b4f2a956cf5f3b284123ae65d684f26d1f413f9db6341f28",
+    "activo": true
+  },
+  "penaflor": {
+    "nombre": "Gissela Salvo",
+    "rol": "establecimiento",
+    "email": "gissela.salvo@redsalud.gob.cl",
+    "establecimiento": "penaflor",
+    "password_hash": "8c2cbc0e4fef8f98dae9e51d3fe2a02f8ee8afbeca1c8eb91e7a713f9721c2fc",
+    "activo": true
+  },
+  "curacavi": {
+    "nombre": "Pablo Yévenes Olivares",
+    "rol": "establecimiento",
+    "email": "pablo.yevenes@redsalud.gob.cl",
+    "establecimiento": "curacavi",
+    "password_hash": "dbabf41a5db50f1ed3350965c203dba4442ba4972449af3a8f5b4b5d39417fef",
+    "activo": true
+  },
+  "talagante": {
+    "nombre": "María Andrea Villegas Albarrán",
+    "rol": "establecimiento",
+    "email": "mandrea.villegas@redsalud.gob.cl",
+    "establecimiento": "talagante",
+    "password_hash": "a2b6d1b782914b59b58ef487824e58a972f3506d5f03612331f164fbc1906fa0",
+    "activo": true
+  }
+}
