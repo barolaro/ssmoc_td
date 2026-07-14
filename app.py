@@ -652,7 +652,7 @@ def _anexo_texto_medidas(r: dict) -> str:
         "lic": "Inicio procesos licitatorios",
         "cm": "Migración a Convenio Marco",
         "cenabast": "Gestión CENABAST",
-        "cap": "Capacitación equipo Ley 21.634",
+        "cap": "Capacitación equipo (Ley 21.634, actualiza Ley 19.886)",
         "venc": "Control vencimiento contratos",
     }
     txt = "; ".join(lbl for k, lbl in med_labels.items() if med.get(k))
@@ -1721,7 +1721,7 @@ def pg_mis_reportes():
 
         med_labels = {"pac":("📅","Actualización Plan Anual de Compras"),"lic":("📄","Inicio procesos licitatorios"),
                       "cm":("🛒","Migración a Convenio Marco"),"cenabast":("🏥","Gestión CENABAST"),
-                      "cap":("📚","Capacitación equipo Ley 21.634"),"venc":("⏰","Control vencimiento contratos")}
+                      "cap":("📚","Capacitación equipo (Ley 21.634, actualiza Ley 19.886)"),"venc":("⏰","Control vencimiento contratos")}
         ex_med = existing.get("medidas",{}) if existing else {}
         med_sel = {}
         cols_m = st.columns(3)
@@ -2019,7 +2019,7 @@ def pg_exportar():
             "lic": "Inicio procesos licitatorios",
             "cm": "Migración a Convenio Marco",
             "cenabast": "Gestión CENABAST",
-            "cap": "Capacitación equipo Ley 21.634",
+            "cap": "Capacitación equipo (Ley 21.634, actualiza Ley 19.886)",
             "venc": "Control vencimiento contratos",
         }
         txt = "; ".join(lbl for k, lbl in med_labels.items() if med.get(k))
