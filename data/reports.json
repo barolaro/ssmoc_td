@@ -140,17 +140,17 @@
       "cap": false,
       "venc": false
     },
-    "med_desc": "",
-    "compromisos": "",
+    "med_desc": "Anticiparse a los vencimientos de contratos, y así planificar con tiempo procesos de licitación, en paralelo se coordinara con referentes técnicos que administran los contratos, para que la información sea oportuna y así tener los tiempos necesarios para gestionar compras que no sean tartos directos.",
+    "compromisos": "Anticiparse a los vencimientos de contratos, y así planificar con tiempo procesos de licitación, en paralelo se coordinara con referentes técnicos que administran los contratos, para que la información sea oportuna y así tener los tiempos necesarios para gestionar compras que no sean tartos directos.",
     "meta_prox": 16.0,
     "fecha_comp": "2026-08-31",
-    "resp_nombre": "Referente Dir. SSMOCC",
+    "resp_nombre": "Sergio Monsalves Oporto",
     "resp_cargo": "Jefe/a de Abastecimiento",
-    "resp_email": "abast.direccion@ssmocc.cl",
-    "obs": "",
-    "estado": "borrador",
+    "resp_email": "sergio.monsalves@redsalud.gob.cl",
+    "obs": "Los procesos que se mencionan como mejora, serán visibles cuando los contratos (TD), que ya están en ejecución empiecen a vencer.",
+    "estado": "enviado",
     "usuario": "direccion",
-    "fecha_ingreso": "2026-07-29T16:32:49",
+    "fecha_ingreso": "2026-07-29T19:49:49",
     "bitacora": [
       {
         "fecha": "2026-07-29T15:55:42",
@@ -186,8 +186,17 @@
         "nombre": "Referente Dir. SSMOCC",
         "accion": "Guarda borrador",
         "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-07-29T19:49:49",
+        "usuario": "direccion",
+        "nombre": "Referente Dir. SSMOCC",
+        "accion": "Reenvía reporte corregido",
+        "detalle": "Reporte cerrado para edición del establecimiento."
       }
     ],
-    "bloqueado": false
+    "bloqueado": true,
+    "habilitado_edicion": false,
+    "fecha_envio": "2026-07-29T19:49:49"
   }
 ]
