@@ -232,12 +232,11 @@
     "fecha_comp": "2026-08-31",
     "resp_nombre": "Juan Pablo Aravena Cañas",
     "resp_cargo": "Jefe Unidad de Con",
-    "resp_email": "carolina.castroj@redsalud.gob.cl",
-    "obs": "",
-    "estado": "borrador",
+    "resp_email": "juan.aravenac@redsalud.gob.cl",
+    "obs": "Conforme al análisis efectuado por la Unidad de Contratación Pública, el monto contratado mediante la modalidad de Trato Directo durante el período comprendido entre enero y marzo de 2026 representa aproximadamente un 24, 72% del monto total contratado por el establecimiento durante dicho período.\nAsimismo, se deja constancia de que las medidas y compromisos descritos en el presente informe comprenden tanto acciones que ya fueron implementadas con posterioridad al período analizado, principalmente entre los meses de abril y junio de 2026, como acciones que se encuentran actualmente en ejecución o programadas para su materialización. Lo anterior obedece a que, a la fecha de elaboración del presente informe, el período inmediatamente siguiente al evaluado ya se encuentra concluido, estimándose pertinente informar las medidas efectivamente adoptadas y los resultados obtenidos, así como aquellas acciones que permitirán continuar disminuyendo la utilización del procedimiento de Trato Directo y fortalecer la planificación de las contrataciones institucionales.\nCreo que esta última precisión es importante porque anticipa una eventual observación de la auditoría: explica por qué el apartado de \"compromisos\" incluye medidas que, al momento de emitir el informe, ya fueron ejecutadas. De esa forma queda claro que el informe no solo proyecta acciones futuras, sino que también da cuenta de la gestión realizada inmediatamente después del período enero-marzo, mostrando la efectividad de las medidas adoptadas.",
+    "estado": "enviado",
     "usuario": "felix_bulnes",
-    "fecha_ingreso": "2026-07-29T21:36:59",
-    "bloqueado": false,
+    "fecha_ingreso": "2026-07-29T21:40:56",
     "bitacora": [
       {
         "fecha": "2026-07-29T21:36:59",
@@ -245,7 +244,17 @@
         "nombre": "Carolina Castro",
         "accion": "Guarda borrador",
         "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-07-29T21:40:56",
+        "usuario": "felix_bulnes",
+        "nombre": "Carolina Castro",
+        "accion": "Reenvía reporte corregido",
+        "detalle": "Reporte cerrado para edición del establecimiento."
       }
-    ]
+    ],
+    "bloqueado": true,
+    "habilitado_edicion": false,
+    "fecha_envio": "2026-07-29T21:40:56"
   }
 ]
