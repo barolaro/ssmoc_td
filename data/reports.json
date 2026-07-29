@@ -48,5 +48,52 @@
         "detalle": "Reporte cerrado para edición del establecimiento."
       }
     ]
+  },
+  {
+    "year": 2026,
+    "establecimiento_id": "san_juan",
+    "establecimiento_nombre": "Hospital San Juan de Dios",
+    "reporte_id": "R1",
+    "periodo": "Enero–Marzo 2026",
+    "periodo_label": "1° Reporte",
+    "nivel_riesgo": "amarillo",
+    "pct_2026": 12.0,
+    "pct_2025": 11.86,
+    "pct_per": 12.0,
+    "monto_td": 3426218280,
+    "n_proc": 0,
+    "causas_sel": [
+      "Emergencia o urgencia debidamente calificada"
+    ],
+    "causas_desc": "",
+    "medidas": {
+      "pac": false,
+      "lic": false,
+      "cm": false,
+      "cenabast": false,
+      "cap": false,
+      "venc": false
+    },
+    "med_desc": "",
+    "compromisos": "",
+    "meta_prox": 16.0,
+    "fecha_comp": "2026-08-31",
+    "resp_nombre": "Rodrigo Bravo Gajardo",
+    "resp_cargo": "Jefe/a de Abastecimiento",
+    "resp_email": "rodrigo.bravog@redsalud.gob.cl",
+    "obs": "",
+    "estado": "borrador",
+    "usuario": "san_juan",
+    "fecha_ingreso": "2026-07-29T14:23:07",
+    "bloqueado": false,
+    "bitacora": [
+      {
+        "fecha": "2026-07-29T14:23:07",
+        "usuario": "san_juan",
+        "nombre": "Rodrigo Bravo Gajardo",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      }
+    ]
   }
 ]
