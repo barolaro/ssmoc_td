@@ -135,7 +135,7 @@
     "obs": "",
     "estado": "borrador",
     "usuario": "direccion",
-    "fecha_ingreso": "2026-07-29T16:25:12",
+    "fecha_ingreso": "2026-07-29T16:32:49",
     "bitacora": [
       {
         "fecha": "2026-07-29T15:55:42",
@@ -160,6 +160,13 @@
       },
       {
         "fecha": "2026-07-29T16:25:12",
+        "usuario": "direccion",
+        "nombre": "Referente Dir. SSMOCC",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-07-29T16:32:49",
         "usuario": "direccion",
         "nombre": "Referente Dir. SSMOCC",
         "accion": "Guarda borrador",
