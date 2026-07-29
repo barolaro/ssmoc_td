@@ -95,5 +95,52 @@
         "detalle": "Borrador actualizado por el establecimiento/administrador."
       }
     ]
+  },
+  {
+    "year": 2026,
+    "establecimiento_id": "direccion",
+    "establecimiento_nombre": "Dirección del Servicio Metropolitano Occidente",
+    "reporte_id": "R1",
+    "periodo": "Enero–Marzo 2026",
+    "periodo_label": "1° Reporte",
+    "nivel_riesgo": "rojo",
+    "pct_2026": 37.05,
+    "pct_2025": 2.79,
+    "pct_per": 37.05,
+    "monto_td": 2,
+    "n_proc": 57,
+    "causas_sel": [
+      "Proveedor único / exclusividad"
+    ],
+    "causas_desc": "",
+    "medidas": {
+      "pac": false,
+      "lic": false,
+      "cm": false,
+      "cenabast": false,
+      "cap": false,
+      "venc": false
+    },
+    "med_desc": "",
+    "compromisos": "",
+    "meta_prox": 16.0,
+    "fecha_comp": "2026-08-31",
+    "resp_nombre": "Referente Dir. SSMOCC",
+    "resp_cargo": "Jefe/a de Abastecimiento",
+    "resp_email": "abast.direccion@ssmocc.cl",
+    "obs": "",
+    "estado": "borrador",
+    "usuario": "direccion",
+    "fecha_ingreso": "2026-07-29T15:55:42",
+    "bloqueado": false,
+    "bitacora": [
+      {
+        "fecha": "2026-07-29T15:55:42",
+        "usuario": "direccion",
+        "nombre": "Referente Dir. SSMOCC",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      }
+    ]
   }
 ]
