@@ -110,9 +110,13 @@
     "monto_td": 2171058052,
     "n_proc": 57,
     "causas_sel": [
-      "Proveedor único / exclusividad"
+      "Proveedor único / exclusividad",
+      "Otra causal — especificar en observaciones",
+      "Confidencialidad / seguridad nacional",
+      "Convenio con otro organismo público (CENABAST, etc.)",
+      "Emergencia o urgencia debidamente calificada"
     ],
-    "causas_desc": "",
+    "causas_desc": "Enero 12 OC. , 11 con causal Confianza y seguridad de los proveedores y 1 OC. , de Conocimiento público de licitación pudiera poner en riesgo el objeto de la contratación; Febrero 26 OC. , 25 con causal Confianza y seguridad de los proveedores, 1 OC Conocimiento público de licitación pudiera poner en riesgo el objeto de la contratación y 1 OC por intermediación Trato Directo de Cenabast con emisión de OC por $ 1. 111. 650. 0000. ; Marzo 19 OC. , 11 con causal Confianza y seguridad de los proveedores; 2 OC. , Conocimiento público de licitación pudiera poner en riesgo el objeto de la contratación. ; 2 OC. , Contratación de proveedor por seguridad e integridad de las autoridades; 1 OC. , Naturaleza de la negociación - Proveedor con alto grado de especialización. ; 3 OC Emergencia, urgencia o imprevisto.",
     "medidas": {
       "pac": false,
       "lic": false,
@@ -131,7 +135,7 @@
     "obs": "",
     "estado": "borrador",
     "usuario": "direccion",
-    "fecha_ingreso": "2026-07-29T15:56:56",
+    "fecha_ingreso": "2026-07-29T16:25:12",
     "bitacora": [
       {
         "fecha": "2026-07-29T15:55:42",
@@ -149,6 +153,13 @@
       },
       {
         "fecha": "2026-07-29T15:56:56",
+        "usuario": "direccion",
+        "nombre": "Referente Dir. SSMOCC",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-07-29T16:25:12",
         "usuario": "direccion",
         "nombre": "Referente Dir. SSMOCC",
         "accion": "Guarda borrador",
