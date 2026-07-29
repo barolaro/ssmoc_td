@@ -107,7 +107,7 @@
     "pct_2026": 37.05,
     "pct_2025": 2.79,
     "pct_per": 37.05,
-    "monto_td": 2,
+    "monto_td": 2171058052,
     "n_proc": 57,
     "causas_sel": [
       "Proveedor único / exclusividad"
@@ -131,8 +131,7 @@
     "obs": "",
     "estado": "borrador",
     "usuario": "direccion",
-    "fecha_ingreso": "2026-07-29T15:55:42",
-    "bloqueado": false,
+    "fecha_ingreso": "2026-07-29T15:56:45",
     "bitacora": [
       {
         "fecha": "2026-07-29T15:55:42",
@@ -140,7 +139,15 @@
         "nombre": "Referente Dir. SSMOCC",
         "accion": "Guarda borrador",
         "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-07-29T15:56:45",
+        "usuario": "direccion",
+        "nombre": "Referente Dir. SSMOCC",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
       }
-    ]
+    ],
+    "bloqueado": false
   }
 ]
