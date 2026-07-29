@@ -59,16 +59,17 @@
     "nivel_riesgo": "amarillo",
     "pct_2026": 12.0,
     "pct_2025": 11.86,
-    "pct_per": 12.0,
+    "pct_per": 11.06,
     "monto_td": 3426218280,
-    "n_proc": 0,
+    "n_proc": 442,
     "causas_sel": [
-      "Emergencia o urgencia debidamente calificada"
+      "Emergencia o urgencia debidamente calificada",
+      "Otra causal — especificar en observaciones"
     ],
     "causas_desc": "",
     "medidas": {
       "pac": false,
-      "lic": false,
+      "lic": true,
       "cm": false,
       "cenabast": false,
       "cap": false,
@@ -84,8 +85,7 @@
     "obs": "",
     "estado": "borrador",
     "usuario": "san_juan",
-    "fecha_ingreso": "2026-07-29T14:23:07",
-    "bloqueado": false,
+    "fecha_ingreso": "2026-07-29T17:20:24",
     "bitacora": [
       {
         "fecha": "2026-07-29T14:23:07",
@@ -93,8 +93,16 @@
         "nombre": "Rodrigo Bravo Gajardo",
         "accion": "Guarda borrador",
         "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-07-29T17:20:24",
+        "usuario": "san_juan",
+        "nombre": "Rodrigo Bravo Gajardo",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
       }
-    ]
+    ],
+    "bloqueado": false
   },
   {
     "year": 2026,
