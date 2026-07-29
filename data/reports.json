@@ -66,17 +66,17 @@
       "Emergencia o urgencia debidamente calificada",
       "Otra causal — especificar en observaciones"
     ],
-    "causas_desc": "",
+    "causas_desc": "Naturaleza de la negociación - Reposición o complementación de servicios o equipamientos accesorios\nCosto de evaluación desproporcionado, y por monto de contratación inferior a 100 UTM\nNaturaleza de la negociación - Proveedor con alto grado de especialización\nlicitación pública previa sin ofertas, o con ofertas inadmisibles\nSi sólo existe un proveedor del bien o servicio. (Monto igual o inferior a 1. 000 utm. )\nConfianza y seguridad de los proveedores.",
     "medidas": {
-      "pac": false,
+      "pac": true,
       "lic": true,
       "cm": false,
       "cenabast": false,
-      "cap": false,
-      "venc": false
+      "cap": true,
+      "venc": true
     },
     "med_desc": "",
-    "compromisos": "",
+    "compromisos": "Actualmente, se realiza un control mensual del vencimiento de los contratos vigentes, con el propósito de identificar oportunamente aquellos próximos a expirar y adoptar las medidas necesarias para asegurar la continuidad de los procesos de contratación.\nAsimismo, se encuentra en desarrollo la elaboración del Plan Anual de Compras (PAC) 2027, en coordinación con las distintas unidades del establecimiento, con el objetivo de planificar adecuadamente las adquisiciones del próximo período.\nAdicionalmente, se están llevando a cabo capacitaciones dirigidas al equipo de Abastecimiento, orientadas al fortalecimiento de conocimientos, la actualización normativa y la mejora continua de los procesos de contratación pública.",
     "meta_prox": 16.0,
     "fecha_comp": "2026-08-31",
     "resp_nombre": "Rodrigo Bravo Gajardo",
@@ -85,7 +85,7 @@
     "obs": "",
     "estado": "borrador",
     "usuario": "san_juan",
-    "fecha_ingreso": "2026-07-29T17:20:24",
+    "fecha_ingreso": "2026-07-29T17:31:08",
     "bitacora": [
       {
         "fecha": "2026-07-29T14:23:07",
@@ -96,6 +96,13 @@
       },
       {
         "fecha": "2026-07-29T17:20:24",
+        "usuario": "san_juan",
+        "nombre": "Rodrigo Bravo Gajardo",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-07-29T17:31:08",
         "usuario": "san_juan",
         "nombre": "Rodrigo Bravo Gajardo",
         "accion": "Guarda borrador",
