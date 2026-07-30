@@ -256,5 +256,54 @@
     "bloqueado": true,
     "habilitado_edicion": false,
     "fecha_envio": "2026-07-29T21:40:56"
+  },
+  {
+    "year": 2026,
+    "establecimiento_id": "crs_allende",
+    "establecimiento_nombre": "Centro de Referencia Salud Occidente Salvador Allende",
+    "reporte_id": "R1",
+    "periodo": "Enero–Marzo 2026",
+    "periodo_label": "1° Reporte",
+    "nivel_riesgo": "amarillo",
+    "pct_2026": 8.12,
+    "pct_2025": 7.85,
+    "pct_per": 8.12,
+    "monto_td": 24470175,
+    "n_proc": 6,
+    "causas_sel": [
+      "Equipamiento especializado sin equivalente",
+      "Proveedor único / exclusividad",
+      "Otra causal — especificar en observaciones"
+    ],
+    "causas_desc": "TD-01/2026 — Servicio de anestesiología → $19. 800. 000 (exento IVA)\nProveedor: Layner SpA (76. 179. 729-8). Causal: servicios personales especializados (Art. 7° c) Ley 19. 886 / Art. 71 N°7 c) DS 661). Contratación de 400 horas a $49. 500/hora para cubrir licencias maternales de 2 de 3 anestesiólogos. Requirente: Subdirección de Gestión Asistencial (Req. N°62).\nTD-02/2026 — Mantención correctiva desfibrilador → $864. 624 (IVA incluido)\nProveedor: Plus Medical SPA (76. 520. 087-3). Causal: equipamiento accesorio/proveedor único (Art. 71 N°7 a) DS 661). Falla de pantalla en desfibrilador COMEN, proveedor exclusivo acreditado. Requirente: Encargada de equipos médicos (Req. N°76).\nTD-03 (numerado TD-02/2025) — Sellador piso Tarkett → $1. 071. 000 (IVA incluido)\nProveedor: Llape Construcción SpA (76. 495. 045-3). Causal: costo desproporcionado <100 UTM (Art. 8° bis f) N°2 Ley 19. 886 / Art. 71 N°7 b) DS 661). Trabajo accesorio a LP 1532-34-LP25 vigente, con justificación IAAS. Requirente: Jefe Unidad de Operaciones (Req. N°86).\nTD-04/2026 — Reparación pistolas de aire → $1. 925. 351 (IVA incluido)\nProveedor: Ingeniería y Gestión en Salud y Seguridad Ocupacional Ltda (76. 400. 788-3). Causal: equipamiento accesorio/proveedor único (Art. 8° bis a) Ley 19. 886 / Art. 71 N°7 a) DS 661). Calibración y reemplazo componentes en esterilización. Requirente: Encargada de equipos médicos (Req. N°85).\nTD-06/2026 — Inspección de gases → $809. 200 (IVA incluido)\nProveedor: Devia y Rozas Ingeniería Ltda (76. 086. 895-7). Causal: costo desproporcionado <100 UTM (Art. 8° bis f) N°2 Ley 19. 886 / Art. 71 N°7 b) DS 661). Cumplimiento de requerimiento SEC (Oficio 321666, DS N°66 Ministerio de Economía). Requirente: Jefe Unidad de Operaciones (Req. N°214).",
+    "medidas": {
+      "pac": false,
+      "lic": true,
+      "cm": false,
+      "cenabast": false,
+      "cap": false,
+      "venc": true
+    },
+    "med_desc": "",
+    "compromisos": "A) Incorporar cláusulas de mantenimiento en las licitaciones de adquisición de equipos. Al licitar la compra de equipamiento médico, incluir como parte de la evaluación técnica la existencia de red de servicio técnico en Chile, la disponibilidad de repuestos y la posibilidad de contratar mantenciones con proveedores alternativos\nb) c) Coordinación con Subdirección de Gestión de Personas. Establecer un protocolo formal en que RRHH notifique a Abastecimiento, con al menos 90 días de anticipación, cualquier licencia médica prolongada, prenatal/postnatal, o vacancia en cargos de especialidades críticas (anestesiología, imagenología, etc. ), para gatillar el proceso de contratación antes de que se configure la urgencia.",
+    "meta_prox": 16.0,
+    "fecha_comp": "2026-08-31",
+    "resp_nombre": "Eric Cubillo Antúnez",
+    "resp_cargo": "Jefe/a de Abastecimiento",
+    "resp_email": "eric.cubillo@redsalud.gob.cl",
+    "obs": "",
+    "estado": "borrador",
+    "usuario": "crs_allende",
+    "fecha_ingreso": "2026-07-30T14:26:08",
+    "bloqueado": false,
+    "bitacora": [
+      {
+        "fecha": "2026-07-30T14:26:08",
+        "usuario": "crs_allende",
+        "nombre": "Eric Cubillo Antúnez",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      }
+    ]
   }
 ]
