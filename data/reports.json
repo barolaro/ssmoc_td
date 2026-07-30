@@ -83,9 +83,9 @@
     "resp_cargo": "Jefe/a de Abastecimiento",
     "resp_email": "rodrigo.bravog@redsalud.gob.cl",
     "obs": "",
-    "estado": "borrador",
+    "estado": "enviado",
     "usuario": "san_juan",
-    "fecha_ingreso": "2026-07-29T17:31:08",
+    "fecha_ingreso": "2026-07-30T14:50:52",
     "bitacora": [
       {
         "fecha": "2026-07-29T14:23:07",
@@ -107,9 +107,18 @@
         "nombre": "Rodrigo Bravo Gajardo",
         "accion": "Guarda borrador",
         "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-07-30T14:50:52",
+        "usuario": "san_juan",
+        "nombre": "Rodrigo Bravo Gajardo",
+        "accion": "Reenvía reporte corregido",
+        "detalle": "Reporte cerrado para edición del establecimiento."
       }
     ],
-    "bloqueado": false
+    "bloqueado": true,
+    "habilitado_edicion": false,
+    "fecha_envio": "2026-07-30T14:50:52"
   },
   {
     "year": 2026,
