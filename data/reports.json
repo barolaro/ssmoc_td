@@ -285,17 +285,16 @@
       "venc": true
     },
     "med_desc": "",
-    "compromisos": "A) Incorporar cláusulas de mantenimiento en las licitaciones de adquisición de equipos. Al licitar la compra de equipamiento médico, incluir como parte de la evaluación técnica la existencia de red de servicio técnico en Chile, la disponibilidad de repuestos y la posibilidad de contratar mantenciones con proveedores alternativos\nb) c) Coordinación con Subdirección de Gestión de Personas. Establecer un protocolo formal en que RRHH notifique a Abastecimiento, con al menos 90 días de anticipación, cualquier licencia médica prolongada, prenatal/postnatal, o vacancia en cargos de especialidades críticas (anestesiología, imagenología, etc. ), para gatillar el proceso de contratación antes de que se configure la urgencia.",
+    "compromisos": "A) Incorporar cláusulas de mantenimiento en las licitaciones de adquisición de equipos. Al licitar la compra de equipamiento médico, incluir como parte de la evaluación técnica la existencia de red de servicio técnico en Chile, la disponibilidad de repuestos y la posibilidad de contratar mantenciones con proveedores alternativos\nb) Coordinación con Subdirección de Gestión de Personas. Establecer un protocolo formal en que RRHH notifique a Abastecimiento, con al menos 90 días de anticipación, cualquier licencia médica prolongada, prenatal/postnatal, o vacancia en cargos de especialidades críticas (anestesiología, imagenología, etc. ), para gatillar el proceso de contratación antes de que se configure la urgencia.",
     "meta_prox": 16.0,
     "fecha_comp": "2026-08-31",
     "resp_nombre": "Eric Cubillo Antúnez",
     "resp_cargo": "Jefe/a de Abastecimiento",
     "resp_email": "eric.cubillo@redsalud.gob.cl",
     "obs": "",
-    "estado": "borrador",
+    "estado": "enviado",
     "usuario": "crs_allende",
-    "fecha_ingreso": "2026-07-30T14:26:08",
-    "bloqueado": false,
+    "fecha_ingreso": "2026-07-30T14:26:43",
     "bitacora": [
       {
         "fecha": "2026-07-30T14:26:08",
@@ -303,7 +302,17 @@
         "nombre": "Eric Cubillo Antúnez",
         "accion": "Guarda borrador",
         "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-07-30T14:26:43",
+        "usuario": "crs_allende",
+        "nombre": "Eric Cubillo Antúnez",
+        "accion": "Reenvía reporte corregido",
+        "detalle": "Reporte cerrado para edición del establecimiento."
       }
-    ]
+    ],
+    "bloqueado": true,
+    "habilitado_edicion": false,
+    "fecha_envio": "2026-07-30T14:26:43"
   }
 ]
