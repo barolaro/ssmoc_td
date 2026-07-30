@@ -323,5 +323,56 @@
     "bloqueado": true,
     "habilitado_edicion": false,
     "fecha_envio": "2026-07-30T14:26:43"
+  },
+  {
+    "year": 2026,
+    "establecimiento_id": "traumatologico",
+    "establecimiento_nombre": "Instituto Traumatológico Dr. Teodoro Gebauer",
+    "reporte_id": "R1",
+    "periodo": "Enero–Marzo 2026",
+    "periodo_label": "1° Reporte",
+    "nivel_riesgo": "rojo",
+    "pct_2026": 61.72,
+    "pct_2025": 20.48,
+    "pct_per": 61.72,
+    "monto_td": 2720818081,
+    "n_proc": 191,
+    "causas_sel": [
+      "Emergencia o urgencia debidamente calificada",
+      "Equipamiento especializado sin equivalente",
+      "Otra causal — especificar en observaciones"
+    ],
+    "causas_desc": "- Compra de prótesis y material de Osteosíntesis (OTS), principal concepto de gasto en el Subtítulo 22, Bienes y Servicios de Consumo (40%): Históricamente, la complejidad técnica de los productos, las dificultades en el mecanismo de compra y ciertas debilidades clínico-administrativas favorecieron el uso inercial de la contratación directa. Actualmente, esta tendencia se ha ido revirtiendo mediante la implementación de licitaciones internas —específicamente para los sets de Clavo Cefalomedular, Placas y Tornillos para fractura de Muñeca, Endoscopía de Columna, Insumos para Tutor Externo y Reconstrucción Tutor Externo— y el uso del nuevo Convenio Marco. Como resultado, se proyecta reducir, significativamente, esto es en un 45% aprox, las compras directas ascendentes a MM$ 6. 600 anuales.\n-Compra del servicio de alimentación, gasto que representa aproximadamente un 6% del Subtítulo 22: El establecimiento carece de una Central de Producción de alimentos adecuada para prestar el servicio de alimentación de pacientes y funcionarios, disponiendo solo de un deteriorado espacio físico. El IT tampoco ha contado con los recursos para invertir en obras y en el equipamiento necesario. Esta situación ha obligado al establecimiento a incorporar en la licitación estos conceptos, bases que fueron aprobadas por CGR, sin embargo, las ofertas superaron significativamente el presupuesto destinado a dicho servicio, debido a la alta inversión exigida a los oferentes, quienes la traspasaron a lo ofertado. Por esta razón y velando por la continuidad del servicio se recurrió a la compra directa, mientras se reformulan requerimientos, se prioriza presupuesto y levanta nuevo proceso.\n-Compra de servicio de personal de pabellón, lo que representa cerca de un 3% del Sbt22: Producto de un proceso licitatorio, se adjudicaron los servicios de personal de pabellón a la empresa GSM, oferente que reiteradamente no cumplió con las exigencias del contrato, lo que derivó en variadas multas y el término anticipado de éste.\n-Compra de servicios de esterilización, aproximadamente un 4, 5% del gasto en Sbt22: Ante el cierre transitorio de la Central de Esterilización, para la renovación de equipamiento, y los inciertos plazos de para su reinauguración, se recurrió a tratos directos considerando la transitoriedad de la interrupción.",
+    "medidas": {
+      "pac": false,
+      "lic": true,
+      "cm": true,
+      "cenabast": false,
+      "cap": false,
+      "venc": true
+    },
+    "med_desc": "- En Prótesis y material OTS: Comprar productos a través de Convenio Marco y licitaciones vigentes (5). Licitar a la brevedad material de OTS de Hombro, Tobillo y pie, y manos, no incluidos en CM. Licitar otros insumos no cubiertos por CM, esto es, tumores, y material para máxilo-facial.\n- En servicio de Alimentación: Rebajar partidas de la licitación fallida, para ajustarse a presupuesto (razón por la que falló licitación anterior), luego publicar durante agosto licitación.\n- En servicio personal de pabellón: Agilizar proceso de evaluación y adjudicación proceso publicado.\n- En servicio de Esterilización: Velar por la pronta y definitiva puesta en marcha de central, prescindiendo de la compra de servicio externo.",
+    "compromisos": "- En Prótesis y material OTS: Comprar productos a través de Convenio Marco y licitaciones vigentes (5). Licitar a la brevedad material de OTS de Hombro, Tobillo y pie, y manos, no incluidos en CM. Licitar otros insumos no cubiertos por CM, esto es, tumores, y material para máxilo-facial.\n- En servicio de Alimentación: Rebajar partidas de la licitación fallida, para ajustarse a presupuesto (razón por la que falló licitación anterior), luego publicar durante agosto licitación.\n- En servicio personal de pabellón: Agilizar proceso de evaluación y adjudicación proceso publicado.\n- En servicio de Esterilización: Velar por la pronta y definitiva puesta en marcha de central, prescindiendo de la compra de servicio externo.",
+    "meta_prox": 16.0,
+    "fecha_comp": "2026-08-31",
+    "resp_nombre": "Miguel Jara",
+    "resp_cargo": "Jefe/a de Abastecimiento",
+    "resp_email": "miguel.jara@intraumatologico.cl",
+    "obs": "El indicador (Monto TD recepción conforme/Todas las modalidades) del reporte muestra para el IT un 20. 5% al 1° trimestre 2025 y un 61. 7% al 1° trimestre 2026. Esto evidenciaría que se triplicó el monto relativo de compras directas sobre el total.\nSobre lo anterior, se informa que, por razones administrativas en el caso de Prótesis, principal componente de gasto del Sbt22, (falta de certificados clínicos para justificar causal) los contratos se atrasaron prácticamente todo el trimestre y más, lo que se ve reflejado en el numerador del indicador. En conclusión, el indicador debiera estar más cercano al guarismo del año 2026, esto se comprobará con las mediciones, de ambos años, a junio, donde ambas cifras, según nuestros registros, son similares y se acercan al 62%.",
+    "estado": "enviado",
+    "usuario": "traumatologico",
+    "fecha_ingreso": "2026-07-30T16:31:25",
+    "bloqueado": true,
+    "habilitado_edicion": false,
+    "fecha_envio": "2026-07-30T16:31:25",
+    "bitacora": [
+      {
+        "fecha": "2026-07-30T16:31:25",
+        "usuario": "traumatologico",
+        "nombre": "Miguel Jara",
+        "accion": "Envía reporte",
+        "detalle": "Reporte cerrado para edición del establecimiento."
+      }
+    ]
   }
 ]
