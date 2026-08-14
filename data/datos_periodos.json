@@ -127,6 +127,134 @@
           "fuente_csv": "Hospital de Curacaví"
         }
       }
+    },
+    "R2": {
+      "metadata": {
+        "year": 2026,
+        "reporte_id": "R2",
+        "fuente": "indicador_trato_directo_2026 (2).csv",
+        "fecha_carga": "2026-08-14T17:40:44",
+        "establecimientos": 9
+      },
+      "establecimientos": {
+        "penaflor": {
+          "pct_2026": 16.85,
+          "pct_2025": 9.37,
+          "brecha": 0.85,
+          "variacion": 7.48,
+          "denominador": 1166986484,
+          "numerador": 196609664,
+          "nivel": "rojo",
+          "rut": "61602121-4",
+          "codigo_deis": "110140",
+          "ultima_actualizacion": "2026-08-14",
+          "fuente_csv": "Hospital de Peñaflor"
+        },
+        "talagante": {
+          "pct_2026": 2.96,
+          "pct_2025": 6.73,
+          "brecha": -13.04,
+          "variacion": -3.77,
+          "denominador": 3583538688,
+          "numerador": 106217133,
+          "nivel": "verde",
+          "rut": "61602122-2",
+          "codigo_deis": "110130",
+          "ultima_actualizacion": "2026-08-14",
+          "fuente_csv": "Hospital Adalberto Steeger (Talagante)"
+        },
+        "melipilla": {
+          "pct_2026": 7.47,
+          "pct_2025": 6.38,
+          "brecha": -8.53,
+          "variacion": 1.09,
+          "denominador": 4376323976,
+          "numerador": 326980380,
+          "nivel": "amarillo",
+          "rut": "61602123-0",
+          "codigo_deis": "110150",
+          "ultima_actualizacion": "2026-08-14",
+          "fuente_csv": "Hospital San José (Melipilla)"
+        },
+        "curacavi": {
+          "pct_2026": 7.93,
+          "pct_2025": 19.72,
+          "brecha": -8.07,
+          "variacion": -11.79,
+          "denominador": 523073720,
+          "numerador": 41462400,
+          "nivel": "verde",
+          "rut": "61602125-7",
+          "codigo_deis": "110160",
+          "ultima_actualizacion": "2026-08-14",
+          "fuente_csv": "Hospital de Curacaví"
+        },
+        "direccion": {
+          "pct_2026": 12.43,
+          "pct_2025": 13.06,
+          "brecha": -3.57,
+          "variacion": -0.64,
+          "denominador": 4520631240,
+          "numerador": 561816201,
+          "nivel": "verde",
+          "rut": "61608200-0",
+          "codigo_deis": "110010",
+          "ultima_actualizacion": "2026-08-14",
+          "fuente_csv": "Dirección del Servicio Metropolitano Occidente"
+        },
+        "traumatologico": {
+          "pct_2026": 59.0,
+          "pct_2025": 60.38,
+          "brecha": 43.0,
+          "variacion": -1.38,
+          "denominador": 3251739295,
+          "numerador": 1918618616,
+          "nivel": "rojo",
+          "rut": "61608203-5",
+          "codigo_deis": "110110",
+          "ultima_actualizacion": "2026-08-14",
+          "fuente_csv": "Instituto Traumatológico Dr. Teodoro Gebauer"
+        },
+        "san_juan": {
+          "pct_2026": 10.61,
+          "pct_2025": 9.11,
+          "brecha": -5.39,
+          "variacion": 1.5,
+          "denominador": 15308696697,
+          "numerador": 1623913099,
+          "nivel": "amarillo",
+          "rut": "61608204-3",
+          "codigo_deis": "110100",
+          "ultima_actualizacion": "2026-08-14",
+          "fuente_csv": "Hospital San Juan de Dios"
+        },
+        "felix_bulnes": {
+          "pct_2026": 22.86,
+          "pct_2025": 19.11,
+          "brecha": 6.86,
+          "variacion": 3.76,
+          "denominador": 10851700664,
+          "numerador": 2481192068,
+          "nivel": "rojo",
+          "rut": "61608205-1",
+          "codigo_deis": "110120",
+          "ultima_actualizacion": "2026-08-14",
+          "fuente_csv": "Hospital Dr. Félix Bulnes Cerda"
+        },
+        "crs_allende": {
+          "pct_2026": 4.99,
+          "pct_2025": 0.57,
+          "brecha": -11.01,
+          "variacion": 4.42,
+          "denominador": 1524422648,
+          "numerador": 76034448,
+          "nivel": "rojo",
+          "rut": "61933400-0",
+          "codigo_deis": "110300",
+          "ultima_actualizacion": "2026-08-14",
+          "fuente_csv": "Centro de Referencia Salud Occidente Salvador Allende"
+        }
+      }
     }
   }
 }
