@@ -374,5 +374,54 @@
         "detalle": "Reporte cerrado para edición del establecimiento."
       }
     ]
+  },
+  {
+    "year": 2026,
+    "establecimiento_id": "curacavi",
+    "establecimiento_nombre": "Hospital de Curacaví",
+    "reporte_id": "R2",
+    "periodo": "Abril–Junio 2026",
+    "periodo_label": "2° Reporte",
+    "nivel_riesgo": "verde",
+    "pct_2026": 7.93,
+    "pct_2025": 19.72,
+    "pct_per": 7.93,
+    "monto_td": 41844756,
+    "n_proc": 3,
+    "causas_sel": [
+      "Emergencia o urgencia debidamente calificada"
+    ],
+    "causas_desc": "1. - incumplimiento de obligaciones del contrato, de manera imprevista, \"trabajadores en paro\" obligan a contratar por 2 meses para dar continuidad de servicio, mientras se licita.\n2. - falla imprevista de ambulancias deja 2 menos de la flota del hospital y con campaña invierno en vigencia, se acude a servicio por 3 meses para asegurar continuidad de respuesta de traslado de emergencia.\n3. - Proveedor informa que su insumo de troponina será descontinuado. Y SS informa que licitación para la red está en toma de razón. Para asegurar continuidad se procede con Trato Directo.",
+    "medidas": {
+      "pac": false,
+      "lic": true,
+      "cm": false,
+      "cenabast": false,
+      "cap": false,
+      "venc": false
+    },
+    "med_desc": "Se ejecuta licitación.",
+    "compromisos": "Licitación de servicio de traslado de emergencia se publicará semana del 24. 8. 26.",
+    "meta_prox": 16.0,
+    "fecha_comp": "2026-08-31",
+    "resp_nombre": "Pablo Yévenes Olivares",
+    "resp_cargo": "Jefe/a de Abastecimiento",
+    "resp_email": "pablo.yevenes@redsalud.gob.cl",
+    "obs": "",
+    "estado": "enviado",
+    "usuario": "curacavi",
+    "fecha_ingreso": "2026-08-17T13:22:06",
+    "bloqueado": true,
+    "habilitado_edicion": false,
+    "fecha_envio": "2026-08-17T13:22:06",
+    "bitacora": [
+      {
+        "fecha": "2026-08-17T13:22:06",
+        "usuario": "curacavi",
+        "nombre": "Pablo Yévenes Olivares",
+        "accion": "Envía reporte",
+        "detalle": "Reporte cerrado para edición del establecimiento."
+      }
+    ]
   }
 ]
