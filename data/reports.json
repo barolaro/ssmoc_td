@@ -486,5 +486,55 @@
     "bloqueado": true,
     "habilitado_edicion": false,
     "fecha_envio": "2026-08-27T15:29:06"
+  },
+  {
+    "year": 2026,
+    "establecimiento_id": "traumatologico",
+    "establecimiento_nombre": "Instituto Traumatológico Dr. Teodoro Gebauer",
+    "reporte_id": "R2",
+    "periodo": "Abril–Junio 2026",
+    "periodo_label": "2° Reporte",
+    "nivel_riesgo": "rojo",
+    "pct_2026": 59.0,
+    "pct_2025": 60.38,
+    "pct_per": 59.0,
+    "monto_td": 2571806144,
+    "n_proc": 137,
+    "causas_sel": [
+      "Emergencia o urgencia debidamente calificada",
+      "Licitación desierta (2° vez)",
+      "Equipamiento especializado sin equivalente",
+      "Otra causal — especificar en observaciones"
+    ],
+    "causas_desc": "Compra de prótesis y material de Osteosíntesis (OTS), principal concepto de gasto en el Subtítulo 22, Bienes y Servicios de Consumo (40%): Históricamente, la complejidad técnica de los productos, las dificultades en el mecanismo de compra y ciertas debilidades clínico-administrativas favorecieron el uso inercial de la contratación directa. Actualmente, esta tendencia se ha ido revirtiendo mediante la implementación de licitaciones internas —específicamente para los sets de Clavo Cefalomedular, Placas y Tornillos para fractura de Muñeca, Endoscopía de Columna, Insumos para Tutor Externo y Reconstrucción Tutor Externo— y el uso del nuevo Convenio Marco. El establecimiento carece de una Central de Producción de alimentos adecuada para prestar el servicio de alimentación de pacientes y funcionarios, disponiendo solo de un deteriorado espacio físico. El IT tampoco ha contado con los recursos para invertir en obras y en el equipamiento necesario. Esta situación ha obligado al establecimiento a incorporar en la licitación estos conceptos, bases que fueron aprobadas por CGR, sin embargo, las ofertas superaron significativamente el presupuesto destinado a dicho servicio, debido a la alta inversión exigida a los oferentes, quienes la traspasaron a lo ofertado. Por esta razón y velando por la continuidad del servicio se recurrió a la compra directa, mientras se reformulan requerimientos, se prioriza presupuesto y levanta nuevo proceso. -Compra de servicio de personal de pabellón, lo que representa cerca de un 3% del Sbt22: Producto de un proceso licitatorio, se adjudicaron los servicios de personal de pabellón a la empresa GSM, oferente que reiteradamente no cumplió con las exigencias del contrato, lo que derivó en variadas multas y el término anticipado de éste.",
+    "medidas": {
+      "pac": false,
+      "lic": true,
+      "cm": true,
+      "cenabast": false,
+      "cap": false,
+      "venc": true
+    },
+    "med_desc": "Ante la puesta en Marcha del Convenio Marco el 1° semestre año 2026, existen para nuestra Institución varios problemas Operativos con el detalle de los Set que No cuadran con lo efectivamente a ocupar (Chilecompra No puede solucionar), se están trabajando en Acuerdos Complementarios con cada proveedor para poder solucionar dicho problema, lo que se espera finalizar en Septiembre 2026 y poder ocupar en gran medida el Convenio marco, que para nuestra Institución seria aproximadamente un 50 % de la Producción total de Cirugías de Prótesis, el 50% restante que No figura en Convenio Marco, se trabajo en 5 Licitación Adjudicadas y en proceso a la fecha y que tendrán su real impacto en este Indicador con relevancia en el 2° semestre 2026, y se encuentra trabajando en Apurar otros procesos licitatorios de Prótesis. Ademas se estan trabajando en otras licitaciones del Casino y Personal Clínico externo, que ayudaran a disminuir el Indicado. Todo los procesos de licitación se debe contar con el REAL Apoyo y compromiso de Unidad de licitaciones y Contratos.",
+    "compromisos": "1. - En El 2° Semestre poder solucionar los problemas de Operatividad de Convenio Marco con los Acuerdos Complementarios.\n2. - Apurar otros procesos Licitatorios del Casino, Personal Clínico externo y Nuevos procesos de Prótesis e Implantes que No cubre Convenio Marco.",
+    "meta_prox": 16.0,
+    "fecha_comp": "2026-11-30",
+    "resp_nombre": "Miguel Jara",
+    "resp_cargo": "Jefe de Abastecimiento",
+    "resp_email": "miguel.jara@intraumatologico.cl",
+    "obs": "Para poder cumplir con los Compromisos adoptados, se debe contar con el Apoyo de S. D. A. , Dirección y Asesoría Juridica para los Acuerdos Complementarios de Convenio Marco y en el caso de procesos Licitatorios se debe contar con el COMPROMISO real de Unidad de licitaciones y Contratos.",
+    "estado": "borrador",
+    "usuario": "traumatologico",
+    "fecha_ingreso": "2026-08-27T19:40:31",
+    "bloqueado": false,
+    "bitacora": [
+      {
+        "fecha": "2026-08-27T19:40:31",
+        "usuario": "traumatologico",
+        "nombre": "Miguel Jara",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      }
+    ]
   }
 ]
