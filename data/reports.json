@@ -423,5 +423,52 @@
         "detalle": "Reporte cerrado para edición del establecimiento."
       }
     ]
+  },
+  {
+    "year": 2026,
+    "establecimiento_id": "melipilla",
+    "establecimiento_nombre": "Hospital San José (Melipilla)",
+    "reporte_id": "R2",
+    "periodo": "Abril–Junio 2026",
+    "periodo_label": "2° Reporte",
+    "nivel_riesgo": "amarillo",
+    "pct_2026": 7.47,
+    "pct_2025": 6.38,
+    "pct_per": 7.47,
+    "monto_td": 229125885,
+    "n_proc": 5,
+    "causas_sel": [
+      "Emergencia o urgencia debidamente calificada"
+    ],
+    "causas_desc": "Durante el período reportado, el establecimiento afrontó un proceso crítico de traslado e instalación en las nuevas dependencias hospitalarias. Esta contingencia operacional generó requerimientos impostergables de adquisición de bienes y servicios clave para asegurar la continuidad de la atención clínica y operacional de manera inmediata. Debido a que los plazos de tramitación de un proceso licitatorio público hubiesen impedido responder a tiempo a las exigencias operativas del traslado —poniendo en riesgo el funcionamiento del recinto—, se recurrió de manera estricta y transitoria a la causal de emergencia o urgencia debidamente calificada, acotando la adquisición a las cantidades mínimas necesarias para cubrir el período de transición.",
+    "medidas": {
+      "pac": false,
+      "lic": true,
+      "cm": false,
+      "cenabast": false,
+      "cap": false,
+      "venc": false
+    },
+    "med_desc": "Con el objetivo de regularizar las adquisiciones efectuadas bajo Trato Directo durante la contingencia del traslado, se dio inicio a la estructuración y publicación de nuevos procesos licitatorios públicos. Esta medida permite sustituir las contrataciones directas de carácter transitorio por contratos administrativos de largo plazo, garantizando el cumplimiento de los principios de probidad, libre concurrencia y eficiencia en el uso de los recursos públicos.",
+    "compromisos": "1. Publicar bases de licitación pública para los requerimientos transitorios contratados durante el traslado\n2. Fortalecer la planificación previa de requerimientos en coordinación con las unidades usuarias para formalizar los procesos licitatorios con suficiente antelación, previniendo el uso de tratos directos por urgencia operacional.",
+    "meta_prox": 16.0,
+    "fecha_comp": "2026-08-31",
+    "resp_nombre": "María de los Ángeles Morales",
+    "resp_cargo": "Jefe/a de Abastecimiento",
+    "resp_email": "maria.moralesj@redsalud.gob.cl",
+    "obs": "N/A.",
+    "estado": "borrador",
+    "usuario": "melipilla",
+    "fecha_ingreso": "2026-08-27T15:03:40",
+    "bloqueado": false,
+    "bitacora": [
+      {
+        "fecha": "2026-08-27T15:03:40",
+        "usuario": "melipilla",
+        "nombre": "María de los Ángeles Morales",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      }
+    ]
   }
 ]
