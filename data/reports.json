@@ -523,10 +523,9 @@
     "resp_cargo": "Jefe de Abastecimiento",
     "resp_email": "miguel.jara@intraumatologico.cl",
     "obs": "Para poder cumplir con los Compromisos adoptados, se debe contar con el Apoyo de S. D. A. , Dirección y Asesoría Juridica para los Acuerdos Complementarios de Convenio Marco y en el caso de procesos Licitatorios se debe contar con el COMPROMISO real de Unidad de licitaciones y Contratos.",
-    "estado": "borrador",
+    "estado": "enviado",
     "usuario": "traumatologico",
-    "fecha_ingreso": "2026-08-27T19:40:31",
-    "bloqueado": false,
+    "fecha_ingreso": "2026-08-27T19:40:41",
     "bitacora": [
       {
         "fecha": "2026-08-27T19:40:31",
@@ -534,7 +533,17 @@
         "nombre": "Miguel Jara",
         "accion": "Guarda borrador",
         "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-08-27T19:40:41",
+        "usuario": "traumatologico",
+        "nombre": "Miguel Jara",
+        "accion": "Reenvía reporte corregido",
+        "detalle": "Reporte cerrado para edición del establecimiento."
       }
-    ]
+    ],
+    "bloqueado": true,
+    "habilitado_edicion": false,
+    "fecha_envio": "2026-08-27T19:40:41"
   }
 ]
