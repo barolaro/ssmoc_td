@@ -459,8 +459,7 @@
     "obs": "N/A.",
     "estado": "borrador",
     "usuario": "melipilla",
-    "fecha_ingreso": "2026-08-27T15:03:40",
-    "bloqueado": false,
+    "fecha_ingreso": "2026-08-27T15:04:07",
     "bitacora": [
       {
         "fecha": "2026-08-27T15:03:40",
@@ -468,7 +467,15 @@
         "nombre": "María de los Ángeles Morales",
         "accion": "Guarda borrador",
         "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-08-27T15:04:07",
+        "usuario": "melipilla",
+        "nombre": "María de los Ángeles Morales",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
       }
-    ]
+    ],
+    "bloqueado": false
   }
 ]
