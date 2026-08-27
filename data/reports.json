@@ -457,9 +457,9 @@
     "resp_cargo": "Jefe/a de Abastecimiento",
     "resp_email": "maria.moralesj@redsalud.gob.cl",
     "obs": "N/A.",
-    "estado": "borrador",
+    "estado": "enviado",
     "usuario": "melipilla",
-    "fecha_ingreso": "2026-08-27T15:04:07",
+    "fecha_ingreso": "2026-08-27T15:29:06",
     "bitacora": [
       {
         "fecha": "2026-08-27T15:03:40",
@@ -474,8 +474,17 @@
         "nombre": "María de los Ángeles Morales",
         "accion": "Guarda borrador",
         "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-08-27T15:29:06",
+        "usuario": "melipilla",
+        "nombre": "María de los Ángeles Morales",
+        "accion": "Reenvía reporte corregido",
+        "detalle": "Reporte cerrado para edición del establecimiento."
       }
     ],
-    "bloqueado": false
+    "bloqueado": true,
+    "habilitado_edicion": false,
+    "fecha_envio": "2026-08-27T15:29:06"
   }
 ]
