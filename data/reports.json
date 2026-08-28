@@ -557,7 +557,7 @@
     "pct_2026": 10.61,
     "pct_2025": 9.11,
     "pct_per": 10.12,
-    "monto_td": 2131282,
+    "monto_td": 2131282546,
     "n_proc": 356,
     "causas_sel": [
       "Emergencia o urgencia debidamente calificada",
@@ -580,10 +580,9 @@
     "resp_cargo": "Jefe/a de Abastecimiento",
     "resp_email": "rodrigo.bravog@redsalud.gob.cl",
     "obs": "",
-    "estado": "borrador",
+    "estado": "enviado",
     "usuario": "san_juan",
-    "fecha_ingreso": "2026-08-28T17:03:25",
-    "bloqueado": false,
+    "fecha_ingreso": "2026-08-28T17:06:15",
     "bitacora": [
       {
         "fecha": "2026-08-28T17:03:25",
@@ -591,7 +590,17 @@
         "nombre": "Rodrigo Bravo Gajardo",
         "accion": "Guarda borrador",
         "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-08-28T17:06:15",
+        "usuario": "san_juan",
+        "nombre": "Rodrigo Bravo Gajardo",
+        "accion": "Reenvía reporte corregido",
+        "detalle": "Reporte cerrado para edición del establecimiento."
       }
-    ]
+    ],
+    "bloqueado": true,
+    "habilitado_edicion": false,
+    "fecha_envio": "2026-08-28T17:06:15"
   }
 ]
