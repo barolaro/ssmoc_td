@@ -726,5 +726,54 @@
     "bloqueado": true,
     "habilitado_edicion": false,
     "fecha_envio": "2026-08-31T20:26:57"
+  },
+  {
+    "year": 2026,
+    "establecimiento_id": "penaflor",
+    "establecimiento_nombre": "Hospital de Peñaflor",
+    "reporte_id": "R2",
+    "periodo": "Abril–Junio 2026",
+    "periodo_label": "2° Reporte",
+    "nivel_riesgo": "rojo",
+    "pct_2026": 16.85,
+    "pct_2025": 9.37,
+    "pct_per": 16.85,
+    "monto_td": 196609664,
+    "n_proc": 4,
+    "causas_sel": [
+      "Emergencia o urgencia debidamente calificada"
+    ],
+    "causas_desc": "TD que se realizaron para mantener la continuidad de actividades claves dentro del funcionamiento del hospital y que no era posible suspender tales como mantenimiento de la toma de muestras en laboratorio clínico respecto de algunos exámenes (Troponina, química clínica, hematología, y coagulación), oxigeno medicinal clínico y continuidad de ERP institucional.",
+    "medidas": {
+      "pac": false,
+      "lic": true,
+      "cm": false,
+      "cenabast": false,
+      "cap": false,
+      "venc": true
+    },
+    "med_desc": "Se apuntará a mejorar los tiempos de los procesos a realizar y por tanto el inicio de los procesos de licitación.",
+    "compromisos": "Respecto de ERP, Troponina y Gases Medicinales se tomaron las medidas y fueron regularizados mediante licitaciones públicas. Respecto de química clínica, hematología, y coagulación, es un proceso del SSMOC (1288-37-LR25) el que fue adjudicado en el mes de mayo del presente año.",
+    "meta_prox": 13.0,
+    "fecha_comp": "2026-09-30",
+    "resp_nombre": "Gissela Salvo",
+    "resp_cargo": "Jefe/a de Abastecimiento",
+    "resp_email": "gissela.salvo@redsalud.gob.cl",
+    "obs": "El TD que más presupuesto utilizó es el que proviene de un proceso del SSMOC cuyo monto por si solo equivale a $138. 447. 479. -, un 11, 86% de la muestra.",
+    "estado": "enviado",
+    "usuario": "penaflor",
+    "fecha_ingreso": "2026-08-31T20:58:24",
+    "bloqueado": true,
+    "habilitado_edicion": false,
+    "fecha_envio": "2026-08-31T20:58:24",
+    "bitacora": [
+      {
+        "fecha": "2026-08-31T20:58:24",
+        "usuario": "penaflor",
+        "nombre": "Gissela Salvo",
+        "accion": "Envía reporte",
+        "detalle": "Reporte cerrado para edición del establecimiento."
+      }
+    ]
   }
 ]
