@@ -621,7 +621,7 @@
       "Equipamiento especializado sin equivalente",
       "Otra causal — especificar en observaciones"
     ],
-    "causas_desc": "TD-06/2026 — Mantención de tomógrafo axial computarizado dental → $1. 475. 600 (IVA incluido). Proveedor: Rosanna Tapia (RUT 76. 687. 336-7). Causal: equipamiento/servicio accesorio y compatibilidad técnica con equipamiento previamente adquirido (Art. 7° c) Ley 19. 886 / Art. 71 N°7 a) DS 661). Servicio de mantención preventiva y correctiva del tomógrafo axial computarizado dental, incluyendo calibración, verificación técnica y reemplazo de componentes críticos. Requirente: Jefe de la Unidad de Operaciones (Requerimiento. N°286).\nTD-07/2026 — Servicio de cataratas → $26. 000. 000 (exento de IVA). Proveedor: Sociedad Oftalmológica Averclaro SpA. (RUT 76. 382. 973-1). Causal: servicios personales especializados indispensables para asegurar la continuidad del servicio (Art. 79 letra c) Ley 19. 886 / Art. 33 inciso 2 y Art. 71 N°7 letra c) DS 661). Contratación excepcional y transitoria de 65 cirugías de cataratas, mientras finaliza el nuevo proceso licitatorio ID 1532-32-LR26. El convenio finalizará anticipadamente una vez totalmente tramitada la adjudicación y formalización del nuevo proceso. Requirente: Jefe de Oftalmología (Requerimiento. N°343).\nTD-08/2026 — SERVICIO DE SISTEMA RIS-PACS →$58. 065. 393 (IVA incluido). Proveedor: Ingeniería en Electrónica Computación y Medicina S. A. (ECM) RUT 89. 630. 400-3). Causal: Trato Directo por emergencia, urgencia e imprevisto. Artículo 8 bis, letra c) de la Ley N°19. 886 y en los artículos 71 N°3 y 74 del Decreto Supremo N°661/2024, por las razones de urgencia e imprevisto, asociadas a la continuidad del servicio, debidamente fundadas en los considerandos precedentes. Requirente: Jefe Unidad de Imagenología (Requerimiento. N°382).",
+    "causas_desc": "TD-06/2026 — Mantención de tomógrafo axial computarizado dental → $1. 475. 600 (IVA incluido). Proveedor: Rosanna Tapia (RUT 76. 687. 336-7). Causal: equipamiento/servicio accesorio y compatibilidad técnica con equipamiento previamente adquirido (Art. 7° c) Ley 19. 886 / Art. 71 N°7 a) DS 661). Servicio de mantención preventiva y correctiva del tomógrafo axial computarizado dental, incluyendo calibración, verificación técnica y reemplazo de componentes críticos. Requirente: Jefe de la Unidad de Operaciones (Requerimiento. N°286).\nTD-07/2026 — Servicio de cataratas → $26. 000. 000 (exento de IVA). Proveedor: Sociedad Oftalmológica Averclaro SpA. (RUT 76. 382. 973-1). Causal: servicios personales especializados indispensables para asegurar la continuidad del servicio (Art. 79 letra c) Ley 19. 886 / Art. 33 inciso 2 y Art. 71 N°7 letra c) DS 661). Contratación excepcional y transitoria de 65 cirugías de cataratas, mientras finaliza el nuevo proceso licitatorio ID 1532-32-LR26. El convenio finalizará anticipadamente una vez totalmente tramitada la adjudicación y formalización del nuevo proceso. Requirente: Jefe de Oftalmología (Requerimiento. N°343).\nTD-08/2026 — SERVICIO DE SISTEMA RIS-PACS →$58. 065. 393 (IVA incluido). Proveedor: Ingeniería en Electrónica Computación y Medicina S. A. (ECM) RUT 89. 630. 400-3). Causal: Trato Directo por emergencia, urgencia e imprevisto. Artículo 8 bis, letra c) de la Ley N°19. 886 y en los\nartículos 71 N°3 y 74 del Decreto Supremo N°661/2024, por las razones de urgencia e imprevisto, asociadas a la continuidad del servicio, debidamente fundadas en los considerandos precedentes. Requirente: Jefe Unidad de Imagenología (Requerimiento. N°382).",
     "medidas": {
       "pac": false,
       "lic": true,
@@ -638,10 +638,9 @@
     "resp_cargo": "Jefe/a de Abastecimiento",
     "resp_email": "eric.cubillo@redsalud.gob.cl",
     "obs": "",
-    "estado": "borrador",
+    "estado": "enviado",
     "usuario": "crs_allende",
-    "fecha_ingreso": "2026-08-31T18:58:39",
-    "bloqueado": false,
+    "fecha_ingreso": "2026-08-31T19:38:52",
     "bitacora": [
       {
         "fecha": "2026-08-31T18:58:39",
@@ -649,8 +648,18 @@
         "nombre": "Eric Cubillo Antúnez",
         "accion": "Guarda borrador",
         "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-08-31T19:38:52",
+        "usuario": "crs_allende",
+        "nombre": "Eric Cubillo Antúnez",
+        "accion": "Reenvía reporte corregido",
+        "detalle": "Reporte cerrado para edición del establecimiento."
       }
-    ]
+    ],
+    "bloqueado": true,
+    "habilitado_edicion": false,
+    "fecha_envio": "2026-08-31T19:38:52"
   },
   {
     "year": 2026,
