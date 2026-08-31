@@ -602,5 +602,54 @@
     "bloqueado": true,
     "habilitado_edicion": false,
     "fecha_envio": "2026-08-28T17:06:15"
+  },
+  {
+    "year": 2026,
+    "establecimiento_id": "crs_allende",
+    "establecimiento_nombre": "Centro de Referencia Salud Occidente Salvador Allende",
+    "reporte_id": "R2",
+    "periodo": "Abril–Junio 2026",
+    "periodo_label": "2° Reporte",
+    "nivel_riesgo": "rojo",
+    "pct_2026": 4.99,
+    "pct_2025": 0.57,
+    "pct_per": 4.99,
+    "monto_td": 85540993,
+    "n_proc": 3,
+    "causas_sel": [
+      "Emergencia o urgencia debidamente calificada",
+      "Equipamiento especializado sin equivalente",
+      "Otra causal — especificar en observaciones"
+    ],
+    "causas_desc": "TD-06/2026 — Mantención de tomógrafo axial computarizado dental → $1. 475. 600 (IVA incluido). Proveedor: Rosanna Tapia (RUT 76. 687. 336-7). Causal: equipamiento/servicio accesorio y compatibilidad técnica con equipamiento previamente adquirido (Art. 7° c) Ley 19. 886 / Art. 71 N°7 a) DS 661). Servicio de mantención preventiva y correctiva del tomógrafo axial computarizado dental, incluyendo calibración, verificación técnica y reemplazo de componentes críticos. Requirente: Jefe de la Unidad de Operaciones (Requerimiento. N°286).\nTD-07/2026 — Servicio de cataratas → $26. 000. 000 (exento de IVA). Proveedor: Sociedad Oftalmológica Averclaro SpA. (RUT 76. 382. 973-1). Causal: servicios personales especializados indispensables para asegurar la continuidad del servicio (Art. 79 letra c) Ley 19. 886 / Art. 33 inciso 2 y Art. 71 N°7 letra c) DS 661). Contratación excepcional y transitoria de 65 cirugías de cataratas, mientras finaliza el nuevo proceso licitatorio ID 1532-32-LR26. El convenio finalizará anticipadamente una vez totalmente tramitada la adjudicación y formalización del nuevo proceso. Requirente: Jefe de Oftalmología (Requerimiento. N°343).\nTD-08/2026 — SERVICIO DE SISTEMA RIS-PACS →$58. 065. 393 (IVA incluido). Proveedor: Ingeniería en Electrónica Computación y Medicina S. A. (ECM) RUT 89. 630. 400-3). Causal: Trato Directo por emergencia, urgencia e imprevisto. Artículo 8 bis, letra c) de la Ley N°19. 886 y en los artículos 71 N°3 y 74 del Decreto Supremo N°661/2024, por las razones de urgencia e imprevisto, asociadas a la continuidad del servicio, debidamente fundadas en los considerandos precedentes. Requirente: Jefe Unidad de Imagenología (Requerimiento. N°382).",
+    "medidas": {
+      "pac": false,
+      "lic": true,
+      "cm": false,
+      "cenabast": false,
+      "cap": false,
+      "venc": true
+    },
+    "med_desc": "Se dio continuidad a los compromisos establecidos en el período enero–marzo, fortaleciendo la planificación de los procesos de contratación asociados a servicios críticos. Durante el período se concretó la adjudicación, formalización y puesta en funcionamiento del proceso licitatorio ID 1532-32-LR26 correspondiente al servicio de cataratas, permitiendo regularizar la prestación y disminuir la necesidad de recurrir a contrataciones excepcionales. Asimismo, se mantuvo la gestión y planificación de las necesidades de mantención y continuidad operacional de equipamiento y sistemas críticos.",
+    "compromisos": "1) Dar continuidad a la planificación anticipada de las mantenciones y servicios asociados a equipamiento médico, procurando su incorporación oportuna en procesos de contratación competitiva.\n2) Fortalecer la planificación de prestaciones asistenciales y servicios críticos, anticipando los vencimientos contractuales y necesidades de continuidad, con el objeto de evitar contrataciones excepcionales.\n3) Reforzar el monitoreo de los servicios y sistemas críticos cuya interrupción pueda afectar la continuidad de la atención, promoviendo medidas preventivas y oportunas que permitan disminuir la ocurrencia de tratos directos por situaciones de emergencia, urgencia o imprevisto.",
+    "meta_prox": 16.0,
+    "fecha_comp": "2026-08-31",
+    "resp_nombre": "Eric Cubillo Antúnez",
+    "resp_cargo": "Jefe/a de Abastecimiento",
+    "resp_email": "eric.cubillo@redsalud.gob.cl",
+    "obs": "",
+    "estado": "borrador",
+    "usuario": "crs_allende",
+    "fecha_ingreso": "2026-08-31T18:58:39",
+    "bloqueado": false,
+    "bitacora": [
+      {
+        "fecha": "2026-08-31T18:58:39",
+        "usuario": "crs_allende",
+        "nombre": "Eric Cubillo Antúnez",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      }
+    ]
   }
 ]
