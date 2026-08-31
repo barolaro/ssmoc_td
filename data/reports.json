@@ -651,5 +651,55 @@
         "detalle": "Borrador actualizado por el establecimiento/administrador."
       }
     ]
+  },
+  {
+    "year": 2026,
+    "establecimiento_id": "felix_bulnes",
+    "establecimiento_nombre": "Hospital Dr. Félix Bulnes Cerda",
+    "reporte_id": "R2",
+    "periodo": "Abril–Junio 2026",
+    "periodo_label": "2° Reporte",
+    "nivel_riesgo": "rojo",
+    "pct_2026": 22.86,
+    "pct_2025": 19.11,
+    "pct_per": 22.86,
+    "monto_td": 2886038392,
+    "n_proc": 130,
+    "causas_sel": [
+      "Emergencia o urgencia debidamente calificada",
+      "Proveedor único / exclusividad",
+      "Derechos de propiedad intelectual (software/licencias)",
+      "Continuidad de servicios en ejecución"
+    ],
+    "causas_desc": "Durante el período comprendido entre abril y junio de 2026, el Trato Directo representó un 22, 86% del gasto total asociado a procedimientos de contratación, porcentaje inferior al 26, 89% registrado durante el trimestre enero-marzo de 2026, lo que representa una disminución de 4, 03 puntos porcentuales respecto del período anterior.\nEntre las principales causas que explican el resultado observado se mantiene la necesidad de asegurar la continuidad de determinadas prestaciones asistenciales que, por las circunstancias desarrolladas en el informe correspondiente al trimestre enero-marzo de 2026, debieron continuar transitoriamente bajo la modalidad de Trato Directo durante parte del período informado. No obstante, durante el trimestre se avanzó en la regularización de una parte importante de estas contrataciones, mediante la entrada en vigencia de procesos licitatorios o la utilización de otros mecanismos de financiamiento.\nEn efecto, las primeras cuatro órdenes de compra de mayor cuantía efectuadas mediante Trato Directo, por un monto total de $555. 726. 000, corresponden a servicios médicos contratados para asegurar su continuidad. Estas contrataciones actualmente no se encuentran vigentes. En el caso de los servicios médicos de Urgencia Adulto, estos se mantuvieron con cargo al subtítulo 22 hasta el 30 de abril de 2026 y, a contar del 1 de mayo, comenzaron a financiarse mediante subtítulo 21, en el marco del Plan de Reforzamiento Transitorio de Recursos Humanos. Por su parte, los servicios médicos de UPC Adulto cuentan, desde el 1 de agosto de 2026, con contrato vigente derivado de la Licitación Pública ID N. ° 705290-51-LP26, por lo que el gasto asociado a estas prestaciones se reflejará como Licitación Pública en el próximo período informado.\nAsimismo, la quinta y sexta órdenes de compra de mayor cuantía corresponden a servicios de enfermería, TENS y auxiliares, contratados mediante Trato Directo para asegurar la continuidad de las prestaciones mientras se desarrollaban los respectivos procesos licitatorios. Para estos servicios se efectuaron cuatro licitaciones públicas, encontrándose actualmente todos los convenios vigentes. En consecuencia, durante el próximo período informado, los gastos asociados a estas prestaciones también corresponderán a Licitación Pública.\nPor otra parte, dentro de las diez contrataciones de mayor cuantía se identifican situaciones cuya utilización del Trato Directo responde a circunstancias particulares. El Trato Directo ID N. ° 705290-158-FTD26 corresponde al arriendo de catres clínicos requerido en el contexto de la Alerta Sanitaria y Campaña de Invierno, contratación que debió efectuarse oportunamente para responder a las necesidades asistenciales derivadas de dicho período.\nLa octava y décima contrataciones de mayor cuantía corresponden a determinaciones para exámenes de laboratorio clínico de biología molecular, cuya contratación se encuentra asociada a la compatibilidad con el equipamiento utilizado para efectuar dichas prestaciones. Sobre esta materia existe un contrato vigente derivado de la Licitación Pública ID N. ° 705290-63-LR24, sometida al trámite de toma de razón ante la Contraloría General de la República, vigente desde el 31 de diciembre de 2025. Sin embargo, su ejecución se encuentra pendiente debido a modificaciones de infraestructura que han sido informadas como necesarias, materia que actualmente está siendo abordada por el Hospital con el Inspector Fiscal correspondiente.\nFinalmente, la novena contratación de mayor cuantía corresponde a servicios de radioterapia y braquiterapia, contratados por razones de urgencia para asegurar la continuidad de las prestaciones. Respecto de estos servicios, se encuentra en preparación el correspondiente proceso licitatorio, proyectándose la publicación de sus bases durante septiembre de 2026.\nLas diez órdenes de compra de mayor cuantía efectuadas mediante Trato Directo durante el trimestre representan, en conjunto, $907. 230. 250, equivalentes al 31, 44% del total contratado mediante esta modalidad durante el período, ascendente a $2. 886. 038. 392. El análisis de estas contrataciones permite advertir que una parte relevante de los Tratos Directos de mayor cuantía responde a situaciones transitorias que actualmente se encuentran regularizadas, cuentan con contratos derivados de Licitación Pública o poseen una vía de regularización definida.\nEn este contexto, la disminución de la participación del Trato Directo desde un 26, 89% durante enero-marzo a un 22, 86% durante abril-junio resulta concordante con las medidas adoptadas para avanzar progresivamente hacia procedimientos competitivos de contratación. Asimismo, considerando que varias de las contrataciones de mayor cuantía analizadas dejaron de encontrarse vigentes bajo la modalidad de Trato Directo con posterioridad al período informado, se espera que el efecto de estas medidas se refleje con mayor intensidad en el trimestre julio-septiembre de 2026.",
+    "medidas": {
+      "pac": false,
+      "lic": false,
+      "cm": false,
+      "cenabast": false,
+      "cap": false,
+      "venc": false
+    },
+    "med_desc": "",
+    "compromisos": "",
+    "meta_prox": 16.0,
+    "fecha_comp": "2026-08-31",
+    "resp_nombre": "Carolina Castro",
+    "resp_cargo": "Jefe/a de Abastecimiento",
+    "resp_email": "carolina.castroj@redsalud.gob.cl",
+    "obs": "",
+    "estado": "borrador",
+    "usuario": "felix_bulnes",
+    "fecha_ingreso": "2026-08-31T19:15:33",
+    "bloqueado": false,
+    "bitacora": [
+      {
+        "fecha": "2026-08-31T19:15:33",
+        "usuario": "felix_bulnes",
+        "nombre": "Carolina Castro",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      }
+    ]
   }
 ]
