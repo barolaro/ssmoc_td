@@ -1563,7 +1563,7 @@ def pg_mis_reportes():
         opciones = {eid: e["nombre_corto"] for eid, e in ESTABLECIMIENTOS.items() if e["nivel"] in ["rojo","amarillo"]}
         if not opciones:
             st.info("No hay establecimientos rojos o amarillos para el período seleccionado."); return
-        eid_sel = st.selectbox("Establecimiento", options=list(opciones.keys()), format_func=lambda x: opciones[x])
+        eid_sel = st.selectbox("Establecimiento", options=list(opciones.keys()), format_func=lambda x: opciones[x], help="Seleccione el establecimiento cuyo reporte registrará. Los indicadores corresponden al período activo.")
     else:
         eid_sel = user.get("establecimiento")
         if not eid_sel: st.error("Sin establecimiento asignado."); return
@@ -1721,16 +1721,16 @@ def pg_mis_reportes():
         </div>''', unsafe_allow_html=True)
 
         _dc = [c for c in (existing.get("causas_sel",[]) if existing else []) if c in CAUSALES]
-        causas_sel = st.multiselect("Causales de Trato Directo *", CAUSALES, default=_dc)
+        causas_sel = st.multiselect("Causales de Trato Directo *", CAUSALES, default=_dc, help="Seleccione las causales que correspondan a las compras del período y sus respaldos. Explique el contexto en la descripción.")
         causas_desc = st.text_area("Descripción detallada *", value=existing.get("causas_desc","") if existing else "", height=110,
-                                   placeholder="Describa las causas específicas del período...")
+                                   placeholder="Describa las causas específicas del período...", help="Explique las causas específicas y por qué se utilizó el trato directo. Identifique bienes o servicios y circunstancias relevantes.")
 
         st.markdown('<div style="font-size:12px;font-weight:600;color:#374151;margin:10px 0 4px">Datos cuantitativos</div>', unsafe_allow_html=True)
         c1,c2,c3 = st.columns(3)
-        monto_td = c1.number_input("💰 Monto TD ($CLP)", min_value=0, step=1_000_000, value=int(existing.get("monto_td",0)) if existing else 0, format="%d")
-        n_proc   = c2.number_input("📦 N° procesos TD", min_value=0, step=1, value=int(existing.get("n_proc",0)) if existing else 0)
+        monto_td = c1.number_input("💰 Monto TD ($CLP)", min_value=0, step=1_000_000, value=int(existing.get("monto_td",0)) if existing else 0, format="%d", help="Ingrese el monto de trato directo del período en pesos chilenos. Use el mismo criterio y período de la base informada.")
+        n_proc   = c2.number_input("📦 N° procesos TD", min_value=0, step=1, value=int(existing.get("n_proc",0)) if existing else 0, help="Ingrese la cantidad de procesos de trato directo del período. Distinga procesos de líneas de productos u órdenes de compra.")
         pct_per  = c3.number_input("📊 % TD período MINSAL", min_value=0.0, max_value=100.0, step=0.01,
-                                   value=float(existing.get("pct_per",estab.get("pct_2026",0.0))) if existing else float(estab.get("pct_2026",0.0)), format="%.2f")
+                                   value=float(existing.get("pct_per",estab.get("pct_2026",0.0))) if existing else float(estab.get("pct_2026",0.0)), format="%.2f", help="Revise el porcentaje correspondiente al período cargado. No mezcle cifras de otro trimestre ni sustituya porcentajes por montos.")
 
         st.markdown('''<div style="background:#F0FDF4;border-left:4px solid #22C55E;border-radius:0 6px 6px 0;padding:10px 16px;margin:16px 0 10px">
             <div style="font-size:13px;font-weight:700;color:#166534">2 · Medidas implementadas</div>
@@ -1744,9 +1744,9 @@ def pg_mis_reportes():
         med_sel = {}
         cols_m = st.columns(3)
         for i,(k,(icon_m,lbl)) in enumerate(med_labels.items()):
-            med_sel[k] = cols_m[i%3].checkbox(f"{icon_m} {lbl}", value=ex_med.get(k,False), key=f"m_{k}")
+            med_sel[k] = cols_m[i%3].checkbox(f"{icon_m} {lbl}", value=ex_med.get(k,False), key=f"m_{k}", help="Marque solo las medidas que ya se hayan ejecutado durante el período. Describa su resultado en el campo de medidas.")
         med_desc = st.text_area("Descripción adicional de medidas", value=existing.get("med_desc","") if existing else "", height=80,
-                                placeholder="Describa el resultado de las acciones y el impacto observado...")
+                                placeholder="Describa el resultado de las acciones y el impacto observado...", help="Describa las medidas ejecutadas y sus resultados. Distinga acciones realizadas de las que todavía están planificadas.")
 
         st.markdown('''<div style="background:#FFF7ED;border-left:4px solid #F59E0B;border-radius:0 6px 6px 0;padding:10px 16px;margin:16px 0 10px">
             <div style="font-size:13px;font-weight:700;color:#92400E">3 · Compromisos para el próximo período</div>
@@ -1754,23 +1754,23 @@ def pg_mis_reportes():
         </div>''', unsafe_allow_html=True)
 
         compromisos = st.text_area("Compromisos adoptados *", value=existing.get("compromisos","") if existing else "", height=110,
-                                   placeholder="1. Iniciar licitación para [insumo] antes del [fecha]")
+                                   placeholder="1. Iniciar licitación para [insumo] antes del [fecha]", help="Resuma las acciones que se comprometen para mejorar el resultado. Detállelas después en la tabla, con responsable, plazo y avance.")
         c4,c5 = st.columns(2)
         meta_prox  = c4.number_input("🎯 Meta % TD próximo período", min_value=0.0, max_value=100.0, step=0.5,
-                                     value=float(existing.get("meta_prox",16.0)) if existing else 16.0, format="%.1f")
+                                     value=float(existing.get("meta_prox",16.0)) if existing else 16.0, format="%.1f", help="Ingrese el porcentaje que el establecimiento se propone alcanzar. Es un compromiso de gestión, no una modificación del indicador oficial.")
         fecha_comp = c5.date_input("📆 Fecha comprometida",
                                    value=datetime.date.fromisoformat(existing["fecha_comp"])
-                                   if existing and existing.get("fecha_comp") else datetime.date.fromisoformat(pinfo["fecha_limite"]))
+                                   if existing and existing.get("fecha_comp") else datetime.date.fromisoformat(pinfo["fecha_limite"]), help="Indique la fecha del compromiso general. Cada acción de la tabla debe incluir además su plazo específico.")
 
         st.markdown('''<div style="background:#F8FAFC;border-left:4px solid #64748B;border-radius:0 6px 6px 0;padding:10px 16px;margin:16px 0 10px">
             <div style="font-size:13px;font-weight:700;color:#374151">4 · Responsable del reporte</div>
         </div>''', unsafe_allow_html=True)
 
         c6,c7,c8 = st.columns(3)
-        resp_nombre = c6.text_input("👤 Nombre completo", value=existing.get("resp_nombre",user["nombre"]) if existing else user["nombre"])
-        resp_cargo  = c7.text_input("💼 Cargo", value=existing.get("resp_cargo","Jefe/a de Abastecimiento") if existing else "Jefe/a de Abastecimiento")
-        resp_email  = c8.text_input("📧 Correo", value=existing.get("resp_email",user.get("email","")) if existing else user.get("email",""))
-        obs = st.text_area("💬 Observaciones (opcional)", value=existing.get("obs","") if existing else "", height=60)
+        resp_nombre = c6.text_input("👤 Nombre completo", value=existing.get("resp_nombre",user["nombre"]) if existing else user["nombre"], help="Identifique a la persona responsable de entregar y coordinar este reporte.")
+        resp_cargo  = c7.text_input("💼 Cargo", value=existing.get("resp_cargo","Jefe/a de Abastecimiento") if existing else "Jefe/a de Abastecimiento", help="Indique el cargo del responsable del reporte.")
+        resp_email  = c8.text_input("📧 Correo", value=existing.get("resp_email",user.get("email","")) if existing else user.get("email",""), help="Ingrese el correo institucional del responsable para consultas sobre los antecedentes.")
+        obs = st.text_area("💬 Observaciones (opcional)", value=existing.get("obs","") if existing else "", height=60, help="Agregue aclaraciones necesarias para interpretar el reporte. No reemplace con este campo las causas, medidas o compromisos solicitados.")
 
         anteriores = [r for r in reports_all if r.get("establecimiento_id") == eid_sel
                       and (int(r.get("year",2026)), r.get("reporte_id", "R1")) < (int(year), periodo_id)]
@@ -1991,12 +1991,12 @@ def pg_formato_tipo(year, rid, pinfo, reports):
     mandatory = {eid: e for eid, e in ESTABLECIMIENTOS.items() if e.get("nivel") in ["rojo", "amarillo"]}
     with st.form(f"consolidado_{key}"):
         c1, c2 = st.columns(2)
-        remitente = c1.text_input("Nombre de quien remite", value=meta.get("remitente", ""))
-        cargo = c2.text_input("Cargo de quien remite", value=meta.get("cargo", ""))
-        correo = c1.text_input("Correo institucional de quien remite", value=meta.get("correo", ""))
-        fecha_envio = c2.date_input("Fecha prevista de envío a MINSAL", value=date_value(meta.get("fecha_envio")), format="DD-MM-YYYY")
-        visado_por = c1.text_input("Nombre de quien visa el consolidado", value=meta.get("visado_por", ""))
-        fecha_visado = c2.date_input("Fecha del visado (complete cuando corresponda)", value=date_value(meta.get("fecha_visado")), format="DD-MM-YYYY")
+        remitente = c1.text_input("Nombre de quien remite", value=meta.get("remitente", ""), help="Nombre de la persona que remitirá el consolidado del Servicio a MINSAL.")
+        cargo = c2.text_input("Cargo de quien remite", value=meta.get("cargo", ""), help="Cargo institucional de quien remitirá el consolidado.")
+        correo = c1.text_input("Correo institucional de quien remite", value=meta.get("correo", ""), help="Correo de contacto para consultas sobre el consolidado del Servicio.")
+        fecha_envio = c2.date_input("Fecha prevista de envío a MINSAL", value=date_value(meta.get("fecha_envio")), format="DD-MM-YYYY", help="Fecha prevista para remitir el documento después de su revisión y visado. Seleccionarla no realiza el envío.")
+        visado_por = c1.text_input("Nombre de quien visa el consolidado", value=meta.get("visado_por", ""), help="Nombre de la autoridad que revisará y visará el documento. Registrarlo no constituye una firma ni aprobación.")
+        fecha_visado = c2.date_input("Fecha del visado (complete cuando corresponda)", value=date_value(meta.get("fecha_visado")), format="DD-MM-YYYY", help="Complete la fecha cuando se haya realizado el visado institucional; puede dejarla vacía mientras está pendiente.")
         st.caption("La firma se incorpora al documento después de su revisión. Registrar un nombre no constituye un visado ni un envío a MINSAL.")
         controls = {r.get("establecimiento_id"): r for r in meta.get("pendientes", [])}
         records = [{"establecimiento_id": eid, "Establecimiento": e["nombre"], "Fecha estimada de entrega": controls.get(eid, {}).get("fecha", ""), "Observación": controls.get(eid, {}).get("observacion", "")} for eid, e in mandatory.items()]

@@ -26,6 +26,9 @@ def number_chile(value, decimals=2):
         return text(value)
 
 
+FIELD_HELP = {'avance_anteriores': 'Resuma qué se ha cumplido de los reportes anteriores y qué sigue pendiente. Si no existen compromisos previos, indíquelo expresamente.', 'mecanismos': 'Seleccione la alternativa prevista para regularizar el abastecimiento. Puede marcar más de una; explique Otro en el detalle.', 'detalle_mecanismo': 'Indique qué bienes o servicios se regularizarán, mediante qué proceso y cuál es el próximo paso. Ejemplo: iniciar licitación de insumos durante noviembre.', 'fecha_reunion': 'Registre la fecha acordada o programada para revisar el plan con el Servicio. No registre una reunión como realizada si aún está pendiente.', 'revision_recurrentes': 'Indique si revisaron las compras que se repiten por trato directo. Si marca No, explique el motivo y cómo abordarán la revisión.', 'detalle_recurrentes': 'Identifique los bienes o servicios recurrentes, su frecuencia y el resultado de la revisión. Ejemplo: suministro mensual con oportunidad de licitación.', 'seguimiento_reforzado': 'Indique el compromiso de seguimiento adicional para el próximo período. Antes de enviar debe estar definido.', 'modalidad_seguimiento': 'Describa cómo controlarán los compromisos. Ejemplo: reunión mensual del equipo de abastecimiento con revisión del plan.', 'fecha_seguimiento': 'Indique la fecha programada para el seguimiento reforzado.', 'por_informar': 'Revise las OC cuyo mecanismo aparece como Por Informar. Marque No existen solo después de revisar; si fueron reclasificadas, registre el mecanismo real y su respaldo.'}
+COLUMN_HELP = {'causa': 'Explique la situación que originó el trato directo y su contexto; evite descripciones generales.', 'medida': 'Describa la acción ya implementada. Si aún no se ha ejecutado, indíquelo y explique la situación actual.', 'compromiso': 'Indique una acción concreta y verificable. Ejemplo: publicar una licitación para el suministro identificado.', 'responsable': 'Identifique a la persona o cargo responsable de ejecutar y dar seguimiento a esta acción.', 'plazo': 'Ingrese la fecha comprometida en formato AAAA-MM-DD. Ejemplo: 2026-11-20.', 'avance': 'Informe el avance real, los resultados y lo que queda pendiente. Ejemplo: bases en elaboración; pendiente revisión técnica.', 'mes': 'Identifique el mes de control. Ejemplo: octubre 2026. Puede agregar meses hasta normalizar el indicador.', 'fecha': 'Ingrese la fecha del control o actualización en formato AAAA-MM-DD. Distinga en el estado si está programado o realizado.', 'estado': 'Seleccione el estado real del compromiso. Programado corresponde a una actividad futura; Cumplido requiere un resultado verificable.', 'observacion': 'Registre el resultado del control, dificultades y próximos pasos. Justifique cualquier estado No aplica.', 'oc': 'Ingrese el identificador de la OC o referencia del documento. Ejemplo: código de orden de compra correspondiente al respaldo.', 'descripcion': 'Explique qué acredita el documento. Ejemplo: detalle de OC que respalda la cifra o cotizaciones consultadas.', 'url': 'Pegue un enlace HTTPS al repositorio institucional. Compruebe que el equipo revisor tenga acceso; no incluya claves.', 'mecanismo': 'Indique el mecanismo de compra real de la OC reclasificada. Debe coincidir con los antecedentes de respaldo.', 'respaldo': 'Identifique el documento o enlace institucional que sustenta la reclasificación de esta OC.', 'periodo': 'Indique el reporte en que se asumió el compromiso. Ejemplo: 2.º reporte 2026.'}
+
 def text(value):
     if value is None:
         return ""
@@ -136,14 +139,14 @@ def render_complement(report, level, key, year, rid, previous):
     f = deepcopy(report.get("formato_tipo", {}))
     def choice(label, options, field):
         value = f.get(field, options[0])
-        return st.selectbox(label, options, index=options.index(value) if value in options else 0, key=f"{key}_{field}")
+        return st.selectbox(label, options, index=options.index(value) if value in options else 0, key=f"{key}_{field}", help=FIELD_HELP.get(field))
     def editor(label, field, columns, defaults=None, status_column=None):
         st.markdown(f"**{label}**")
         source = f.get(field, defaults or [])
         frame = pd.DataFrame([{label: text(row.get(k)) for k, label in columns.items()} for row in source], columns=list(columns.values()))
-        configs = {label: st.column_config.TextColumn(label) for label in columns.values()}
+        configs = {label: st.column_config.TextColumn(label, help=COLUMN_HELP.get(k)) for k, label in columns.items()}
         if status_column:
-            configs[columns[status_column]] = st.column_config.SelectboxColumn(columns[status_column], options=ESTADOS)
+            configs[columns[status_column]] = st.column_config.SelectboxColumn(columns[status_column], options=ESTADOS, help=COLUMN_HELP[status_column])
         edited = st.data_editor(frame, num_rows="dynamic", hide_index=True, use_container_width=True,
                                 column_config=configs, key=f"{key}_{field}")
         f[field] = rows_from_editor(edited, columns)
@@ -156,23 +159,23 @@ def render_complement(report, level, key, year, rid, previous):
     if previous:
         for r in previous:
             st.caption(f"{r.get('year', 2026)} · {r.get('periodo_label', r.get('reporte_id'))}: {r.get('compromisos', 'Sin descripción')}")
-    f["avance_anteriores"] = st.text_area("Resumen de avance anterior o justificación de que no existen compromisos previos", value=f.get("avance_anteriores", ""), key=f"{key}_avance_anteriores")
+    f["avance_anteriores"] = st.text_area("Resumen de avance anterior o justificación de que no existen compromisos previos", value=f.get("avance_anteriores", ""), key=f"{key}_avance_anteriores", help=FIELD_HELP["avance_anteriores"])
     editor("Seguimiento individual de compromisos anteriores", "anteriores", ANTERIORES)
     if level == "rojo":
         st.subheader("Seguimiento y control de riesgo rojo")
-        f["mecanismos"] = st.multiselect("Mecanismo competitivo identificado", ["Licitación", "Compra coordinada", "Convenio Marco", "Otro"], default=f.get("mecanismos", []), key=f"{key}_mecanismos")
-        f["detalle_mecanismo"] = st.text_area("Detalle de regularización del abastecimiento", value=f.get("detalle_mecanismo", ""), key=f"{key}_detalle_mecanismo")
-        f["fecha_reunion"] = text(st.date_input("Fecha programada de reunión técnica con SSMOCC", value=date_value(f.get("fecha_reunion")), format="DD-MM-YYYY", key=f"{key}_fecha_reunion"))
+        f["mecanismos"] = st.multiselect("Mecanismo competitivo identificado", ["Licitación", "Compra coordinada", "Convenio Marco", "Otro"], default=f.get("mecanismos", []), key=f"{key}_mecanismos", help=FIELD_HELP["mecanismos"])
+        f["detalle_mecanismo"] = st.text_area("Detalle de regularización del abastecimiento", value=f.get("detalle_mecanismo", ""), key=f"{key}_detalle_mecanismo", help=FIELD_HELP["detalle_mecanismo"])
+        f["fecha_reunion"] = text(st.date_input("Fecha programada de reunión técnica con SSMOCC", value=date_value(f.get("fecha_reunion")), format="DD-MM-YYYY", key=f"{key}_fecha_reunion", help=FIELD_HELP["fecha_reunion"]))
         st.caption("Monitoreo mensual hasta normalizar el indicador. Registre avances reales o controles programados; puede agregar meses adicionales.")
         defaults = [{"mes": f"Mes {i}", "fecha": "", "estado": "Programado", "observacion": ""} for i in range(1, 4)]
         editor("Controles mensuales", "mensual", MESES, defaults, "estado")
     else:
         st.subheader("Plan de seguimiento de riesgo amarillo")
         f["revision_recurrentes"] = choice("¿Se revisaron las compras recurrentes por TD?", ["Pendiente", "Sí", "No"], "revision_recurrentes")
-        f["detalle_recurrentes"] = st.text_area("Ítems recurrentes, periodicidad y resultado de revisión o justificación", value=f.get("detalle_recurrentes", ""), key=f"{key}_detalle_recurrentes")
+        f["detalle_recurrentes"] = st.text_area("Ítems recurrentes, periodicidad y resultado de revisión o justificación", value=f.get("detalle_recurrentes", ""), key=f"{key}_detalle_recurrentes", help=FIELD_HELP["detalle_recurrentes"])
         f["seguimiento_reforzado"] = choice("¿Se compromete seguimiento reforzado?", ["Pendiente", "Sí", "No"], "seguimiento_reforzado")
-        f["modalidad_seguimiento"] = st.text_input("Modalidad del seguimiento reforzado", value=f.get("modalidad_seguimiento", ""), key=f"{key}_modalidad_seguimiento")
-        f["fecha_seguimiento"] = text(st.date_input("Fecha del seguimiento reforzado", value=date_value(f.get("fecha_seguimiento")), format="DD-MM-YYYY", key=f"{key}_fecha_seguimiento"))
+        f["modalidad_seguimiento"] = st.text_input("Modalidad del seguimiento reforzado", value=f.get("modalidad_seguimiento", ""), key=f"{key}_modalidad_seguimiento", help=FIELD_HELP["modalidad_seguimiento"])
+        f["fecha_seguimiento"] = text(st.date_input("Fecha del seguimiento reforzado", value=date_value(f.get("fecha_seguimiento")), format="DD-MM-YYYY", key=f"{key}_fecha_seguimiento", help=FIELD_HELP["fecha_seguimiento"]))
     st.subheader("Órdenes de compra y antecedentes de respaldo")
     f["por_informar"] = choice("Estado de OC con mecanismo Por Informar", ["Pendiente de revisión", "No existen", "Reclasificadas"], "por_informar")
     editor("Reclasificaciones según mecanismo real", "reclasificaciones", RECLASIFICACIONES)
