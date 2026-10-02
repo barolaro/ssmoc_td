@@ -1,11 +1,15 @@
 """
-app.py — SIMOTD SSMOCC v10
+app.py — SIMOTD SSMOCC v11 — Formato Tipo completo
 Navegación sin sidebar para evitar problema de colapso en Streamlit Cloud
 """
 import streamlit as st
 import hashlib, json, datetime, io, base64, csv
 from pathlib import Path
 import urllib.request, urllib.error
+from minsal_formato import render_complement, completeness, generate_docx, format_tables, date_value, text, render_readonly
+
+class PersistenceError(RuntimeError):
+    pass
 
 st.set_page_config(
     page_title="SIMOTD — SSMOCC",
@@ -143,18 +147,21 @@ def _load_json_persistent(local_path: Path, filename: str, default):
     return default
 
 def _save_json_persistent(local_path: Path, filename: str, data):
-    """Guarda JSON: local + GitHub. Nunca lanza excepción."""
+    """Confirma la escritura remota antes de actualizar la copia local o mostrar éxito."""
+    if not _gh_cfg():
+        raise PersistenceError("No hay almacenamiento persistente configurado. Solicite al administrador revisar la configuración; los antecedentes no se han enviado.")
+    result = _gh_read(filename)
+    sha = result[1] if result and result[1] else ""
+    if not _gh_write(filename, data, sha):
+        raise PersistenceError("No fue posible guardar los antecedentes de forma permanente. Conserve el formulario y vuelva a intentar; el envío no se confirmó.")
+    verified, _ = _gh_read(filename)
+    if verified != json.loads(json.dumps(data, ensure_ascii=False, default=str)):
+        raise PersistenceError("La escritura no pudo verificarse. Revise el estado del reporte antes de intentar nuevamente; no se confirmó el envío.")
     try:
-        txt = json.dumps(data, ensure_ascii=False, indent=2, default=str)
-        local_path.write_text(txt, encoding="utf-8")
-    except Exception:
-        pass
-    try:
-        result = _gh_read(filename)
-        sha = result[1] if result and result[1] else ""
-        _gh_write(filename, data, sha)
-    except Exception:
-        pass
+        local_path.write_text(json.dumps(data, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+    except OSError:
+        pass  # La copia remota ya fue confirmada.
+
 
 def _hash(p): return hashlib.sha256(p.encode()).hexdigest()
 
@@ -505,6 +512,8 @@ def page_login():
 # ═══════════════════════════════════════════════════════════════════════
 # TOPBAR + NAV (reemplaza al sidebar)
 # ═══════════════════════════════════════════════════════════════════════
+        st.caption("Formato Tipo completo MINSAL · actualización 02-10-2026")
+
 def render_topbar():
     user=st.session_state.user
     reports=load_reports()
@@ -641,11 +650,17 @@ def cal_cards(reports, eid_filter=None):
 # HELPERS ANEXO N°1 MINSAL
 # ═══════════════════════════════════════════════════════════════════════
 def _anexo_texto_causas(r: dict) -> str:
+    actions = r.get("formato_tipo", {}).get("acciones", [])
+    if actions:
+        return "\n".join(a.get("causa", "") for a in actions)
     causas = "; ".join(r.get("causas_sel", []) or [])
     desc = (r.get("causas_desc", "") or "").strip()
     return (causas + (" | " if causas and desc else "") + desc).strip() or "—"
 
 def _anexo_texto_medidas(r: dict) -> str:
+    actions = r.get("formato_tipo", {}).get("acciones", [])
+    if actions:
+        return "\n".join(a.get("medida", "") for a in actions)
     med = r.get("medidas", {}) or {}
     med_labels = {
         "pac": "Actualización Plan Anual de Compras",
@@ -671,7 +686,7 @@ def build_anexo_minsal_row(r: dict, year: int = None, pinfo: dict = None) -> dic
         "Período informado": f"{year} · {r.get('periodo', pinfo.get('periodo',''))}",
         "Principales causas": _anexo_texto_causas(r),
         "Medidas implementadas": _anexo_texto_medidas(r),
-        "Compromisos": r.get("compromisos", "") or "—",
+        "Compromisos": "\n".join(a.get("compromiso", "") for a in r.get("formato_tipo", {}).get("acciones", [])) or r.get("compromisos", "") or "—",
         "Responsable": ((r.get("resp_nombre", "") or "") + " - " + (r.get("resp_cargo", "") or "")).strip(" -") or "—",
         "Fecha comprometida": r.get("fecha_comp", "") or "—",
     }
@@ -805,6 +820,7 @@ def render_anexo_minsal_preview(r: dict, year: int = None, pinfo: dict = None):
     """
     import html
     import streamlit.components.v1 as components
+    render_readonly(r)
 
     row = build_anexo_minsal_row(r, year, pinfo)
     nivel = (row.get("Nivel de Riesgo", "") or "").lower()
@@ -1053,13 +1069,13 @@ def pg_dashboard():
     amarillos=[e for e in ESTABLECIMIENTOS.values() if e["nivel"]=="amarillo"]
     verdes=[e for e in ESTABLECIMIENTOS.values() if e["nivel"]=="verde"]
     r1_req=len(rojos)+len(amarillos)
-    r1_done=len([r for r in reports if r.get("reporte_id")=="R1" and r.get("estado")=="enviado"])
+    r1_done=len({r.get("establecimiento_id") for r in reports if int(r.get("year",2026))==int(year) and r.get("reporte_id")==rid and r.get("estado")=="enviado" and ESTABLECIMIENTOS.get(r.get("establecimiento_id"),{}).get("nivel") in ["rojo","amarillo"]})
 
     c1,c2,c3,c4=st.columns(4)
     kpi_card(c1,"Numerador SSMOCC",f"${total_num/1e12:.2f} MMM","TD con recepción conforme","#0C447C")
     kpi_card(c2,"Denominador SSMOCC",f"${total_den/1e12:.2f} MMM","Todas las modalidades","#0C447C")
     kpi_card(c3,"% TD SSMOCC 2026",f"{pct_s:.2f}%",f"Meta ≤ 16% · Brecha +{pct_s-16:.2f} pp","#A32D2D")
-    kpi_card(c4,"1° Reporte (31 Jul)",f"{r1_done}/{r1_req}","Establecimientos enviados","#0F6E56")
+    kpi_card(c4,get_periodo_info(rid)["label"],f"{r1_done}/{r1_req}","Establecimientos enviados del período","#0F6E56")
 
     st.markdown("<br>",unsafe_allow_html=True)
     col_g,col_s=st.columns([3,1.2])
@@ -1533,7 +1549,7 @@ def pg_configuracion():
 
 def pg_mis_reportes():
     user = st.session_state.user
-    page_header("Ingreso de antecedentes — Anexo N°1",
+    page_header("Ingreso de antecedentes — Formato Tipo MINSAL",
                 "Lineamiento MINSAL v1.0 · Jun 2026 · Subsecretaría de Redes Asistenciales")
     year = st.session_state.get("selected_year", 2026)
     rid_activo = st.session_state.get("selected_report", "R1")
@@ -1545,6 +1561,8 @@ def pg_mis_reportes():
 
     if user["rol"] == "admin":
         opciones = {eid: e["nombre_corto"] for eid, e in ESTABLECIMIENTOS.items() if e["nivel"] in ["rojo","amarillo"]}
+        if not opciones:
+            st.info("No hay establecimientos rojos o amarillos para el período seleccionado."); return
         eid_sel = st.selectbox("Establecimiento", options=list(opciones.keys()), format_func=lambda x: opciones[x])
     else:
         eid_sel = user.get("establecimiento")
@@ -1609,7 +1627,7 @@ def pg_mis_reportes():
     if not cargados:
         mensaje_periodo_sin_datos(year, rid_activo)
         return
-    if f"per_{eid_sel}" not in st.session_state or st.session_state[f"per_{eid_sel}"] not in cargados:
+    if st.session_state.get(f"per_{eid_sel}") != rid_activo:
         st.session_state[f"per_{eid_sel}"] = rid_activo if rid_activo in cargados else cargados[0]
 
     st.markdown('<div style="font-size:13px;font-weight:600;color:#1F3864;margin-bottom:8px">Seleccionar período habilitado</div>', unsafe_allow_html=True)
@@ -1695,7 +1713,7 @@ def pg_mis_reportes():
         <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px">Plazo: {pinfo["fecha_txt"]}</div>
     </div>''', unsafe_allow_html=True)
 
-    with st.form(f"frm_{eid_sel}_{periodo_id}", clear_on_submit=False):
+    with st.form(f"frm_{year}_{eid_sel}_{periodo_id}", clear_on_submit=False):
 
         st.markdown('''<div style="background:#EFF6FF;border-left:4px solid #1F3864;border-radius:0 6px 6px 0;padding:10px 16px;margin:12px 0 10px">
             <div style="font-size:13px;font-weight:700;color:#1F3864">1 · Principales causas del resultado observado</div>
@@ -1742,7 +1760,7 @@ def pg_mis_reportes():
                                      value=float(existing.get("meta_prox",16.0)) if existing else 16.0, format="%.1f")
         fecha_comp = c5.date_input("📆 Fecha comprometida",
                                    value=datetime.date.fromisoformat(existing["fecha_comp"])
-                                   if existing and existing.get("fecha_comp") else datetime.date(2026,8,31))
+                                   if existing and existing.get("fecha_comp") else datetime.date.fromisoformat(pinfo["fecha_limite"]))
 
         st.markdown('''<div style="background:#F8FAFC;border-left:4px solid #64748B;border-radius:0 6px 6px 0;padding:10px 16px;margin:16px 0 10px">
             <div style="font-size:13px;font-weight:700;color:#374151">4 · Responsable del reporte</div>
@@ -1753,6 +1771,10 @@ def pg_mis_reportes():
         resp_cargo  = c7.text_input("💼 Cargo", value=existing.get("resp_cargo","Jefe/a de Abastecimiento") if existing else "Jefe/a de Abastecimiento")
         resp_email  = c8.text_input("📧 Correo", value=existing.get("resp_email",user.get("email","")) if existing else user.get("email",""))
         obs = st.text_area("💬 Observaciones (opcional)", value=existing.get("obs","") if existing else "", height=60)
+
+        anteriores = [r for r in reports_all if r.get("establecimiento_id") == eid_sel
+                      and (int(r.get("year",2026)), r.get("reporte_id", "R1")) < (int(year), periodo_id)]
+        formato_tipo = render_complement(existing or {}, nivel, f"ft_{year}_{eid_sel}_{periodo_id}", year, periodo_id, anteriores)
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown('''<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-left:4px solid #1F3864;border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:10px;font-size:11px;color:#1E3A8A;line-height:1.5">
@@ -1775,6 +1797,7 @@ def pg_mis_reportes():
                 if not causas_desc.strip(): errs.append("⚠️ Complete la descripción de causas.")
                 if not compromisos.strip(): errs.append("⚠️ Complete los compromisos.")
                 if not resp_nombre.strip(): errs.append("⚠️ Ingrese el nombre del responsable.")
+                errs.extend(completeness({"formato_tipo": formato_tipo}, estab))
                 if errs:
                     for e in errs: st.error(e)
                     ok = False
@@ -1786,6 +1809,8 @@ def pg_mis_reportes():
                     "obs": obs,
                 })
                 data = {"year":year,"establecimiento_id":eid_sel,"establecimiento_nombre":estab["nombre"],"reporte_id":periodo_id,"periodo":pinfo["periodo"],"periodo_label":pinfo["label"],"nivel_riesgo":nivel,"pct_2026":estab.get("pct_2026"),"pct_2025":estab.get("pct_2025"),"pct_per":pct_per,"monto_td":monto_td,"n_proc":n_proc,"causas_sel":causas_sel,"causas_desc":textos_corregidos["causas_desc"],"medidas":med_sel,"med_desc":textos_corregidos["med_desc"],"compromisos":textos_corregidos["compromisos"],"meta_prox":meta_prox,"fecha_comp":str(fecha_comp),"resp_nombre":resp_nombre.strip(),"resp_cargo":resp_cargo.strip(),"resp_email":resp_email.strip(),"obs":textos_corregidos["obs"],"estado":"enviado" if enviar else "borrador","usuario":user["username"],"fecha_ingreso":str(datetime.datetime.now().isoformat(timespec="seconds"))}
+                data["formato_tipo"] = formato_tipo
+                data["formato_version"] = 2
                 # Mantener trazabilidad si el reporte fue habilitado por el administrador y luego corregido.
                 if existing:
                     for keep_key in ["bitacora", "habilitado_por", "habilitado_nombre", "fecha_habilitacion", "motivo_habilitacion"]:
@@ -1794,13 +1819,19 @@ def pg_mis_reportes():
 
                 if enviar:
                     cerrar_reporte_enviado(data, "Envía reporte" if not existing else "Reenvía reporte corregido")
-                    upsert_report(data)
+                    try:
+                        upsert_report(data)
+                    except PersistenceError as error:
+                        st.error(str(error)); return
                     st.success(f"✅ **Reporte {pinfo['label']}** enviado exitosamente. Quedó bloqueado para edición y con corrección ortográfica básica aplicada.")
                     st.balloons()
                 else:
                     data["bloqueado"] = False
                     _append_audit_entry(data, "Guarda borrador", "Borrador actualizado por el establecimiento/administrador.")
-                    upsert_report(data)
+                    try:
+                        upsert_report(data)
+                    except PersistenceError as error:
+                        st.error(str(error)); return
                     st.info("💾 Borrador guardado correctamente con corrección ortográfica básica aplicada.")
                 st.rerun()
 
@@ -1949,6 +1980,61 @@ def pg_historico():
 # Esta definición reemplaza la anterior y deja el Excel alineado al formato
 # solicitado: solo establecimientos ROJO/AMARILLO que hayan entregado reporte.
 # ═══════════════════════════════════════════════════════════════════════
+def pg_formato_tipo(year, rid, pinfo, reports):
+    import pandas as pd
+    st.subheader("Formato Tipo completo — reporte consolidado")
+    st.caption("Incluye indicadores, cotejo, antecedentes por riesgo, seguimiento, establecimientos adicionales, pendientes y validación. El envío y la firma institucional se gestionan después de la revisión.")
+    path = DATA_DIR / "gestion_consolidado.json"
+    all_meta = _load_json_persistent(path, path.name, {})
+    key = f"{year}_{rid}"
+    meta = all_meta.get(key, {})
+    mandatory = {eid: e for eid, e in ESTABLECIMIENTOS.items() if e.get("nivel") in ["rojo", "amarillo"]}
+    with st.form(f"consolidado_{key}"):
+        c1, c2 = st.columns(2)
+        remitente = c1.text_input("Nombre de quien remite", value=meta.get("remitente", ""))
+        cargo = c2.text_input("Cargo de quien remite", value=meta.get("cargo", ""))
+        correo = c1.text_input("Correo institucional de quien remite", value=meta.get("correo", ""))
+        fecha_envio = c2.date_input("Fecha prevista de envío a MINSAL", value=date_value(meta.get("fecha_envio")), format="DD-MM-YYYY")
+        visado_por = c1.text_input("Nombre de quien visa el consolidado", value=meta.get("visado_por", ""))
+        fecha_visado = c2.date_input("Fecha del visado (complete cuando corresponda)", value=date_value(meta.get("fecha_visado")), format="DD-MM-YYYY")
+        st.caption("La firma se incorpora al documento después de su revisión. Registrar un nombre no constituye un visado ni un envío a MINSAL.")
+        controls = {r.get("establecimiento_id"): r for r in meta.get("pendientes", [])}
+        records = [{"establecimiento_id": eid, "Establecimiento": e["nombre"], "Fecha estimada de entrega": controls.get(eid, {}).get("fecha", ""), "Observación": controls.get(eid, {}).get("observacion", "")} for eid, e in mandatory.items()]
+        pending_editor = st.data_editor(pd.DataFrame(records, columns=["establecimiento_id", "Establecimiento", "Fecha estimada de entrega", "Observación"]),
+            hide_index=True, use_container_width=True, disabled=["establecimiento_id", "Establecimiento"],
+            column_config={"establecimiento_id": None}, key=f"pendientes_{key}")
+        st.caption("Para antecedentes pendientes, indique fecha estimada AAAA-MM-DD y observación. Solo los casos pendientes se incorporarán a la sección 7.")
+        if st.form_submit_button("Guardar identificación y control del consolidado", type="primary"):
+            meta = {"remitente": remitente.strip(), "cargo": cargo.strip(), "correo": correo.strip(),
+                    "fecha_envio": text(fecha_envio), "visado_por": visado_por.strip(), "fecha_visado": text(fecha_visado),
+                    "pendientes": [{"establecimiento_id": row["establecimiento_id"], "fecha": text(row["Fecha estimada de entrega"]), "observacion": text(row["Observación"])} for row in pending_editor.to_dict("records")]}
+            bad = [row for row in meta["pendientes"] if row["fecha"] and not date_value(row["fecha"])]
+            if bad:
+                st.error("Revise las fechas estimadas: utilice AAAA-MM-DD.")
+            else:
+                all_meta[key] = meta
+                _save_json_persistent(path, path.name, all_meta)
+                st.success("Identificación y control del consolidado guardados y verificados.")
+    _, selected, indicators, comparisons, pending, warnings = format_tables(ESTABLECIMIENTOS, reports, year, rid, meta)
+    for field, label in [("remitente", "Nombre de quien remite"), ("cargo", "Cargo"), ("correo", "Correo"), ("fecha_envio", "Fecha prevista de envío")]:
+        if not meta.get(field):
+            warnings.append(f"Identificación del Servicio: falta {label.lower()}.")
+    if warnings:
+        st.warning("El consolidado requiere revisión. Puede descargar el borrador completo; los pendientes y datos faltantes quedarán identificados.")
+        with st.expander(f"Revisar {len(warnings)} antecedente(s)"):
+            for warning in warnings:
+                st.write("• " + warning)
+    else:
+        st.success("Antecedentes completos para revisión y visado institucional.")
+    st.caption("Los reportes previos se conservan. Si faltan los nuevos campos, un administrador puede habilitar su edición desde Todos los reportes, registrando el motivo.")
+    mode = "BORRADOR — requiere completar o revisar antecedentes" if warnings else "PARA REVISIÓN Y VISADO INSTITUCIONAL"
+    export_meta = dict(meta, export_estado=mode)
+    content, _ = generate_docx(ESTABLECIMIENTOS, reports, year, rid, pinfo, export_meta)
+    st.download_button("Descargar Formato Tipo completo en Word", content,
+        f"SSMOCC_FormatoTipo_{year}_{rid}_{'borrador' if warnings else 'revision'}.docx",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True, type="primary")
+
+
 def pg_exportar():
     if st.session_state.user["rol"] != "admin":
         st.error("Solo administradores."); return
@@ -1956,7 +2042,7 @@ def pg_exportar():
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     from openpyxl.utils import get_column_letter
 
-    page_header("Exportar Anexo N°1 MINSAL", "Formato oficial de entrega de antecedentes por Servicio de Salud")
+    page_header("Exportar reporte consolidado MINSAL", "Formato Tipo completo y Anexo N.º 1 de antecedentes por Servicio de Salud")
     reports = load_reports()
     year = st.session_state.get("selected_year", 2026)
     cargados = periodos_cargados(year)
@@ -1978,6 +2064,10 @@ def pg_exportar():
         mensaje_periodo_sin_datos(year, ps)
         st.info("El Anexo N°1 MINSAL queda bloqueado hasta cargar la base oficial del período. Así se evita exportar información del período anterior.")
         return
+
+    pg_formato_tipo(year, ps, pinfo, reports)
+    st.divider()
+    st.subheader("Anexo N.º 1 — resumen complementario")
 
     # Solo deben reportar los establecimientos categorizados en rojo o amarillo.
     obligatorios = {eid: e for eid, e in ESTABLECIMIENTOS.items() if e.get("nivel") in ["rojo", "amarillo"]}
@@ -2008,23 +2098,10 @@ def pg_exportar():
     """, unsafe_allow_html=True)
 
     def _texto_causas(r):
-        causas = "; ".join(r.get("causas_sel", []))
-        desc = r.get("causas_desc", "")
-        return (causas + (" | " if causas and desc else "") + desc).strip()
+        return _anexo_texto_causas(r)
 
     def _texto_medidas(r):
-        med = r.get("medidas", {})
-        med_labels = {
-            "pac": "Actualización Plan Anual de Compras",
-            "lic": "Inicio procesos licitatorios",
-            "cm": "Migración a Convenio Marco",
-            "cenabast": "Gestión CENABAST",
-            "cap": "Capacitación equipo (Ley 21.634, actualiza Ley 19.886)",
-            "venc": "Control vencimiento contratos",
-        }
-        txt = "; ".join(lbl for k, lbl in med_labels.items() if med.get(k))
-        desc = r.get("med_desc", "")
-        return (txt + (" | " if txt and desc else "") + desc).strip()
+        return _anexo_texto_medidas(r)
 
     rows = []
     for r in sorted(enviados, key=lambda x: (x.get("nivel_riesgo", ""), x.get("establecimiento_nombre", ""))):
@@ -2035,9 +2112,9 @@ def pg_exportar():
             "Período informado": f"{year} · {r.get('periodo', pinfo['periodo'])}",
             "Principales causas": _texto_causas(r),
             "Medidas implementadas": _texto_medidas(r),
-            "Compromisos": r.get("compromisos", ""),
-            "Responsable": (r.get("resp_nombre", "") + " - " + r.get("resp_cargo", "")).strip(" -"),
-            "Fecha comprometida": r.get("fecha_comp", ""),
+            "Compromisos": "\n".join(a.get("compromiso", "") for a in r.get("formato_tipo", {}).get("acciones", [])) or r.get("compromisos", ""),
+            "Responsable": "\n".join(a.get("responsable", "") for a in r.get("formato_tipo", {}).get("acciones", [])) or (r.get("resp_nombre", "") + " - " + r.get("resp_cargo", "")).strip(" -"),
+            "Fecha comprometida": "\n".join(a.get("plazo", "") for a in r.get("formato_tipo", {}).get("acciones", [])) or r.get("fecha_comp", ""),
         })
 
     cols_minsal = ["Servicio de salud", "Establecimiento", "Nivel de Riesgo", "Período informado", "Principales causas", "Medidas implementadas", "Compromisos", "Responsable", "Fecha comprometida"]
@@ -2134,18 +2211,22 @@ def pg_exportar():
 # ═══════════════════════════════════════════════════════════════════════
 # ROUTING
 # ═══════════════════════════════════════════════════════════════════════
-if st.session_state.user is None:
-    page_login()
-else:
-    render_topbar()
-    pg = st.session_state.page
-    if   pg == "dashboard":      pg_dashboard()
-    elif pg == "mis_reportes":   pg_mis_reportes()
-    elif pg == "todos_reportes": pg_todos_reportes()
-    elif pg == "exportar":       pg_exportar()
-    elif pg == "boletines":      pg_boletines()
-    elif pg == "historico":      pg_historico()
-    elif pg == "usuarios":       pg_usuarios()
-    elif pg == "configuracion":   pg_configuracion()
-    elif pg == "actualizar_datos": pg_actualizar_datos()
-    else:                         pg_dashboard()
+try:
+    if st.session_state.user is None:
+        page_login()
+    else:
+        render_topbar()
+        pg = st.session_state.page
+        if   pg == "dashboard":      pg_dashboard()
+        elif pg == "mis_reportes":   pg_mis_reportes()
+        elif pg == "todos_reportes": pg_todos_reportes()
+        elif pg == "exportar":       pg_exportar()
+        elif pg == "boletines":      pg_boletines()
+        elif pg == "historico":      pg_historico()
+        elif pg == "usuarios":       pg_usuarios()
+        elif pg == "configuracion":   pg_configuracion()
+        elif pg == "actualizar_datos": pg_actualizar_datos()
+        else:                         pg_dashboard()
+    
+except PersistenceError as error:
+    st.error(str(error))
