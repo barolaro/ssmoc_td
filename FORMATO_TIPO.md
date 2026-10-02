@@ -2,9 +2,9 @@
 
 La actualización usa `assets/formato_minsal_2026.docx`, copia del formato vigente proporcionado por el Servicio. Conserva sus ocho secciones y duplica los bloques por establecimiento. El Anexo N.º 1 sigue disponible como resumen complementario.
 
-Los establecimientos completan el plan por acción, avances anteriores, seguimiento según riesgo, cotejo con la comunicación de la Subsecretaría y referencias a respaldos y reclasificaciones de OC. El indicador cargado desde el CSV se conserva; la actualización no recalcula el indicador A.3.2 ni modifica su metodología.
+Los establecimientos completan el plan por acción, avances anteriores, seguimiento según riesgo y referencias a respaldos y reclasificaciones de OC. El indicador cargado desde el CSV se conserva; la actualización no recalcula el indicador A.3.2 ni modifica su metodología.
 
-En **Exportar MINSAL**, el administrador registra la identificación del remitente y el control de pendientes y descarga el Word completo. Si faltan antecedentes, el documento se identifica como borrador y los casos se incorporan a la sección 7. La firma, el visado y el envío ministerial requieren gestión institucional posterior; no se envían correos desde este módulo. Los enlaces de respaldo deben apuntar a repositorios institucionales y sus documentos deben adjuntarse o ponerse a disposición según el procedimiento de entrega.
+En **Exportar MINSAL**, el administrador registra la identificación del remitente y el control de pendientes y descarga el Word completo. Si faltan antecedentes, el documento se identifica como borrador y los casos se incorporan a la sección 7. La revisión de clasificación de la sección 3 corresponde al Servicio y no se exige en el formulario de los establecimientos. La firma, el visado y el envío ministerial requieren gestión institucional posterior; no se envían correos desde este módulo. Los enlaces de respaldo deben apuntar a repositorios institucionales y sus documentos deben adjuntarse o ponerse a disposición según el procedimiento de entrega.
 
 Los reportes antiguos conservan sus campos originales. No se inventan avances ni clasificaciones de la comunicación MINSAL. Si un reporte ya enviado requiere completar los campos nuevos, el administrador habilita su edición desde **Todos los reportes**, registra el motivo y el referente lo reenvía.
 

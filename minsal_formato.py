@@ -87,24 +87,6 @@ def completeness(report, establishment):
                 errors.append(f"Acción {i}: complete {label.lower()}.")
         if text(a.get("plazo")) and not date_value(a.get("plazo")):
             errors.append(f"Acción {i}: indique el plazo como AAAA-MM-DD.")
-    included, official, same = revision(report, establishment)
-    if included == "Pendiente de cotejo":
-        errors.append("Coteje si el establecimiento está incluido en la comunicación MINSAL.")
-    if included == "Sí":
-        if official == "Sin cotejar" or not text(f.get("pct_minsal")):
-            errors.append("Complete el riesgo y porcentaje de la comunicación MINSAL.")
-        else:
-            try:
-                pct = float(text(f["pct_minsal"]).replace(",", "."))
-                if not 0 <= pct <= 100:
-                    raise ValueError()
-                pct_diff = abs(pct - float(establishment.get("pct_2026", 0))) >= .005
-                if (same == "No" or pct_diff) and not text(f.get("observacion_cotejo")):
-                    errors.append("Fundamente la diferencia de clasificación o porcentaje con MINSAL.")
-                if pct_diff and not f.get("respaldos"):
-                    errors.append("Registre el detalle de OC que respalda la diferencia de cifras.")
-            except ValueError:
-                errors.append("El porcentaje MINSAL debe ser un número entre 0 y 100.")
     status = f.get("por_informar", "Pendiente de revisión")
     if status == "Pendiente de revisión":
         errors.append("Revise y reclasifique las OC Por Informar antes del envío.")
@@ -191,11 +173,6 @@ def render_complement(report, level, key, year, rid, previous):
         f["seguimiento_reforzado"] = choice("¿Se compromete seguimiento reforzado?", ["Pendiente", "Sí", "No"], "seguimiento_reforzado")
         f["modalidad_seguimiento"] = st.text_input("Modalidad del seguimiento reforzado", value=f.get("modalidad_seguimiento", ""), key=f"{key}_modalidad_seguimiento")
         f["fecha_seguimiento"] = text(st.date_input("Fecha del seguimiento reforzado", value=date_value(f.get("fecha_seguimiento")), format="DD-MM-YYYY", key=f"{key}_fecha_seguimiento"))
-    st.subheader("Cotejo con la comunicación MINSAL")
-    f["incluido_minsal"] = choice("¿Incluido en la comunicación original de la Subsecretaría?", ["Pendiente de cotejo", "Sí", "No"], "incluido_minsal")
-    f["riesgo_minsal"] = choice("Riesgo según la comunicación MINSAL", ["Sin cotejar", "Rojo", "Amarillo", "Verde"], "riesgo_minsal")
-    f["pct_minsal"] = st.text_input("% TD según comunicación MINSAL (si está incluido)", value=text(f.get("pct_minsal")), key=f"{key}_pct_minsal")
-    f["observacion_cotejo"] = st.text_area("Aclaración de clasificación o fundamento de diferencias", value=f.get("observacion_cotejo", ""), key=f"{key}_observacion_cotejo")
     st.subheader("Órdenes de compra y antecedentes de respaldo")
     f["por_informar"] = choice("Estado de OC con mecanismo Por Informar", ["Pendiente de revisión", "No existen", "Reclasificadas"], "por_informar")
     editor("Reclasificaciones según mecanismo real", "reclasificaciones", RECLASIFICACIONES)
@@ -215,7 +192,7 @@ def render_readonly(report):
             if f.get(field):
                 st.markdown(f"**{label}**")
                 st.dataframe(pd.DataFrame([{label: row.get(k, "") for k, label in columns.items()} for row in f[field]]), hide_index=True, use_container_width=True)
-        for field, label in [("avance_anteriores", "Avance anterior"), ("fecha_reunion", "Reunión técnica"), ("detalle_mecanismo", "Regularización del abastecimiento"), ("detalle_recurrentes", "Compras recurrentes"), ("modalidad_seguimiento", "Seguimiento reforzado"), ("fecha_seguimiento", "Fecha de seguimiento"), ("incluido_minsal", "Incluido en comunicación MINSAL"), ("observacion_cotejo", "Cotejo"), ("por_informar", "OC Por Informar")]:
+        for field, label in [("avance_anteriores", "Avance anterior"), ("fecha_reunion", "Reunión técnica"), ("detalle_mecanismo", "Regularización del abastecimiento"), ("detalle_recurrentes", "Compras recurrentes"), ("modalidad_seguimiento", "Seguimiento reforzado"), ("fecha_seguimiento", "Fecha de seguimiento"), ("por_informar", "OC Por Informar")]:
             if f.get(field):
                 st.write(f"{label}: {f[field]}")
 

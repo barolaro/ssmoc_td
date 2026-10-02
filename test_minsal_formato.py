@@ -43,13 +43,13 @@ class FormatoTests(unittest.TestCase):
         r = deepcopy(reports[0]); r["formato_tipo"]["mensual"][1]["fecha"] = ""
         self.assertTrue(any("control mensual" in x for x in completeness(r, est["a"])))
 
-    def test_por_informar_and_discrepancies_block_complete_status(self):
+    def test_por_informar_blocks_but_cotejo_is_not_required_of_establishment(self):
         est, reports = fixtures()
         r = deepcopy(reports[0]); r["formato_tipo"]["por_informar"] = "Pendiente de revisión"
         self.assertTrue(any("reclasifique" in x for x in completeness(r, est["a"])))
-        r = deepcopy(reports[0]); r["formato_tipo"]["pct_minsal"] = "23,5"
-        self.assertTrue(any("Fundamente" in x for x in completeness(r, est["a"])))
-        r["formato_tipo"]["observacion_cotejo"] = "Diferencia documentada con detalle OC"
+        r = deepcopy(reports[0])
+        for field in ["incluido_minsal", "riesgo_minsal", "pct_minsal", "observacion_cotejo"]:
+            r["formato_tipo"].pop(field, None)
         self.assertEqual(completeness(r, est["a"]), [])
 
     def test_pending_legacy_and_period_isolation(self):

@@ -2016,6 +2016,8 @@ def pg_formato_tipo(year, rid, pinfo, reports):
                 _save_json_persistent(path, path.name, all_meta)
                 st.success("Identificación y control del consolidado guardados y verificados.")
     _, selected, indicators, comparisons, pending, warnings = format_tables(ESTABLECIMIENTOS, reports, year, rid, meta)
+    if any(row[6] == "Pendiente" for row in comparisons):
+        warnings.append("Revisión del Servicio: completar la sección 3 del documento consolidado antes del visado.")
     for field, label in [("remitente", "Nombre de quien remite"), ("cargo", "Cargo"), ("correo", "Correo"), ("fecha_envio", "Fecha prevista de envío")]:
         if not meta.get(field):
             warnings.append(f"Identificación del Servicio: falta {label.lower()}.")
