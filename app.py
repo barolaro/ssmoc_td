@@ -528,6 +528,15 @@ def render_topbar():
     pct=int(r1_done/r1_req*100) if r1_req else 0
     col_pct="#4ade80" if r1_req and r1_done==r1_req else "#fbbf24" if r1_done>0 else "#f87171"
     etiqueta_avance = get_periodo_info(rid_act)["label"] if rid_act else "Sin carga"
+    texto_avance = f"{r1_done}/{r1_req}"
+    if user["rol"] != "admin":
+        eid = user.get("establecimiento")
+        datos = load_datos_periodos().get(str(year_act), {}).get(rid_act, {}).get("establecimientos", {})
+        reporte = next((r for r in reports if r.get("year", 2026) == year_act and r.get("reporte_id") == rid_act and r.get("establecimiento_id") == eid), None)
+        estado = estado_reporte_periodo(datos, eid, reporte)
+        texto_avance = {"sin_carga":"Sin carga oficial", "no_requiere_informe":"No requiere informe", "pendiente":"Pendiente", "borrador":"Borrador", "enviado":"Enviado"}.get(estado, "Pendiente")
+        pct = 100 if estado in ("enviado", "no_requiere_informe") else 0
+        col_pct = "#4ade80" if pct == 100 else "#fbbf24" if estado in ("pendiente", "borrador") else "#cbd5e1"
     estab=ESTABLECIMIENTOS.get(user.get("establecimiento"),{})
     rol_txt="🔑 Admin" if user["rol"]=="admin" else f"🏥 {estab.get('nombre_corto','')}"
 
@@ -541,7 +550,7 @@ def render_topbar():
         </div>
         <div style="padding:6px 14px;border-left:1px solid rgba(255,255,255,.15);text-align:center;min-width:120px">
           <div style="font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em">{etiqueta_avance}</div>
-          <div style="font-size:16px;font-weight:700;color:{col_pct}">{r1_done}/{r1_req}</div>
+          <div style="font-size:14px;font-weight:700;color:{col_pct}">{texto_avance}</div>
           <div style="background:rgba(255,255,255,.15);border-radius:3px;height:3px;margin-top:4px">
             <div style="width:{pct}%;height:100%;background:{col_pct};border-radius:3px"></div>
           </div>
