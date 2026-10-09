@@ -601,38 +601,53 @@ def nivel_pill(nivel):
     cls={"rojo":"nr","amarillo":"na","verde":"nv"}.get(nivel,"nv")
     return f'<span class="{cls}">{nivel.capitalize()}</span>'
 
+def estado_reporte_periodo(establecimientos, eid, reporte=None):
+    """La obligación depende del riesgo histórico, nunca del trimestre activo."""
+    if eid not in establecimientos:
+        return "sin_carga"
+    nivel = str(establecimientos[eid].get("nivel", "")).strip().lower()
+    if nivel == "verde":
+        return "no_requiere_informe"
+    if nivel not in ("rojo", "amarillo"):
+        return "sin_carga"
+    return (reporte or {}).get("estado", "pendiente")
+
+
 def cal_cards(reports, eid_filter=None):
     hoy=datetime.date.today()
     year = st.session_state.get("selected_year", 2026)
-    req=len([e for e in ESTABLECIMIENTOS.values() if e["nivel"] in ["rojo","amarillo"]])
+    historico = load_datos_periodos().get(str(year), {})
     cols=st.columns(4)
     for i,p in enumerate(PERIODOS):
         fl=datetime.date.fromisoformat(p["fecha_limite"])
         dias=(fl-hoy).days
+        establecimientos_p = historico.get(p["id"], {}).get("establecimientos", {})
+        requeridos = {eid for eid, e in establecimientos_p.items() if str(e.get("nivel", "")).strip().lower() in ("rojo", "amarillo")}
+        req = len(requeridos)
         if eid_filter:
             cargado = periodo_tiene_datos(year, p["id"])
             r=next((x for x in reports if x.get("year", 2026)==year and x.get("establecimiento_id")==eid_filter and x.get("reporte_id")==p["id"]),None)
-            est=r.get("estado","pendiente") if r else "pendiente"
-            if not cargado:
-                est = "sin_carga"
+            est = estado_reporte_periodo(establecimientos_p, eid_filter, r)
             if est=="sin_carga":   bg,tc,bc,tag="#F8FAFC","#94A3B8","#E2E8F0","🔒 SIN CARGA"
+            elif est=="no_requiere_informe": bg,tc,bc,tag="#F0FDF4","#166534","#BBF7D0","🟢 NO REQUIERE INFORME"
             elif est=="enviado":     bg,tc,bc,tag="#F0FDF4","#166534","#BBF7D0","✅ ENVIADO"
             elif est=="borrador":  bg,tc,bc,tag="#FFFBEB","#92400E","#FDE68A","📝 BORRADOR"
             elif dias<0:           bg,tc,bc,tag="#FEF2F2","#991B1B","#FECACA","⛔ VENCIDO"
             elif dias<=14:         bg,tc,bc,tag="#FEF2F2","#991B1B","#FECACA",f"⚠️ {dias}d"
             elif dias<=30:         bg,tc,bc,tag="#FFFBEB","#92400E","#FDE68A",f"🔔 {dias}d"
             else:                  bg,tc,bc,tag="#F8FAFC","#475569","#E2E8F0",f"📅 {dias}d"
-            sub=f"Estado: <b>{est.upper()}</b>"
+            sub = "Nivel verde en este período" if est == "no_requiere_informe" else f"Estado: <b>{est.replace('_', ' ').upper()}</b>"
         else:
             cargado = periodo_tiene_datos(year, p["id"])
-            env=len([r for r in reports if r.get("year", 2026)==year and r.get("reporte_id")==p["id"] and r.get("estado")=="enviado"])
+            env=len({r.get("establecimiento_id") for r in reports if r.get("year", 2026)==year and r.get("reporte_id")==p["id"] and r.get("estado")=="enviado" and r.get("establecimiento_id") in requeridos})
             if not cargado:        bg,tc,bc,tag="#F8FAFC","#94A3B8","#E2E8F0","🔒 SIN CARGA"
+            elif req==0:             bg,tc,bc,tag="#F0FDF4","#166534","#BBF7D0","🟢 NO REQUIERE INFORMES"
             elif env==req:           bg,tc,bc,tag="#F0FDF4","#166534","#BBF7D0","✅ COMPLETO"
             elif dias<0:           bg,tc,bc,tag="#FEF2F2","#991B1B","#FECACA","⛔ VENCIDO"
             elif dias<=14:         bg,tc,bc,tag="#FEF2F2","#991B1B","#FECACA",f"⚠️ {dias}d"
             elif dias<=30:         bg,tc,bc,tag="#FFFBEB","#92400E","#FDE68A",f"🔔 {dias}d"
             else:                  bg,tc,bc,tag="#F8FAFC","#475569","#E2E8F0",f"📅 {dias}d"
-            sub=f"{env}/{req} enviados"
+            sub=f"{env}/{req} informes requeridos enviados"
         with cols[i]:
             st.markdown(f"""
             <div style="background:{bg};border:1px solid {bc};border-top:3px solid {tc};
@@ -1631,18 +1646,17 @@ def pg_mis_reportes():
         st.session_state[f"per_{eid_sel}"] = rid_activo if rid_activo in cargados else cargados[0]
 
     st.markdown('<div style="font-size:13px;font-weight:600;color:#1F3864;margin-bottom:8px">Seleccionar período habilitado</div>', unsafe_allow_html=True)
+    historico = load_datos_periodos().get(str(year), {})
     cols_per = st.columns(4)
     for i, p in enumerate(PERIODOS):
         cargado_p = periodo_tiene_datos(year, p["id"])
         r_ex = next((x for x in reports_all if x.get("year", 2026)==year and x.get("establecimiento_id")==eid_sel and x.get("reporte_id")==p["id"]), None)
-        est_ex = r_ex.get("estado","pendiente") if r_ex else "pendiente"
-        if not cargado_p:
-            est_ex = "sin_carga"
-        icon_p = {"enviado":"✅","borrador":"📝","pendiente":"⬜","sin_carga":"🔒"}[est_ex]
+        est_ex = estado_reporte_periodo(historico.get(p["id"], {}).get("establecimientos", {}), eid_sel, r_ex)
+        icon_p = {"no_requiere_informe":"🟢","enviado":"✅","borrador":"📝","pendiente":"⬜","sin_carga":"🔒"}[est_ex]
         sel = st.session_state[f"per_{eid_sel}"] == p["id"] and cargado_p
         border = "3px solid #1F3864" if sel else "1px solid #e2e8f0"
-        bg_p = {"enviado":"#F0FDF4","borrador":"#EFF6FF","pendiente":"white","sin_carga":"#F8FAFC"}[est_ex]
-        tc_p = {"enviado":"#166534","borrador":"#1E40AF","pendiente":"#64748b","sin_carga":"#94A3B8"}[est_ex]
+        bg_p = {"no_requiere_informe":"#F0FDF4","enviado":"#F0FDF4","borrador":"#EFF6FF","pendiente":"white","sin_carga":"#F8FAFC"}[est_ex]
+        tc_p = {"no_requiere_informe":"#166534","enviado":"#166534","borrador":"#1E40AF","pendiente":"#64748b","sin_carga":"#94A3B8"}[est_ex]
         with cols_per[i]:
             st.markdown(f"""
             <div style="background:{bg_p};border:{border};border-radius:10px;padding:12px 8px;text-align:center;opacity:{'1' if cargado_p else '.65'}">
