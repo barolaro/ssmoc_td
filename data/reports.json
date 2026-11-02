@@ -775,5 +775,84 @@
         "detalle": "Reporte cerrado para edición del establecimiento."
       }
     ]
+  },
+  {
+    "year": 2026,
+    "establecimiento_id": "direccion",
+    "establecimiento_nombre": "Dirección del Servicio Metropolitano Occidente",
+    "reporte_id": "R3",
+    "periodo": "Jul–Sep 2026",
+    "periodo_label": "3° Reporte",
+    "nivel_riesgo": "rojo",
+    "pct_2026": 70.56,
+    "pct_2025": 13.96,
+    "pct_per": 70.56,
+    "monto_td": 0,
+    "n_proc": 0,
+    "causas_sel": [
+      "Otra causal — especificar en observaciones"
+    ],
+    "causas_desc": "Lo mencionado asociado a la falta de control interno, en dicho período no se disponía de una plataforma que anticipara el vencimiento de contratos, también a procesos críticos que han tenido que dar continuidad a servicios mientras se esta en proceso de licitar.",
+    "medidas": {
+      "pac": false,
+      "lic": false,
+      "cm": false,
+      "cenabast": false,
+      "cap": false,
+      "venc": true
+    },
+    "med_desc": "Se esta en marcha blanca de una plataforma llamada SIGA, que ayudara con alertas de contratos según vencimiento.",
+    "compromisos": "Comunicar al equipo de contratos el uso del SIGA.",
+    "meta_prox": 16.0,
+    "fecha_comp": "2026-11-30",
+    "resp_nombre": "Sergio Monsalves Oporto",
+    "resp_cargo": "Jefe/a de Abastecimiento",
+    "resp_email": "sergio.monsalves@redsalud.gob.cl",
+    "obs": "",
+    "estado": "borrador",
+    "usuario": "direccion",
+    "fecha_ingreso": "2026-11-02T15:45:49",
+    "formato_tipo": {
+      "acciones": [],
+      "avance_anteriores": "",
+      "anteriores": [],
+      "mecanismos": [],
+      "detalle_mecanismo": "",
+      "fecha_reunion": "",
+      "mensual": [
+        {
+          "mes": "Mes 1",
+          "fecha": "",
+          "estado": "Programado",
+          "observacion": ""
+        },
+        {
+          "mes": "Mes 2",
+          "fecha": "",
+          "estado": "Programado",
+          "observacion": ""
+        },
+        {
+          "mes": "Mes 3",
+          "fecha": "",
+          "estado": "Programado",
+          "observacion": ""
+        }
+      ],
+      "por_informar": "Pendiente de revisión",
+      "reclasificaciones": [],
+      "respaldos": []
+    },
+    "formato_version": 2,
+    "bloqueado": false,
+    "bitacora": [
+      {
+        "fecha": "2026-11-02T15:45:49",
+        "usuario": "direccion",
+        "nombre": "Referente Dir. SSMOCC",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      }
+    ]
   }
 ]
