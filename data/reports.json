@@ -888,9 +888,9 @@
     "resp_cargo": "Jefe/a de Abastecimiento",
     "resp_email": "miguel.jara@intraumatologico.cl",
     "obs": "",
-    "estado": "borrador",
+    "estado": "enviado",
     "usuario": "traumatologico",
-    "fecha_ingreso": "2026-11-23T14:35:44",
+    "fecha_ingreso": "2026-11-23T14:35:56",
     "formato_tipo": {
       "acciones": [
         {
@@ -1115,8 +1115,17 @@
         "nombre": "Miguel Jara",
         "accion": "Guarda borrador",
         "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-11-23T14:35:56",
+        "usuario": "traumatologico",
+        "nombre": "Miguel Jara",
+        "accion": "Reenvía reporte corregido",
+        "detalle": "Reporte cerrado para edición del establecimiento."
       }
     ],
-    "bloqueado": false
+    "bloqueado": true,
+    "habilitado_edicion": false,
+    "fecha_envio": "2026-11-23T14:35:56"
   }
 ]
