@@ -890,7 +890,7 @@
     "obs": "",
     "estado": "borrador",
     "usuario": "traumatologico",
-    "fecha_ingreso": "2026-11-23T14:32:38",
+    "fecha_ingreso": "2026-11-23T14:33:35",
     "formato_tipo": {
       "acciones": [
         {
@@ -958,54 +958,54 @@
         {
           "oc": "2109-1969-SE26",
           "mecanismo": "Licitacion 2109-17-LR25",
-          "respaldo": "Chilecompra"
+          "respaldo": "https://www.mercadopublico.cl/Portal/Modules/Menu/Menu.aspx"
         },
         {
           "oc": "2109-1970-SE26",
           "mecanismo": "Licitacion 2109-17-LR25",
-          "respaldo": "Chilecompra"
+          "respaldo": "https://www.mercadopublico.cl/Portal/Modules/Menu/Menu.aspx"
         },
         {
           "oc": "2109-1971-SE26",
           "mecanismo": "Licitacion 2109-17-LR25",
-          "respaldo": "Chilecompra"
+          "respaldo": "https://www.mercadopublico.cl/Portal/Modules/Menu/Menu.aspx"
         },
         {
           "oc": "2109-1987-TD26",
           "mecanismo": "Servicio Esterilización Trato Directo",
-          "respaldo": "Chilecompra"
+          "respaldo": "https://www.mercadopublico.cl/Portal/Modules/Menu/Menu.aspx"
         },
         {
           "oc": "2109-1790-TD26",
           "mecanismo": "Servicio Esterilización Trato Directo",
-          "respaldo": "Chilecompra"
+          "respaldo": "https://www.mercadopublico.cl/Portal/Modules/Menu/Menu.aspx"
         }
       ],
       "respaldos": [
         {
           "oc": "2109-1969-SE26",
           "descripcion": "Licitación 2109-17-LR25",
-          "url": "Chilecompra"
+          "url": "https://www.mercadopublico.cl/Portal/Modules/Menu/Menu.aspx"
         },
         {
           "oc": "2109-1970-SE26",
           "descripcion": "Licitación 2109-17-LR25",
-          "url": "Chilecompra"
+          "url": "https://www.mercadopublico.cl/Portal/Modules/Menu/Menu.aspx"
         },
         {
           "oc": "2109-1971-SE26",
           "descripcion": "Licitación 2109-17-LR25",
-          "url": "Chilecompra"
+          "url": "https://www.mercadopublico.cl/Portal/Modules/Menu/Menu.aspx"
         },
         {
           "oc": "2109-1987-TD26",
           "descripcion": "Servicio Esterilización Trato Directo",
-          "url": "Chilecompra"
+          "url": "https://www.mercadopublico.cl/Portal/Modules/Menu/Menu.aspx"
         },
         {
           "oc": "2109-1790-TD26",
           "descripcion": "Servicio Esterilización Trato Directo",
-          "url": "Chilecompra"
+          "url": "https://www.mercadopublico.cl/Portal/Modules/Menu/Menu.aspx"
         }
       ]
     },
@@ -1090,6 +1090,13 @@
       },
       {
         "fecha": "2026-11-23T14:32:38",
+        "usuario": "traumatologico",
+        "nombre": "Miguel Jara",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-11-23T14:33:35",
         "usuario": "traumatologico",
         "nombre": "Miguel Jara",
         "accion": "Guarda borrador",
