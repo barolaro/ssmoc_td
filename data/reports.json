@@ -890,7 +890,7 @@
     "obs": "",
     "estado": "borrador",
     "usuario": "traumatologico",
-    "fecha_ingreso": "2026-11-23T13:28:22",
+    "fecha_ingreso": "2026-11-23T13:28:28",
     "formato_tipo": {
       "acciones": [],
       "avance_anteriores": "1.- Servicio de Alimentación, Bases a toma de razón x CGR en Diciembre 2026 y que se pueda Adjudicar en el 1° semestre 2027, lo que rebajaría en 80 millones mensuales en Indicador de T.D.\n2.- Servicio Personal clínico, con Licitación Id 2019-4-LR26, comienza en Noviembre 2026.\n3.- Servicios Esterilización, con la puesta en marcha de la Central propia del I.T., se a rebajado desde 75 mill a 3 mill, ademas de entrar en vigencia Licitación Id 2109-12-LR26 en Noviembre y Diciembre 2026.\n4.- Acuerdos Complementarios de C.M. Prótesis a implementarse en Noviembre y Diciembre 2026.\n",
@@ -1002,6 +1002,13 @@
       },
       {
         "fecha": "2026-11-23T13:28:22",
+        "usuario": "traumatologico",
+        "nombre": "Miguel Jara",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-11-23T13:28:28",
         "usuario": "traumatologico",
         "nombre": "Miguel Jara",
         "accion": "Guarda borrador",
