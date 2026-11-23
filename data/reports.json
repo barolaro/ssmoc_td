@@ -890,7 +890,7 @@
     "obs": "",
     "estado": "borrador",
     "usuario": "traumatologico",
-    "fecha_ingreso": "2026-11-23T14:04:29",
+    "fecha_ingreso": "2026-11-23T14:28:15",
     "formato_tipo": {
       "acciones": [
         {
@@ -936,19 +936,19 @@
       "mensual": [
         {
           "mes": "Diciembre 2026",
-          "fecha": "2026/12/15",
-          "estado": "Programado",
-          "observacion": ""
-        },
-        {
-          "mes": "Enero 2027",
-          "fecha": "2027/01/31",
+          "fecha": "2026-12-15",
           "estado": "Programado",
           "observacion": ""
         },
         {
           "mes": "Febrero 2027",
-          "fecha": "2027/02/28",
+          "fecha": "2027-02-15",
+          "estado": "Programado",
+          "observacion": ""
+        },
+        {
+          "mes": "Marzo 2027",
+          "fecha": "2027-03-15",
           "estado": "Programado",
           "observacion": ""
         }
@@ -1076,6 +1076,13 @@
       },
       {
         "fecha": "2026-11-23T14:04:29",
+        "usuario": "traumatologico",
+        "nombre": "Miguel Jara",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-11-23T14:28:15",
         "usuario": "traumatologico",
         "nombre": "Miguel Jara",
         "accion": "Guarda borrador",
