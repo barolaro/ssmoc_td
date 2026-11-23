@@ -874,8 +874,8 @@
     "causas_desc": "Compra de prótesis y material de Osteosíntesis (OTS), principal concepto de gasto en el Subtítulo 22, Bienes y Servicios de Consumo (40%): Históricamente, la complejidad técnica de los productos, las dificultades en el mecanismo de compra y ciertas debilidades clínico-administrativas favorecieron el uso inercial de la contratación directa. Actualmente, esta tendencia se ha ido revirtiendo mediante la implementación de licitaciones internas —específicamente para los sets de Clavo Cefalomedular, Placas y Tornillos para fractura de Muñeca, Endoscopía de Columna, Insumos para Tutor Externo y Reconstrucción Tutor Externo— y el uso del nuevo Convenio Marco. El establecimiento carece de una Central de Producción de alimentos adecuada para prestar el servicio de alimentación de pacientes y funcionarios, disponiendo solo de un deteriorado espacio físico. El IT tampoco ha contado con los recursos para invertir en obras y en el equipamiento necesario. Esta situación ha obligado al establecimiento a incorporar en la licitación estos conceptos, bases que fueron aprobadas por CGR, sin embargo, las ofertas superaron significativamente el presupuesto destinado a dicho servicio, debido a la alta inversión exigida a los oferentes, quienes la traspasaron a lo ofertado. Por esta razón y velando por la continuidad del servicio se recurrió a la compra directa, mientras se reformulan requerimientos, se prioriza presupuesto y levanta nuevo proceso. -Compra de servicio de personal de pabellón, lo que representa cerca de un 3% del Sbt22: Producto de un proceso licitatorio, se adjudicaron los servicios de personal de pabellón a la empresa GSM, oferente que reiteradamente no cumplió con las exigencias del contrato, lo que derivó en variadas multas y el término anticipado de éste, este Servicio se encuentra en proceso licitatorio Id 2019-4-LR26 y comenzara a regir en Noviembre 2026. Compra de Servicios de Esterilización reducido considerablemente x la entrada en vigencia de la nueva Central Esterilización de nuestro I. T. , más nueva licitación Id 2109-12-LR26 vigente entre Noviembre y Diciembre 2026. Aumento en las Cirugías de Tumores en un 50% y que están contempladas en Convenio Marco.",
     "medidas": {
       "pac": false,
-      "lic": false,
-      "cm": false,
+      "lic": true,
+      "cm": true,
       "cenabast": false,
       "cap": false,
       "venc": false
@@ -890,7 +890,7 @@
     "obs": "",
     "estado": "borrador",
     "usuario": "traumatologico",
-    "fecha_ingreso": "2026-11-23T13:16:16",
+    "fecha_ingreso": "2026-11-23T13:28:22",
     "formato_tipo": {
       "acciones": [],
       "avance_anteriores": "1.- Servicio de Alimentación, Bases a toma de razón x CGR en Diciembre 2026 y que se pueda Adjudicar en el 1° semestre 2027, lo que rebajaría en 80 millones mensuales en Indicador de T.D.\n2.- Servicio Personal clínico, con Licitación Id 2019-4-LR26, comienza en Noviembre 2026.\n3.- Servicios Esterilización, con la puesta en marcha de la Central propia del I.T., se a rebajado desde 75 mill a 3 mill, ademas de entrar en vigencia Licitación Id 2109-12-LR26 en Noviembre y Diciembre 2026.\n4.- Acuerdos Complementarios de C.M. Prótesis a implementarse en Noviembre y Diciembre 2026.\n",
@@ -937,6 +937,16 @@
           "oc": "2109-1971-SE26",
           "mecanismo": "Licitacion 2109-17-LR25",
           "respaldo": "Chilecompra"
+        },
+        {
+          "oc": "2109-1987-TD26",
+          "mecanismo": "Servicio Esterilizacion T.D.",
+          "respaldo": "Chilecompra"
+        },
+        {
+          "oc": "2109-1790-TD26",
+          "mecanismo": "Servicio Esterilizacion T.D.",
+          "respaldo": "Chilecompra"
         }
       ],
       "respaldos": [
@@ -953,6 +963,16 @@
         {
           "oc": "2109-1971-SE26",
           "descripcion": "Licitación 2109-17-LR25",
+          "url": "Chilecompra"
+        },
+        {
+          "oc": "2109-1987-TD26",
+          "descripcion": "Servicio Esterilizacion T.D.",
+          "url": "Chilecompra"
+        },
+        {
+          "oc": "2109-1790-TD26",
+          "descripcion": "Servicio Esterilizacion T.D.",
           "url": "Chilecompra"
         }
       ]
@@ -975,6 +995,13 @@
       },
       {
         "fecha": "2026-11-23T13:16:16",
+        "usuario": "traumatologico",
+        "nombre": "Miguel Jara",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-11-23T13:28:22",
         "usuario": "traumatologico",
         "nombre": "Miguel Jara",
         "accion": "Guarda borrador",
