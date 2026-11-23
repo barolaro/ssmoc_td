@@ -890,7 +890,7 @@
     "obs": "",
     "estado": "borrador",
     "usuario": "traumatologico",
-    "fecha_ingreso": "2026-11-23T14:33:53",
+    "fecha_ingreso": "2026-11-23T14:35:44",
     "formato_tipo": {
       "acciones": [
         {
@@ -953,7 +953,7 @@
           "observacion": "En Proceso."
         }
       ],
-      "por_informar": "Pendiente de revisión",
+      "por_informar": "Reclasificadas",
       "reclasificaciones": [
         {
           "oc": "2109-1969-SE26",
@@ -1104,6 +1104,13 @@
       },
       {
         "fecha": "2026-11-23T14:33:53",
+        "usuario": "traumatologico",
+        "nombre": "Miguel Jara",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-11-23T14:35:44",
         "usuario": "traumatologico",
         "nombre": "Miguel Jara",
         "accion": "Guarda borrador",
