@@ -890,7 +890,7 @@
     "obs": "",
     "estado": "borrador",
     "usuario": "traumatologico",
-    "fecha_ingreso": "2026-11-23T14:33:35",
+    "fecha_ingreso": "2026-11-23T14:33:53",
     "formato_tipo": {
       "acciones": [
         {
@@ -1097,6 +1097,13 @@
       },
       {
         "fecha": "2026-11-23T14:33:35",
+        "usuario": "traumatologico",
+        "nombre": "Miguel Jara",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-11-23T14:33:53",
         "usuario": "traumatologico",
         "nombre": "Miguel Jara",
         "accion": "Guarda borrador",
