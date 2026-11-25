@@ -1271,7 +1271,7 @@ def pg_todos_reportes():
 
             st.markdown(
                 f"**Responsable:** {r.get('resp_nombre','')} · {r.get('resp_cargo','')} · {r.get('resp_email','')}  \n"
-                f"**Meta próximo período:** {r.get('meta_prox',16):.1f}% · **Fecha comprometida:** {_format_fecha_chile(r.get('fecha_comp',''))}  \n"
+                f"**Meta próximo período:** {text(r.get('meta_prox')) + '%' if r.get('meta_prox') is not None else 'Pendiente de definir'} · **Fecha comprometida:** {_format_fecha_chile(r.get('fecha_comp') or '')}  \n"
                 f"**Ingresado por:** {r.get('usuario','')} · {r.get('fecha_ingreso','')[:16]}"
             )
 
@@ -1750,8 +1750,8 @@ def pg_mis_reportes():
 
         st.markdown('<div style="font-size:12px;font-weight:600;color:#374151;margin:10px 0 4px">Datos cuantitativos</div>', unsafe_allow_html=True)
         c1,c2,c3 = st.columns(3)
-        monto_td = c1.number_input("💰 Monto TD ($CLP)", min_value=0, step=1_000_000, value=int(existing.get("monto_td",0)) if existing else 0, format="%d", help="Ingrese el monto de trato directo del período en pesos chilenos. Use el mismo criterio y período de la base informada.")
-        n_proc   = c2.number_input("📦 N° procesos TD", min_value=0, step=1, value=int(existing.get("n_proc",0)) if existing else 0, help="Ingrese la cantidad de procesos de trato directo del período. Distinga procesos de líneas de productos u órdenes de compra.")
+        monto_td = c1.number_input("💰 Monto TD ($CLP)", min_value=0, step=1_000_000, value=int(existing["monto_td"]) if existing and existing.get("monto_td") is not None else None, format="%d", help="Ingrese el monto de trato directo del período en pesos chilenos. Use el mismo criterio y período de la base informada.")
+        n_proc   = c2.number_input("📦 N° procesos TD", min_value=0, step=1, value=int(existing["n_proc"]) if existing and existing.get("n_proc") is not None else None, help="Ingrese la cantidad de procesos de trato directo del período. Distinga procesos de líneas de productos u órdenes de compra.")
         pct_per  = c3.number_input("📊 % TD período MINSAL", min_value=0.0, max_value=100.0, step=0.01,
                                    value=float(existing.get("pct_per",estab.get("pct_2026",0.0))) if existing else float(estab.get("pct_2026",0.0)), format="%.2f", help="Revise el porcentaje correspondiente al período cargado. No mezcle cifras de otro trimestre ni sustituya porcentajes por montos.")
 
@@ -1780,10 +1780,9 @@ def pg_mis_reportes():
                                    placeholder="1. Iniciar licitación para [insumo] antes del [fecha]", help="Resuma las acciones que se comprometen para mejorar el resultado. Detállelas después en la tabla, con responsable, plazo y avance.")
         c4,c5 = st.columns(2)
         meta_prox  = c4.number_input("🎯 Meta % TD próximo período", min_value=0.0, max_value=100.0, step=0.5,
-                                     value=float(existing.get("meta_prox",16.0)) if existing else 16.0, format="%.1f", help="Ingrese el porcentaje que el establecimiento se propone alcanzar. Es un compromiso de gestión, no una modificación del indicador oficial.")
+                                     value=float(existing["meta_prox"]) if existing and existing.get("meta_prox") is not None else None, format="%.1f", help="Ingrese el porcentaje que el establecimiento se propone alcanzar. Es un compromiso de gestión, no una modificación del indicador oficial.")
         fecha_comp = c5.date_input("📆 Fecha comprometida",
-                                   value=datetime.date.fromisoformat(existing["fecha_comp"])
-                                   if existing and existing.get("fecha_comp") else datetime.date.fromisoformat(pinfo["fecha_limite"]), help="Indique la fecha del compromiso general. Cada acción de la tabla debe incluir además su plazo específico.")
+                                   value=date_value(existing.get("fecha_comp")) if existing else None, help="Indique la fecha del compromiso general. Cada acción de la tabla debe incluir además su plazo específico.")
 
         st.markdown('''<div style="background:#F8FAFC;border-left:4px solid #64748B;border-radius:0 6px 6px 0;padding:10px 16px;margin:16px 0 10px">
             <div style="font-size:13px;font-weight:700;color:#374151">4 · Responsable del reporte</div>
@@ -1831,7 +1830,7 @@ def pg_mis_reportes():
                     "compromisos": compromisos,
                     "obs": obs,
                 })
-                data = {"year":year,"establecimiento_id":eid_sel,"establecimiento_nombre":estab["nombre"],"reporte_id":periodo_id,"periodo":pinfo["periodo"],"periodo_label":pinfo["label"],"nivel_riesgo":nivel,"pct_2026":estab.get("pct_2026"),"pct_2025":estab.get("pct_2025"),"pct_per":pct_per,"monto_td":monto_td,"n_proc":n_proc,"causas_sel":causas_sel,"causas_desc":textos_corregidos["causas_desc"],"medidas":med_sel,"med_desc":textos_corregidos["med_desc"],"compromisos":textos_corregidos["compromisos"],"meta_prox":meta_prox,"fecha_comp":str(fecha_comp),"resp_nombre":resp_nombre.strip(),"resp_cargo":resp_cargo.strip(),"resp_email":resp_email.strip(),"obs":textos_corregidos["obs"],"estado":"enviado" if enviar else "borrador","usuario":user["username"],"fecha_ingreso":str(datetime.datetime.now().isoformat(timespec="seconds"))}
+                data = {"year":year,"establecimiento_id":eid_sel,"establecimiento_nombre":estab["nombre"],"reporte_id":periodo_id,"periodo":pinfo["periodo"],"periodo_label":pinfo["label"],"nivel_riesgo":nivel,"pct_2026":estab.get("pct_2026"),"pct_2025":estab.get("pct_2025"),"pct_per":pct_per,"monto_td":monto_td,"n_proc":n_proc,"causas_sel":causas_sel,"causas_desc":textos_corregidos["causas_desc"],"medidas":med_sel,"med_desc":textos_corregidos["med_desc"],"compromisos":textos_corregidos["compromisos"],"meta_prox":meta_prox,"fecha_comp":text(fecha_comp),"resp_nombre":resp_nombre.strip(),"resp_cargo":resp_cargo.strip(),"resp_email":resp_email.strip(),"obs":textos_corregidos["obs"],"estado":"enviado" if enviar else "borrador","usuario":user["username"],"fecha_ingreso":str(datetime.datetime.now().isoformat(timespec="seconds"))}
                 data["formato_tipo"] = formato_tipo
                 data["formato_version"] = 2
                 # Mantener trazabilidad si el reporte fue habilitado por el administrador y luego corregido.
