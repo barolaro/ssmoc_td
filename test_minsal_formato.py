@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import Mock
 
 from docx import Document
-from minsal_formato import completeness, generate_docx, format_tables, rows_from_editor
+from minsal_formato import completeness, generate_docx, format_tables, rows_from_editor, previous_commitments, submission_issues, record_review_pending
 import pandas as pd
 
 
@@ -34,6 +34,71 @@ def fixtures():
 
 
 class FormatoTests(unittest.TestCase):
+    def test_na_rows_do_not_require_previous_commitment_dates(self):
+        est, reports = fixtures()
+        r = deepcopy(reports[2])
+        f = r["formato_tipo"]
+        f["anteriores"] = [{key: "N/A" for key in ("periodo", "compromiso", "avance", "responsable", "fecha")}]
+        self.assertEqual(previous_commitments(f), [])
+        self.assertEqual(completeness(r, est["c"]), [])
+        f["avance_anteriores"] = ""
+        self.assertTrue(any("justifique" in issue for issue in completeness(r, est["c"])))
+        f["avance_anteriores"] = "Se revisaron compromisos anteriores."
+        f["anteriores"][0]["compromiso"] = "Preparar licitación"
+        self.assertEqual(len(previous_commitments(f)), 1)
+        self.assertTrue(any("fecha de los compromisos anteriores" in issue for issue in completeness(r, est["c"])))
+
+    def test_internal_receipt_preserves_pending_items_for_minsal(self):
+        est, reports = fixtures()
+        r = deepcopy(reports[2])
+        f = r["formato_tipo"]
+        r["nivel_riesgo"] = "amarillo"
+        f["acciones"][0]["plazo"] = ""
+        f["por_informar"] = "Pendiente de revisión"
+        f["reclasificaciones"] = [{"oc": "OC-PRUEBA", "mecanismo": "", "respaldo": "Antecedente administrativo; mecanismo pendiente"}]
+        f["fecha_seguimiento"] = ""
+        before = deepcopy(r)
+        blocking, pending = submission_issues(r, est["c"])
+        self.assertEqual(blocking, [])
+        self.assertEqual(len(pending), 3)
+        self.assertEqual(completeness(r, est["c"]), pending)
+        self.assertEqual(r, before)
+        record_review_pending(r)
+        self.assertTrue(r["revision_pendiente"])
+        self.assertEqual(r["pendientes_revision"], pending)
+        self.assertEqual(f["acciones"][0]["plazo"], "")
+        self.assertEqual(f["por_informar"], "Pendiente de revisión")
+        tables = format_tables(est, [r], 2026, "R3", {})
+        self.assertTrue(any(row[0] == "Establecimiento c" and "requiere completar" in row[1] for row in tables[4]))
+        self.assertTrue(any("plazo" in warning for warning in tables[5]))
+
+    def test_internal_receipt_keeps_capture_errors_blocking(self):
+        est, reports = fixtures()
+        r = deepcopy(reports[2])
+        f = r["formato_tipo"]
+        f["acciones"][0]["plazo"] = "N/A"
+        f["acciones"][0]["responsable"] = ""
+        f["por_informar"] = "Pendiente de revisión"
+        f["reclasificaciones"] = []
+        blocking, _ = submission_issues(r, est["c"])
+        self.assertTrue(any("responsable" in issue for issue in blocking))
+        self.assertTrue(any("AAAA-MM-DD" in issue for issue in blocking))
+        self.assertTrue(any("Por Informar" in issue for issue in blocking))
+        f["por_informar"] = "Reclasificadas"
+        self.assertTrue(any("reclasificadas" in issue for issue in submission_issues(r, est["c"])[0]))
+
+    def test_review_flags_clear_when_missing_items_are_completed(self):
+        est, reports = fixtures()
+        r = deepcopy(reports[2])
+        r["nivel_riesgo"] = "amarillo"
+        r["formato_tipo"]["acciones"][0]["plazo"] = ""
+        record_review_pending(r)
+        self.assertTrue(r["revision_pendiente"])
+        r["formato_tipo"]["acciones"][0]["plazo"] = "2026-12-15"
+        record_review_pending(r)
+        self.assertFalse(r["revision_pendiente"])
+        self.assertEqual(r["pendientes_revision"], [])
+
     def test_requirements_for_both_risks(self):
         est, reports = fixtures()
         for r in reports[:-1]:
@@ -108,3 +173,4 @@ class FormatoTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

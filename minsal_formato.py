@@ -60,6 +60,14 @@ def rows_from_editor(frame, columns):
             if any(text(row.get(label)) for label in columns.values())]
 
 
+def previous_commitments(formato):
+    """Las filas vacías o escritas enteramente como N/A no son compromisos."""
+    placeholders = {"", "n/a", "na", "n.a", "no aplica", "no corresponde", "—", "-"}
+    return [row for row in formato.get("anteriores", [])
+            if any(text(row.get(key)).casefold().strip().rstrip(".") not in placeholders
+                   for key in ANTERIORES)]
+
+
 def legacy_action(report):
     return {"causa": text(report.get("causas_desc")), "medida": text(report.get("med_desc")),
             "compromiso": text(report.get("compromisos")),
@@ -92,7 +100,7 @@ def completeness(report, establishment):
             errors.append(f"Acción {i}: indique el plazo como AAAA-MM-DD.")
     status = f.get("por_informar", "Pendiente de revisión")
     if status == "Pendiente de revisión":
-        errors.append("Revise y reclasifique las OC Por Informar antes del envío.")
+        errors.append("Revise y reclasifique las OC Por Informar antes del envío a MINSAL.")
     if status == "Reclasificadas":
         if not f.get("reclasificaciones"):
             errors.append("Registre las OC reclasificadas y su respaldo.")
@@ -108,7 +116,7 @@ def completeness(report, establishment):
                 errors.append("Use enlaces HTTPS sin credenciales para los respaldos.")
     if not text(f.get("avance_anteriores")):
         errors.append("Informe el avance de compromisos anteriores o justifique que no existen.")
-    for a in f.get("anteriores", []):
+    for a in previous_commitments(f):
         if not all(text(a.get(k)) for k in ANTERIORES) or not date_value(a.get("fecha")):
             errors.append("Complete todos los campos y la fecha de los compromisos anteriores.")
     if establishment.get("nivel") == "rojo":
@@ -132,6 +140,45 @@ def completeness(report, establishment):
         if f.get("seguimiento_reforzado") != "Sí" or not text(f.get("modalidad_seguimiento")) or not date_value(f.get("fecha_seguimiento")):
             errors.append("Comprometa seguimiento reforzado, indicando modalidad y fecha.")
     return list(dict.fromkeys(errors))
+
+
+def submission_issues(report, establishment):
+    """Separa errores de captura de pendientes recibibles para revisión interna.
+
+    La validación completa para el consolidado MINSAL sigue en completeness().
+    No asigna fechas ni modifica la clasificación real de las órdenes.
+    """
+    f = report.get("formato_tipo", {})
+    deferrable = set()
+    for i, action in enumerate(f.get("acciones", []), 1):
+        if not text(action.get("plazo")) and all(text(action.get(key)) for key in ACCIONES if key != "plazo"):
+            deferrable.add(f"Acción {i}: complete plazo comprometido.")
+    if (f.get("por_informar", "Pendiente de revisión") == "Pendiente de revisión"
+            and any(text(row.get("oc")) and text(row.get("respaldo"))
+                    for row in f.get("reclasificaciones", []))):
+        deferrable.add("Revise y reclasifique las OC Por Informar antes del envío a MINSAL.")
+    if (establishment.get("nivel") == "amarillo"
+            and f.get("seguimiento_reforzado") == "Sí"
+            and text(f.get("modalidad_seguimiento"))
+            and not text(f.get("fecha_seguimiento"))):
+        deferrable.add("Comprometa seguimiento reforzado, indicando modalidad y fecha.")
+    errors = completeness(report, establishment)
+    return ([error for error in errors if error not in deferrable],
+            [error for error in errors if error in deferrable])
+
+
+def record_review_pending(report):
+    """Conserva las observaciones para revisión, sin aprobar el reporte."""
+    report["pendientes_revision"] = completeness(report, {"nivel": report.get("nivel_riesgo", "")})
+    report["revision_pendiente"] = bool(report["pendientes_revision"])
+
+
+def render_review_status(report):
+    import streamlit as st
+    if report.get("revision_pendiente"):
+        st.warning("Recibido por SSMOCC con antecedentes pendientes. Requiere completar la revisión antes del envío consolidado a MINSAL.")
+        for pending in report.get("pendientes_revision", []):
+            st.write("• " + pending)
 
 
 def render_complement(report, level, key, year, rid, previous):
@@ -160,7 +207,10 @@ def render_complement(report, level, key, year, rid, previous):
         for r in previous:
             st.caption(f"{r.get('year', 2026)} · {r.get('periodo_label', r.get('reporte_id'))}: {r.get('compromisos', 'Sin descripción')}")
     f["avance_anteriores"] = st.text_area("Resumen de avance anterior o justificación de que no existen compromisos previos", value=f.get("avance_anteriores", ""), key=f"{key}_avance_anteriores", help=FIELD_HELP["avance_anteriores"])
-    editor("Seguimiento individual de compromisos anteriores", "anteriores", ANTERIORES)
+    f["anteriores"] = previous_commitments(f)
+    st.caption("Si no existen compromisos anteriores, justifíquelo en el resumen y deje la tabla sin filas. Las filas escritas solo con N/A no se consideran compromisos.")
+    editor("Seguimiento individual de compromisos anteriores (solo si existen)", "anteriores", ANTERIORES)
+    f["anteriores"] = previous_commitments(f)
     if level == "rojo":
         st.subheader("Seguimiento y control de riesgo rojo")
         f["mecanismos"] = st.multiselect("Mecanismo competitivo identificado", ["Licitación", "Compra coordinada", "Convenio Marco", "Otro"], default=f.get("mecanismos", []), key=f"{key}_mecanismos", help=FIELD_HELP["mecanismos"])
@@ -178,7 +228,8 @@ def render_complement(report, level, key, year, rid, previous):
         f["fecha_seguimiento"] = text(st.date_input("Fecha del seguimiento reforzado", value=date_value(f.get("fecha_seguimiento")), format="DD-MM-YYYY", key=f"{key}_fecha_seguimiento", help=FIELD_HELP["fecha_seguimiento"]))
     st.subheader("Órdenes de compra y antecedentes de respaldo")
     f["por_informar"] = choice("Estado de OC con mecanismo Por Informar", ["Pendiente de revisión", "No existen", "Reclasificadas"], "por_informar")
-    editor("Reclasificaciones según mecanismo real", "reclasificaciones", RECLASIFICACIONES)
+    st.caption("Si el mecanismo sigue pendiente, identifique la OC y su respaldo; se remitirá como antecedente pendiente de revisión, sin registrarla como reclasificada.")
+    editor("Detalle de OC por revisar o reclasificadas", "reclasificaciones", RECLASIFICACIONES)
     st.caption("Identifique las OC y los documentos de respaldo en un repositorio institucional con permisos adecuados. No registre contraseñas ni enlaces con credenciales.")
     editor("Índice de respaldos y detalle de OC", "respaldos", RESPALDOS)
     return f
@@ -186,10 +237,11 @@ def render_complement(report, level, key, year, rid, previous):
 
 def render_readonly(report):
     import streamlit as st
-    f = report.get("formato_tipo", {})
+    f = deepcopy(report.get("formato_tipo", {}))
     if not f:
         st.info("Reporte anterior conservado. Requiere completar los campos del Formato Tipo vigente.")
         return
+    f["anteriores"] = previous_commitments(f)
     with st.expander("Plan de acción, seguimiento y respaldos registrados"):
         for field, columns, label in [("acciones", ACCIONES, "Plan de acción"), ("anteriores", ANTERIORES, "Compromisos anteriores"), ("mensual", MESES, "Control mensual"), ("reclasificaciones", RECLASIFICACIONES, "OC reclasificadas"), ("respaldos", RESPALDOS, "Respaldos")]:
             if f.get(field):
@@ -340,7 +392,7 @@ def generate_docx(establishments, reports, year, rid, period, meta, template=Non
             paragraph.paragraph_format.space_after = Pt(6)
             anchor.addprevious(p)
         paragraph("Avance de compromisos de reportes anteriores: " + f.get("avance_anteriores", "Pendiente de informar"))
-        for a in f.get("anteriores", []):
+        for a in previous_commitments(f):
             paragraph(f"{a.get('periodo', '')} · {a.get('compromiso', '')} · Avance: {a.get('avance', '')} · Responsable: {a.get('responsable', '')} · Fecha: {fecha_chile(a.get('fecha'))}")
         paragraph("Estado OC Por Informar: " + f.get("por_informar", "Pendiente de revisión"))
         for a in f.get("reclasificaciones", []):
@@ -386,3 +438,4 @@ def generate_docx(establishments, reports, year, rid, period, meta, template=Non
     buf = BytesIO()
     doc.save(buf)
     return buf.getvalue(), warnings
+

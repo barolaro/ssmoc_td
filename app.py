@@ -6,7 +6,7 @@ import streamlit as st
 import hashlib, json, datetime, io, base64, csv
 from pathlib import Path
 import urllib.request, urllib.error
-from minsal_formato import render_complement, completeness, generate_docx, format_tables, date_value, text, render_readonly
+from minsal_formato import render_complement, completeness, generate_docx, format_tables, date_value, text, render_readonly, submission_issues, record_review_pending, render_review_status
 
 class PersistenceError(RuntimeError):
     pass
@@ -467,7 +467,9 @@ def cerrar_reporte_enviado(report: dict, accion: str = "Envía reporte") -> dict
     report["bloqueado"] = True
     report["habilitado_edicion"] = False
     report["fecha_envio"] = datetime.datetime.now().isoformat(timespec="seconds")
-    return _append_audit_entry(report, accion, "Reporte cerrado para edición del establecimiento.")
+    record_review_pending(report)
+    detail = "Reporte recibido por SSMOCC con antecedentes pendientes de revisión." if report["revision_pendiente"] else "Reporte cerrado para edición del establecimiento."
+    return _append_audit_entry(report, accion, detail)
 
 def authenticate(u,p):
     users=load_users(); usr=users.get(u.strip().lower())
@@ -537,6 +539,8 @@ def render_topbar():
         texto_avance = {"sin_carga":"Sin carga oficial", "no_requiere_informe":"No requiere informe", "pendiente":"Pendiente", "borrador":"Borrador", "enviado":"Enviado"}.get(estado, "Pendiente")
         pct = 100 if estado in ("enviado", "no_requiere_informe") else 0
         col_pct = "#4ade80" if pct == 100 else "#fbbf24" if estado in ("pendiente", "borrador") else "#cbd5e1"
+        if estado == "enviado" and reporte.get("revision_pendiente"):
+            texto_avance, col_pct = "Recibido con pendientes", "#fbbf24"
     estab=ESTABLECIMIENTOS.get(user.get("establecimiento"),{})
     rol_txt="🔑 Admin" if user["rol"]=="admin" else f"🏥 {estab.get('nombre_corto','')}"
 
@@ -639,6 +643,7 @@ def cal_cards(reports, eid_filter=None):
             est = estado_reporte_periodo(establecimientos_p, eid_filter, r)
             if est=="sin_carga":   bg,tc,bc,tag="#F8FAFC","#94A3B8","#E2E8F0","🔒 SIN CARGA"
             elif est=="no_requiere_informe": bg,tc,bc,tag="#F0FDF4","#166534","#BBF7D0","🟢 NO REQUIERE INFORME"
+            elif est=="enviado" and r.get("revision_pendiente"): bg,tc,bc,tag="#FFFBEB","#92400E","#FDE68A","📥 RECIBIDO CON PENDIENTES"
             elif est=="enviado":     bg,tc,bc,tag="#F0FDF4","#166534","#BBF7D0","✅ ENVIADO"
             elif est=="borrador":  bg,tc,bc,tag="#FFFBEB","#92400E","#FDE68A","📝 BORRADOR"
             elif dias<0:           bg,tc,bc,tag="#FEF2F2","#991B1B","#FECACA","⛔ VENCIDO"
@@ -1251,11 +1256,14 @@ def pg_todos_reportes():
     for r in sorted(filtered, key=lambda x: (x.get("reporte_id", ""), x.get("nivel_riesgo", ""), x.get("establecimiento_nombre", ""))):
         estado = r.get("estado", "borrador")
         estado_txt = "✅ ENVIADO / BLOQUEADO" if estado == "enviado" else "📝 BORRADOR / EDITABLE"
+        if estado == "enviado" and r.get("revision_pendiente"):
+            estado_txt = "📥 RECIBIDO CON PENDIENTES / BLOQUEADO"
         icon = "✅" if estado == "enviado" else "📝"
         pinfo = get_periodo_info(r.get("reporte_id", rid))
         exp_label = f"{icon} {r.get('establecimiento_nombre','')[:55]} — {r.get('year', year)} · {r.get('periodo_label','')} — {estado_txt}"
 
         with st.expander(exp_label):
+            render_review_status(r)
             ca, cb, cc, cd = st.columns(4)
             ca.metric("Nivel", r.get("nivel_riesgo", "").capitalize())
             cb.metric("% TD 2026", f"{r.get('pct_2026', 0):.2f}%")
@@ -1702,6 +1710,9 @@ def pg_mis_reportes():
         eb = "#F0FDF4" if estado_actual == "enviado" else "#EFF6FF"
         ei = "✅" if estado_actual == "enviado" else "📝"
         msg_estado = "Reporte enviado y bloqueado para edición." if estado_actual == "enviado" else "Borrador disponible para edición."
+        if estado_actual == "enviado" and existing.get("revision_pendiente"):
+            ec, eb, ei = "#92400E", "#FFFBEB", "📥"
+            msg_estado = "Recibido por SSMOCC con antecedentes pendientes de revisión."
         st.markdown(f"""
         <div style="background:{eb};border-radius:8px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px;border:1px solid {'#BBF7D0' if estado_actual == 'enviado' else '#BFDBFE'}">
             <span style="font-size:24px">{ei}</span>
@@ -1714,7 +1725,10 @@ def pg_mis_reportes():
         # Regla institucional: una vez enviado por el establecimiento, queda cerrado.
         # Solo el administrador puede devolverlo a borrador desde “Todos los reportes”.
         if estado_actual == "enviado" and user.get("rol") != "admin":
-            st.success(f"✅ El reporte {pinfo['label']} fue enviado exitosamente al SSMOCC.")
+            if existing.get("revision_pendiente"):
+                render_review_status(existing)
+            else:
+                st.success(f"✅ El reporte {pinfo['label']} fue enviado exitosamente al SSMOCC.")
             st.markdown(f"""
             <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-left:5px solid #64748B;border-radius:0 10px 10px 0;padding:16px 18px;margin:12px 0;color:#334155;line-height:1.6">
                 <div style="font-size:14px;font-weight:800;margin-bottom:4px">🔒 Reporte cerrado para edición</div>
@@ -1728,6 +1742,7 @@ def pg_mis_reportes():
             """, unsafe_allow_html=True)
             with st.expander("📄 Vista previa del Anexo N°1 MINSAL", expanded=True):
                 render_anexo_minsal_preview(existing, year, pinfo)
+            render_readonly(existing)
             return
 
     st.markdown(f'''
@@ -1804,7 +1819,8 @@ def pg_mis_reportes():
         </div>''', unsafe_allow_html=True)
 
         st.markdown('''<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:11px;color:#64748b">
-            <strong>* Obligatorios para enviar.</strong> Puedes guardar como borrador y completar después.
+            <strong>* Obligatorios para enviar.</strong> Puedes guardar como borrador y completar después.<br>
+            El envío al SSMOCC registra la recepción para revisión interna. Los plazos aún no definidos y las OC identificadas cuyo mecanismo siga pendiente quedarán observados; deben completarse antes de consolidar el envío a MINSAL.
         </div>''', unsafe_allow_html=True)
 
         cg,ce,_ = st.columns([1,1,2])
@@ -1819,7 +1835,8 @@ def pg_mis_reportes():
                 if not causas_desc.strip(): errs.append("⚠️ Complete la descripción de causas.")
                 if not compromisos.strip(): errs.append("⚠️ Complete los compromisos.")
                 if not resp_nombre.strip(): errs.append("⚠️ Ingrese el nombre del responsable.")
-                errs.extend(completeness({"formato_tipo": formato_tipo}, estab))
+                capture_errors, _ = submission_issues({"formato_tipo": formato_tipo}, estab)
+                errs.extend(capture_errors)
                 if errs:
                     for e in errs: st.error(e)
                     ok = False
@@ -1845,8 +1862,11 @@ def pg_mis_reportes():
                         upsert_report(data)
                     except PersistenceError as error:
                         st.error(str(error)); return
-                    st.success(f"✅ **Reporte {pinfo['label']}** enviado exitosamente. Quedó bloqueado para edición y con corrección ortográfica básica aplicada.")
-                    st.balloons()
+                    if data.get("revision_pendiente"):
+                        render_review_status(data)
+                    else:
+                        st.success(f"✅ **Reporte {pinfo['label']}** enviado exitosamente. Quedó bloqueado para edición y con corrección ortográfica básica aplicada.")
+                        st.balloons()
                 else:
                     data["bloqueado"] = False
                     _append_audit_entry(data, "Guarda borrador", "Borrador actualizado por el establecimiento/administrador.")
@@ -2254,3 +2274,4 @@ try:
     
 except PersistenceError as error:
     st.error(str(error))
+
