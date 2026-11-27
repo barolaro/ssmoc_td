@@ -1163,7 +1163,7 @@
     "obs": "Causales: se registra Otra causal para reflejar las situaciones descritas, sin atribuir un fundamento legal específico no confirmado. La OC 1643-1945-SE26 permanece Por Informar; regularización de pago no equivale a confirmar el mecanismo real de contratación.\nMonto total TD y número de procesos: pendientes de confirmación; el monto $75. 066. 077 corresponde solo a una OC y no se ha trasladado como total del trimestre. La base oficial cargada informa numerador $195. 185. 702 y denominador $3. 752. 779. 096, con indicador 5, 20%; se conservan los indicadores oficiales.\nMeta propia del próximo período y fecha general de compromiso: no informadas, se dejan vacías. Las fechas de las acciones concluidas identifican los actos administrativos informados, no compromisos futuros. No se inventan fechas para las ambulancias ni para el próximo seguimiento.",
     "estado": "borrador",
     "usuario": "talagante",
-    "fecha_ingreso": "2026-11-27T13:30:13",
+    "fecha_ingreso": "2026-11-27T13:32:47",
     "formato_tipo": {
       "acciones": [
         {
@@ -1202,7 +1202,7 @@
       "reclasificaciones": [
         {
           "oc": "1643-1945-SE26",
-          "mecanismo": "",
+          "mecanismo": "Regularización de pago",
           "respaldo": "Resolución Exenta N.º 2814 del 10-09-2026 y OC del 10-09-2026, según complemento del Hospital. Mecanismo real pendiente de confirmar; no se registra como reclasificada."
         }
       ],
@@ -1240,6 +1240,13 @@
       },
       {
         "fecha": "2026-11-27T13:30:13",
+        "usuario": "talagante",
+        "nombre": "María Andrea Villegas Albarrán",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-11-27T13:32:47",
         "usuario": "talagante",
         "nombre": "María Andrea Villegas Albarrán",
         "accion": "Guarda borrador",
