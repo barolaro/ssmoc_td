@@ -1148,10 +1148,10 @@
     "medidas": {
       "pac": false,
       "lic": true,
-      "cm": false,
+      "cm": true,
       "cenabast": false,
       "cap": false,
-      "venc": true
+      "venc": false
     },
     "med_desc": "1. Regularización del pago mediante Resolución Exenta N. º 2814 del 10-09-2026 y OC 1643-1945-SE26 del 10-09-2026. El informe identifica un monto total de $75. 066. 077 para esta OC.\n2. Servicio adjudicado mediante licitación pública ID 1643-65-LP26, Resolución Exenta N. º 2257 del 31-07-2026.\n3. Contratación transitoria de ambulancias y gestiones técnicas y administrativas para recuperar la flota institucional.\nEn su complemento, el Hospital informa revisión de compras recurrentes asociadas a servicios especializados y migración a licitaciones públicas; señala adjudicación de prestaciones de otorrino como ejemplo. Para contratos vigentes informa primera notificación a referentes técnicos 120 días antes del término y reiteraciones cada 30 días, solicitando bases técnicas para licitar.",
     "compromisos": "Continuar las gestiones para recuperar la flota de ambulancias y finalizar el servicio externo de contingencia, conforme al informe. Mantener la migración de servicios especializados a licitaciones públicas y el control anticipado del término de contratos, según complemento del Hospital. Pendientes: fechas concretas del próximo seguimiento y de cumplimiento de la recuperación de flota; confirmar mecanismo real de contratación de Clínica Colonial.",
@@ -1161,9 +1161,9 @@
     "resp_cargo": "Jefa de Abastecimiento",
     "resp_email": "mandrea.villegas@redsalud.gob.cl",
     "obs": "Causales: se registra Otra causal para reflejar las situaciones descritas, sin atribuir un fundamento legal específico no confirmado. La OC 1643-1945-SE26 permanece Por Informar; regularización de pago no equivale a confirmar el mecanismo real de contratación.\nMonto total TD y número de procesos: pendientes de confirmación; el monto $75. 066. 077 corresponde solo a una OC y no se ha trasladado como total del trimestre. La base oficial cargada informa numerador $195. 185. 702 y denominador $3. 752. 779. 096, con indicador 5, 20%; se conservan los indicadores oficiales.\nMeta propia del próximo período y fecha general de compromiso: no informadas, se dejan vacías. Las fechas de las acciones concluidas identifican los actos administrativos informados, no compromisos futuros. No se inventan fechas para las ambulancias ni para el próximo seguimiento.",
-    "estado": "borrador",
-    "usuario": "talagante",
-    "fecha_ingreso": "2026-11-27T13:35:03",
+    "estado": "enviado",
+    "usuario": "admin",
+    "fecha_ingreso": "2026-11-27T14:08:37",
     "formato_tipo": {
       "acciones": [
         {
@@ -1192,15 +1192,7 @@
         }
       ],
       "avance_anteriores": "No aplica. El Hospital de Talagante estuvo en riesgo verde en R1 y R2 de 2026 y no requería presentar antecedentes. No existen compromisos reportados en SIMOTD para esos períodos.",
-      "anteriores": [
-        {
-          "periodo": "N/A",
-          "compromiso": "N/A",
-          "avance": "N/A",
-          "responsable": "N/A",
-          "fecha": "N/A"
-        }
-      ],
+      "anteriores": [],
       "revision_recurrentes": "Sí",
       "detalle_recurrentes": "El Hospital informa que las compras recurrentes se asocian a servicios especializados y que está migrando a licitaciones públicas; señala prestaciones de otorrino adjudicadas por licitación como ejemplo. Según el informe, Clínica Colonial corresponde a una regularización puntual no recurrente, la movilización de Hospitalización Domiciliaria fue regularizada por licitación y las ambulancias continúan como contingencia transitoria.",
       "seguimiento_reforzado": "Sí",
@@ -1266,8 +1258,22 @@
         "nombre": "María Andrea Villegas Albarrán",
         "accion": "Guarda borrador",
         "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-11-27T14:08:37",
+        "usuario": "admin",
+        "nombre": "Administrador SSMOCC",
+        "accion": "Reenvía reporte corregido",
+        "detalle": "Reporte recibido por SSMOCC con antecedentes pendientes de revisión."
       }
     ],
-    "bloqueado": false
+    "bloqueado": true,
+    "habilitado_edicion": false,
+    "fecha_envio": "2026-11-27T14:08:37",
+    "pendientes_revision": [
+      "Acción 3: complete plazo comprometido.",
+      "Revise y reclasifique las OC Por Informar antes del envío a MINSAL."
+    ],
+    "revision_pendiente": true
   }
 ]
