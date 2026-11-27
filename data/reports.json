@@ -1139,12 +1139,12 @@
     "pct_2026": 5.2,
     "pct_2025": 3.91,
     "pct_per": 5.2,
-    "monto_td": null,
-    "n_proc": null,
+    "monto_td": 87877744,
+    "n_proc": 3,
     "causas_sel": [
       "Otra causal — especificar en observaciones"
     ],
-    "causas_desc": "1. Derivaciones clínicas de urgencia a Clínica Colonial que requirieron regularización administrativa y financiera.\n\n2. Término anticipado del contrato de movilización para Hospitalización Domiciliaria, ID 1643-50-LP25, que motivó una contratación transitoria por trato directo para mantener las visitas y tratamientos.\n\n3. Fallas de tres ambulancias institucionales que motivaron contratación externa de contingencia para asegurar los traslados asistenciales.",
+    "causas_desc": "1. Derivaciones clínicas de urgencia a Clínica Colonial que requirieron regularización administrativa y financiera.\n2. Término anticipado del contrato de movilización para Hospitalización Domiciliaria, ID 1643-50-LP25, que motivó una contratación transitoria por Trato Directo para mantener las visitas y tratamientos.\n3. Fallas de tres ambulancias institucionales que motivaron contratación externa de contingencia para asegurar los traslados asistenciales.",
     "medidas": {
       "pac": false,
       "lic": true,
@@ -1153,20 +1153,17 @@
       "cap": false,
       "venc": true
     },
-    "med_desc": "1. Regularización del pago mediante Resolución Exenta N.º 2814 del 10-09-2026 y OC 1643-1945-SE26 del 10-09-2026. El informe identifica un monto total de $75.066.077 para esta OC.\n\n2. Servicio adjudicado mediante licitación pública ID 1643-65-LP26, Resolución Exenta N.º 2257 del 31-07-2026.\n\n3. Contratación transitoria de ambulancias y gestiones técnicas y administrativas para recuperar la flota institucional.\n\nEn su complemento, el Hospital informa revisión de compras recurrentes asociadas a servicios especializados y migración a licitaciones públicas; señala adjudicación de prestaciones de otorrino como ejemplo. Para contratos vigentes informa primera notificación a referentes técnicos 120 días antes del término y reiteraciones cada 30 días, solicitando bases técnicas para licitar.",
+    "med_desc": "1. Regularización del pago mediante Resolución Exenta N. º 2814 del 10-09-2026 y OC 1643-1945-SE26 del 10-09-2026. El informe identifica un monto total de $75. 066. 077 para esta OC.\n2. Servicio adjudicado mediante licitación pública ID 1643-65-LP26, Resolución Exenta N. º 2257 del 31-07-2026.\n3. Contratación transitoria de ambulancias y gestiones técnicas y administrativas para recuperar la flota institucional.\nEn su complemento, el Hospital informa revisión de compras recurrentes asociadas a servicios especializados y migración a licitaciones públicas; señala adjudicación de prestaciones de otorrino como ejemplo. Para contratos vigentes informa primera notificación a referentes técnicos 120 días antes del término y reiteraciones cada 30 días, solicitando bases técnicas para licitar.",
     "compromisos": "Continuar las gestiones para recuperar la flota de ambulancias y finalizar el servicio externo de contingencia, conforme al informe. Mantener la migración de servicios especializados a licitaciones públicas y el control anticipado del término de contratos, según complemento del Hospital. Pendientes: fechas concretas del próximo seguimiento y de cumplimiento de la recuperación de flota; confirmar mecanismo real de contratación de Clínica Colonial.",
-    "meta_prox": null,
-    "fecha_comp": "",
+    "meta_prox": 16.0,
+    "fecha_comp": "2026-12-31",
     "resp_nombre": "María Andrea Villegas Albarrán",
     "resp_cargo": "Jefa de Abastecimiento",
     "resp_email": "mandrea.villegas@redsalud.gob.cl",
-    "obs": "BORRADOR PARA REVISIÓN. Carga asistida solicitada por Damiani Retamal González, basada en informe del Hospital de Talagante de 19-11-2026 y complemento de María Andrea Villegas aportado por el solicitante el 25-11-2026. No enviado ni validado por el Hospital.\n\nCausales: se registra Otra causal para reflejar las situaciones descritas, sin atribuir un fundamento legal específico no confirmado. La OC 1643-1945-SE26 permanece Por Informar; regularización de pago no equivale a confirmar el mecanismo real de contratación.\n\nMonto total TD y número de procesos: pendientes de confirmación; el monto $75.066.077 corresponde solo a una OC y no se ha trasladado como total del trimestre. La base oficial cargada informa numerador $195.185.702 y denominador $3.752.779.096, con indicador 5,20%; se conservan los indicadores oficiales.\n\nMeta propia del próximo período y fecha general de compromiso: no informadas, se dejan vacías. Las fechas de las acciones concluidas identifican los actos administrativos informados, no compromisos futuros. No se inventan fechas para las ambulancias ni para el próximo seguimiento.",
+    "obs": "Causales: se registra Otra causal para reflejar las situaciones descritas, sin atribuir un fundamento legal específico no confirmado. La OC 1643-1945-SE26 permanece Por Informar; regularización de pago no equivale a confirmar el mecanismo real de contratación.\nMonto total TD y número de procesos: pendientes de confirmación; el monto $75. 066. 077 corresponde solo a una OC y no se ha trasladado como total del trimestre. La base oficial cargada informa numerador $195. 185. 702 y denominador $3. 752. 779. 096, con indicador 5, 20%; se conservan los indicadores oficiales.\nMeta propia del próximo período y fecha general de compromiso: no informadas, se dejan vacías. Las fechas de las acciones concluidas identifican los actos administrativos informados, no compromisos futuros. No se inventan fechas para las ambulancias ni para el próximo seguimiento.",
     "estado": "borrador",
-    "usuario": "carga_asistida",
-    "fecha_ingreso": "2026-11-25T17:55:56-03:00",
-    "bloqueado": false,
-    "habilitado_edicion": false,
-    "formato_version": 2,
+    "usuario": "talagante",
+    "fecha_ingreso": "2026-11-27T13:30:13",
     "formato_tipo": {
       "acciones": [
         {
@@ -1200,7 +1197,7 @@
       "detalle_recurrentes": "El Hospital informa que las compras recurrentes se asocian a servicios especializados y que está migrando a licitaciones públicas; señala prestaciones de otorrino adjudicadas por licitación como ejemplo. Según el informe, Clínica Colonial corresponde a una regularización puntual no recurrente, la movilización de Hospitalización Domiciliaria fue regularizada por licitación y las ambulancias continúan como contingencia transitoria.",
       "seguimiento_reforzado": "Sí",
       "modalidad_seguimiento": "Seguimiento descrito por el Hospital: notificación inicial a referentes técnicos 120 días antes del término de contratos y reiteración cada 30 días, solicitando bases técnicas para licitar. Pendiente confirmar la fecha del próximo control de las acciones de este reporte, incluida la recuperación de ambulancias.",
-      "fecha_seguimiento": "",
+      "fecha_seguimiento": "2026-12-31",
       "por_informar": "Pendiente de revisión",
       "reclasificaciones": [
         {
@@ -1232,6 +1229,7 @@
         }
       ]
     },
+    "formato_version": 2,
     "bitacora": [
       {
         "fecha": "2026-11-25T17:55:56-03:00",
@@ -1239,7 +1237,15 @@
         "nombre": "Carga asistida solicitada por Damiani Retamal González",
         "accion": "Guarda borrador",
         "detalle": "Incorporación de informe y complemento del Hospital de Talagante por solicitud expresa del usuario. Se mantienen pendientes sin fechas ni mecanismos inventados. No se ejecuta envío a SSMOCC."
+      },
+      {
+        "fecha": "2026-11-27T13:30:13",
+        "usuario": "talagante",
+        "nombre": "María Andrea Villegas Albarrán",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
       }
-    ]
+    ],
+    "bloqueado": false
   }
 ]
