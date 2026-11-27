@@ -1163,7 +1163,7 @@
     "obs": "Causales: se registra Otra causal para reflejar las situaciones descritas, sin atribuir un fundamento legal específico no confirmado. La OC 1643-1945-SE26 permanece Por Informar; regularización de pago no equivale a confirmar el mecanismo real de contratación.\nMonto total TD y número de procesos: pendientes de confirmación; el monto $75. 066. 077 corresponde solo a una OC y no se ha trasladado como total del trimestre. La base oficial cargada informa numerador $195. 185. 702 y denominador $3. 752. 779. 096, con indicador 5, 20%; se conservan los indicadores oficiales.\nMeta propia del próximo período y fecha general de compromiso: no informadas, se dejan vacías. Las fechas de las acciones concluidas identifican los actos administrativos informados, no compromisos futuros. No se inventan fechas para las ambulancias ni para el próximo seguimiento.",
     "estado": "borrador",
     "usuario": "talagante",
-    "fecha_ingreso": "2026-11-27T13:32:47",
+    "fecha_ingreso": "2026-11-27T13:35:03",
     "formato_tipo": {
       "acciones": [
         {
@@ -1192,7 +1192,15 @@
         }
       ],
       "avance_anteriores": "No aplica. El Hospital de Talagante estuvo en riesgo verde en R1 y R2 de 2026 y no requería presentar antecedentes. No existen compromisos reportados en SIMOTD para esos períodos.",
-      "anteriores": [],
+      "anteriores": [
+        {
+          "periodo": "N/A",
+          "compromiso": "N/A",
+          "avance": "N/A",
+          "responsable": "N/A",
+          "fecha": "N/A"
+        }
+      ],
       "revision_recurrentes": "Sí",
       "detalle_recurrentes": "El Hospital informa que las compras recurrentes se asocian a servicios especializados y que está migrando a licitaciones públicas; señala prestaciones de otorrino adjudicadas por licitación como ejemplo. Según el informe, Clínica Colonial corresponde a una regularización puntual no recurrente, la movilización de Hospitalización Domiciliaria fue regularizada por licitación y las ambulancias continúan como contingencia transitoria.",
       "seguimiento_reforzado": "Sí",
@@ -1247,6 +1255,13 @@
       },
       {
         "fecha": "2026-11-27T13:32:47",
+        "usuario": "talagante",
+        "nombre": "María Andrea Villegas Albarrán",
+        "accion": "Guarda borrador",
+        "detalle": "Borrador actualizado por el establecimiento/administrador."
+      },
+      {
+        "fecha": "2026-11-27T13:35:03",
         "usuario": "talagante",
         "nombre": "María Andrea Villegas Albarrán",
         "accion": "Guarda borrador",
